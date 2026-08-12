@@ -28,6 +28,12 @@
   function isPast(dateStr) {
     return !!dateStr && dateStr < todayISO();
   }
+  function moderationValue(record) {
+    return String(record && (record.moderationStatus || record.status) || "").toLowerCase();
+  }
+  function isVisibleEvent(record) {
+    return ["hidden", "rejected", "spam", "blocked", "archived", "deleted"].indexOf(moderationValue(record)) === -1;
+  }
   function formatDate(dateStr) {
     if (!dateStr) return "";
     var parts = String(dateStr).split("-");
@@ -133,7 +139,7 @@
     grid.innerHTML = skeletons(6);
 
     fetchEvents(function (err, events, isDemo) {
-      all = (events || []).slice().sort(function (a, b) {
+      all = (events || []).filter(isVisibleEvent).slice().sort(function (a, b) {
         if (!a.date) return 1;
         if (!b.date) return -1;
         return a.date < b.date ? -1 : a.date > b.date ? 1 : 0;

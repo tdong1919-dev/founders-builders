@@ -133,14 +133,21 @@ headers instead of replacing old data. Until
 `config.js` is set, every hub shows sample data and forms run in demo mode (nothing is
 saved).
 
+For admin features, run `setAdminToken("long-random-token")` in Apps Script after
+deploying `Code.gs`, redeploy the Web App, then paste that token into `admin.html`.
+Private queues, external-event imports, iCal fetching, cleanup, connector setup, and
+admin action notes require this token. Public member submissions do not.
+
 **Event aggregation:** organizers can submit external event sources through
 [`add-event-source.html`](add-event-source.html). The request goes to a private
 `Event Sources` tab for review; approved external events appear in the public `Events`
 tab with source attribution and RSVP links back to the original platform. Admins can
 review selected source requests in [`admin.html`](admin.html), which records append-only
 review actions and recommended status changes. Approved sources can then be used in the
-manual import queue to paste iCal/JSON/CSV/text events, preview/edit them, and publish
-selected rows to the public calendar. The operating guide is in
+manual import queue to paste iCal/JSON/CSV/text events or fetch a public iCal feed,
+preview/edit parsed events, detect duplicates, publish selected rows, archive expired
+events, and track provider connector readiness for Luma, Meetup, Eventbrite, Partiful,
+Google Calendar, iCal, and other websites. The operating guide is in
 [`docs/EVENT_SOURCE_AGGREGATION.md`](docs/EVENT_SOURCE_AGGREGATION.md).
 
 **Schema:** every entity's exact columns, types, required fields, and allowed values

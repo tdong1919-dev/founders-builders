@@ -42,6 +42,23 @@ var PUBLIC_RECORD_HEADERS = [
   'reportCount', 'expiresAt', 'lastUpdated'
 ];
 
+var ADMIN_TOKEN_PROPERTY = 'FB_ADMIN_TOKEN';
+var ADMIN_WRITE_TYPES = {
+  adminAction: true,
+  chapter: true,
+  activity: true,
+  graphEdge: true,
+  seedTemplate: true
+};
+var ADMIN_UPDATE_FIELDS = [
+  'moderationStatus', 'verified', 'reportCount', 'expiresAt', 'lastUpdated',
+  'syncStatus', 'approvalStatus', 'secretStatus', 'lastChecked',
+  'lastImportCount', 'nextStep', 'notes', 'connectorStatus', 'oauthStatus',
+  'lastProviderSyncAt', 'providerNotes', 'providerAccountId',
+  'providerCalendarId', 'providerOrganizationId', 'providerEndpoint',
+  'providerScope', 'importStatus', 'externalUpdatedAt'
+];
+
 var ENTITIES = {
   profile: {
     sheetName: 'Profiles',
@@ -163,6 +180,11 @@ var ENTITIES = {
       'attributionAccepted', 'reviewAccepted', 'syncStatus', 'approvalStatus',
       'secretStatus', 'lastChecked', 'lastImportCount', 'nextStep', 'notes'
     ],
+    extraHeaders: [
+      'providerAccountId', 'providerCalendarId', 'providerOrganizationId',
+      'providerEndpoint', 'providerScope', 'oauthStatus', 'connectorStatus',
+      'lastProviderSyncAt', 'providerNotes'
+    ],
     required: [
       'sourceName', 'organizerEmail', 'platform', 'authMethod',
       'permissionConfirmed', 'attributionAccepted', 'reviewAccepted'
@@ -260,7 +282,8 @@ var ENTITIES = {
     extraHeaders: [
       'recommendedApprovalStatus', 'recommendedSyncStatus',
       'recommendedSecretStatus', 'importPlan', 'sourcePlatform', 'sourceUrl',
-      'feedUrl', 'organizerEmail', 'importCount'
+      'feedUrl', 'organizerEmail', 'importCount', 'adminOperation',
+      'duplicateCount', 'archivedCount', 'provider', 'providerOperation'
     ],
     required: ['action'],
     public: false,
@@ -270,7 +293,8 @@ var ENTITIES = {
         'Hidden in Sheet', 'Rejected in Sheet', 'Event source approved',
         'Event source rejected', 'Event source paused',
         'Event source needs secure setup', 'Event source ready for manual import',
-        'Imported events from source'
+        'Imported events from source', 'Archived expired events',
+        'Configured provider connector'
       ],
       recommendedApprovalStatus: ['Pending review', 'Approved', 'Rejected', 'Paused'],
       recommendedSyncStatus: ['Requested', 'Needs secure setup', 'Pending review', 'Active', 'Paused', 'Rejected', 'Error'],
@@ -383,11 +407,80 @@ function headerFor_(sheet, entity) {
   return header.length ? header : headersFor_(entity);
 }
 
+function configuredAdminToken_() {
+  return PropertiesService.getScriptProperties().getProperty(ADMIN_TOKEN_PROPERTY) || '';
+}
+
+function requestAdminToken_(data, e) {
+  return String(
+    data && data.adminToken ||
+    e && e.parameter && e.parameter.adminToken ||
+    ''
+  );
+}
+
+function requireAdmin_(data, e) {
+  var expected = configuredAdminToken_();
+  if (!expected) {
+    throw new Error('Admin token is not configured. Run setAdminToken(token) in Apps Script.');
+  }
+  if (requestAdminToken_(data, e) !== expected) {
+    throw new Error('Admin token required.');
+  }
+}
+
+function setAdminToken(token) {
+  token = String(token || '').trim();
+  if (token.length < 24) throw new Error('Use an admin token with at least 24 characters.');
+  PropertiesService.getScriptProperties().setProperty(ADMIN_TOKEN_PROPERTY, token);
+  return { ok: true, property: ADMIN_TOKEN_PROPERTY };
+}
+
+function clearAdminToken() {
+  PropertiesService.getScriptProperties().deleteProperty(ADMIN_TOKEN_PROPERTY);
+  return { ok: true, property: ADMIN_TOKEN_PROPERTY };
+}
+
+function isAdminWrite_(type, data) {
+  if (data && data.adminOperation) return true;
+  if (ADMIN_WRITE_TYPES[type]) return true;
+  if (type === 'event') {
+    return !!(
+      data.sourcePlatform ||
+      data.sourceName ||
+      data.sourceUrl ||
+      data.sourceEventId ||
+      data.importedFromSourceId ||
+      data.importStatus ||
+      data.externalUpdatedAt
+    );
+  }
+  return false;
+}
+
+function safeCallback_(callback) {
+  callback = String(callback || '');
+  if (!/^[A-Za-z_$][0-9A-Za-z_$]*(?:\.[A-Za-z_$][0-9A-Za-z_$]*)*$/.test(callback)) {
+    throw new Error('Invalid callback');
+  }
+  return callback;
+}
+
 function eventSourceSecretKey_(sourceId, secretType) {
   if (!sourceId || !secretType) throw new Error('sourceId and secretType are required');
   var safeSource = String(sourceId).replace(/[^A-Za-z0-9_-]/g, '_');
   var safeType = String(secretType).replace(/[^A-Za-z0-9_-]/g, '_').toUpperCase();
   return 'EVENT_SOURCE_SECRET_' + safeSource + '_' + safeType;
+}
+
+function eventSourceProviderSecretKey_(sourceId, provider, secretType) {
+  if (!sourceId || !provider || !secretType) {
+    throw new Error('sourceId, provider, and secretType are required');
+  }
+  var safeSource = String(sourceId).replace(/[^A-Za-z0-9_-]/g, '_');
+  var safeProvider = String(provider).replace(/[^A-Za-z0-9_-]/g, '_').toUpperCase();
+  var safeType = String(secretType).replace(/[^A-Za-z0-9_-]/g, '_').toUpperCase();
+  return 'EVENT_SOURCE_' + safeProvider + '_' + safeSource + '_' + safeType;
 }
 
 /**
@@ -411,11 +504,132 @@ function deleteEventSourceSecret(sourceId, secretType) {
   return { ok: true, key: eventSourceSecretKey_(sourceId, secretType) };
 }
 
+function setEventSourceProviderCredential(sourceId, provider, secretType, secretValue) {
+  if (!secretValue) throw new Error('secretValue is required');
+  var key = eventSourceProviderSecretKey_(sourceId, provider, secretType);
+  PropertiesService.getScriptProperties().setProperty(key, String(secretValue));
+  return { ok: true, key: key };
+}
+
+function deleteEventSourceProviderCredential(sourceId, provider, secretType) {
+  var key = eventSourceProviderSecretKey_(sourceId, provider, secretType);
+  PropertiesService.getScriptProperties().deleteProperty(key);
+  return { ok: true, key: key };
+}
+
+function isPrivateIpv4_(host) {
+  var parts = String(host || '').split('.');
+  if (parts.length !== 4) return false;
+  var nums = parts.map(function (part) { return Number(part); });
+  if (nums.some(function (num) { return isNaN(num) || num < 0 || num > 255; })) return false;
+  return nums[0] === 10 ||
+    nums[0] === 127 ||
+    (nums[0] === 169 && nums[1] === 254) ||
+    (nums[0] === 172 && nums[1] >= 16 && nums[1] <= 31) ||
+    (nums[0] === 192 && nums[1] === 168) ||
+    nums[0] === 0;
+}
+
+function validatePublicFetchUrl_(url) {
+  url = String(url || '').trim();
+  if (!/^https?:\/\//i.test(url)) throw new Error('Only http(s) feed URLs are supported.');
+  var match = url.match(/^https?:\/\/([^\/?#:]+)(?::\d+)?/i);
+  if (!match) throw new Error('Invalid feed URL.');
+  var host = match[1].toLowerCase();
+  if (
+    host === 'localhost' ||
+    host === '0.0.0.0' ||
+    host.indexOf('127.') === 0 ||
+    host.slice(-6) === '.local' ||
+    isPrivateIpv4_(host)
+  ) {
+    throw new Error('Private or local feed URLs are not allowed.');
+  }
+  return url;
+}
+
+function fetchPublicIcal_(url) {
+  url = validatePublicFetchUrl_(url);
+  var response = UrlFetchApp.fetch(url, {
+    followRedirects: true,
+    muteHttpExceptions: true,
+    headers: {
+      Accept: 'text/calendar,text/plain,application/octet-stream,*/*'
+    }
+  });
+  var code = response.getResponseCode();
+  if (code < 200 || code >= 400) {
+    throw new Error('Feed request failed with status ' + code);
+  }
+  var content = response.getContentText() || '';
+  if (content.length > 750000) content = content.slice(0, 750000);
+  return {
+    ok: true,
+    sourceUrl: url,
+    fetchedAt: new Date().toISOString(),
+    content: content
+  };
+}
+
+function parseUpdates_(data) {
+  var raw = data.updates;
+  var updates = {};
+  if (raw) {
+    if (typeof raw === 'string') raw = JSON.parse(raw);
+    Object.keys(raw || {}).forEach(function (key) {
+      if (ADMIN_UPDATE_FIELDS.indexOf(key) !== -1) updates[key] = raw[key];
+    });
+  }
+  ADMIN_UPDATE_FIELDS.forEach(function (key) {
+    if (data[key] != null) updates[key] = data[key];
+  });
+  delete updates.id;
+  delete updates.timestamp;
+  return updates;
+}
+
+function updateRecord_(type, data) {
+  var entity = entityFor_(type);
+  var targetId = String(data.targetId || data.id || '').trim();
+  if (!targetId) throw new Error('targetId is required for updateRecord.');
+  var updates = parseUpdates_(data);
+  var updateKeys = Object.keys(updates);
+  if (!updateKeys.length) throw new Error('No allowed update fields were provided.');
+
+  var sheet = getSheet_(entity);
+  var header = headerFor_(sheet, entity);
+  var idIndex = header.indexOf('id');
+  if (idIndex === -1) throw new Error('No id column on target sheet.');
+  var values = sheet.getDataRange().getValues();
+  var rowIndex = -1;
+  for (var i = 1; i < values.length; i++) {
+    if (String(values[i][idIndex]) === targetId) {
+      rowIndex = i + 1;
+      break;
+    }
+  }
+  if (rowIndex === -1) throw new Error('Record not found: ' + targetId);
+
+  updateKeys.forEach(function (key) {
+    var colIndex = header.indexOf(key);
+    if (colIndex === -1) return;
+    sheet.getRange(rowIndex, colIndex + 1).setValue(updates[key]);
+  });
+
+  return { ok: true, id: targetId, updatedFields: updateKeys };
+}
+
 /** Read: returns all records for the requested type as JSON (supports ?callback= for JSONP). */
 function doGet(e) {
   var out;
   try {
-    var entity = entityFor_(e && e.parameter && e.parameter.type);
+    var params = e && e.parameter || {};
+    if (params.action === 'fetchIcal') {
+      requireAdmin_({}, e);
+      return respond_(fetchPublicIcal_(params.url), e);
+    }
+    var entity = entityFor_(params.type);
+    if (entity.public === false) requireAdmin_({}, e);
     var sheet = getSheet_(entity);
     var values = sheet.getDataRange().getValues();
     var header = values.shift() || headersFor_(entity);
@@ -447,6 +661,13 @@ function doPost(e) {
 
     var type = data.type || (e && e.parameter && e.parameter.type);
     var entity = entityFor_(type);
+
+    if (data.adminOperation === 'updateRecord') {
+      requireAdmin_(data, e);
+      return respond_(updateRecord_(type, data), e);
+    }
+
+    if (isAdminWrite_(type, data)) requireAdmin_(data, e);
 
     // Honeypot: bots fill hidden fields. Silently accept, don't store.
     if (data.company_website) {
@@ -497,7 +718,7 @@ function respond_(obj, e) {
   var callback = e && e.parameter && e.parameter.callback;
   if (callback) {
     return ContentService
-      .createTextOutput(callback + '(' + json + ')')
+      .createTextOutput(safeCallback_(callback) + '(' + json + ')')
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
   return ContentService

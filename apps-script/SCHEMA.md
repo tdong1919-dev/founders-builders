@@ -39,6 +39,23 @@ default to an empty string if omitted.
 non-empty (a bot filled it in), the backend silently returns `{ ok: true }` without
 writing a row.
 
+## Admin security
+
+Private admin reads and privileged writes are protected by an Apps Script token stored in
+Script Properties as `FB_ADMIN_TOKEN`. Run `setAdminToken("long-random-token")` once in
+the Apps Script editor, redeploy the Web App, then paste that token into `admin.html` on
+your own device.
+
+Protected operations include:
+
+- Reading private queue tabs such as `Event Sources`, `Reports`, and `Admin Actions`.
+- Writing `adminAction`, `chapter`, `activity`, `graphEdge`, or `seedTemplate` rows.
+- Publishing imported external events that include source attribution fields.
+- Updating existing rows through the admin-only `adminOperation: "updateRecord"` path.
+- Fetching a public iCal feed through `?action=fetchIcal`.
+
+Public member-facing submissions still work without an admin token.
+
 ---
 
 ## `profile` — sheet `Profiles` (Member Profiles hub)
@@ -312,6 +329,15 @@ row's `secretStatus` manually.
 | lastChecked | string | Optional last sync/review timestamp |
 | lastImportCount | string/number | Optional count from the most recent import |
 | nextStep, notes | string | Admin follow-up and review notes |
+| providerAccountId | string | Optional provider account/user ID for OAuth/API setup; not a secret |
+| providerCalendarId | string | Optional provider calendar ID; not a secret |
+| providerOrganizationId | string | Optional provider organization/group ID; not a secret |
+| providerEndpoint | string | Provider endpoint or public feed URL used by the connector plan |
+| providerScope | string | Plain-English scope, e.g. `Read current/future organization events only` |
+| oauthStatus | string | Admin-tracked OAuth/API status; do not store credential values here |
+| connectorStatus | string | Admin connector state such as `Needs secure setup`, `Active`, `Paused`, or `Error` |
+| lastProviderSyncAt | string | Optional timestamp for future automated sync runs |
+| providerNotes | string | Non-secret connector notes |
 
 ### `report` — sheet `Reports`
 
@@ -334,7 +360,7 @@ Required: `action`
 |---|---|---|
 | id, timestamp | — | see conventions |
 | targetType, targetId, targetTitle | string | Reviewed record |
-| action | enum | `Reviewed` · `Verified` · `Needs follow-up` · `Marked duplicate` · `Hidden in Sheet` · `Rejected in Sheet` · `Event source approved` · `Event source rejected` · `Event source paused` · `Event source needs secure setup` · `Event source ready for manual import` · `Imported events from source` |
+| action | enum | `Reviewed` · `Verified` · `Needs follow-up` · `Marked duplicate` · `Hidden in Sheet` · `Rejected in Sheet` · `Event source approved` · `Event source rejected` · `Event source paused` · `Event source needs secure setup` · `Event source ready for manual import` · `Imported events from source` · `Archived expired events` · `Configured provider connector` |
 | notes, adminEmail | string | Append-only audit note |
 | recommendedApprovalStatus | enum | Optional event-source review recommendation: `Pending review` · `Approved` · `Rejected` · `Paused` |
 | recommendedSyncStatus | enum | Optional event-source review recommendation: `Requested` · `Needs secure setup` · `Pending review` · `Active` · `Paused` · `Rejected` · `Error` |
@@ -342,6 +368,10 @@ Required: `action`
 | importPlan | enum | Optional event-source import plan: `No import yet` · `Manual import approved` · `Curated review only` · `Auto-sync when supported` · `Needs organizer follow-up` |
 | sourcePlatform, sourceUrl, feedUrl, organizerEmail | string | Optional event-source context copied into the audit note row |
 | importCount | string/number | Optional count for manual import audit notes |
+| duplicateCount | string/number | Optional count of possible duplicate imports detected in a preview |
+| archivedCount | string/number | Optional count for expiration cleanup notes |
+| adminOperation | string | Used internally by protected admin row-update requests such as `updateRecord` |
+| provider, providerOperation | string | Optional connector audit context |
 
 ### `chapter` — sheet `Chapters`
 

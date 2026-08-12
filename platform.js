@@ -6,6 +6,7 @@
   var hasBackend = /^https?:\/\//.test(API);
   var IDENTITY_KEY = "fb_member_identity";
   var SAVED_KEY = "fb_saved_items_v1";
+  var ADMIN_TOKEN_KEY = "fb_admin_token_v1";
 
   var CHAPTERS = [
     {
@@ -290,6 +291,72 @@
 
   var EVENT_CATEGORIES = ["Workshop", "Meetup", "AMA", "Demo Day", "Pitch Competition", "Office Hours", "Hack Night", "Panel", "Other"];
   var EVENT_CITIES = ["Boise, ID", "Atlanta, GA", "Washington, DC", "Madison, AL", "Virtual", "Other"];
+  var EVENT_PROVIDER_GUIDES = [
+    {
+      platform: "Luma",
+      auth: "API key stored in Apps Script Properties",
+      endpoint: "https://public-api.luma.com/v1/organizations/events/list",
+      scope: "Read calendar or organization events",
+      note: "Use public calendar links first. API sync needs a Luma Plus calendar-scoped key.",
+      docs: "https://docs.luma.com/reference/getting-started-with-your-api"
+    },
+    {
+      platform: "Meetup",
+      auth: "OAuth bearer token stored in Apps Script Properties",
+      endpoint: "https://api.meetup.com/gql-ext",
+      scope: "Read approved group events",
+      note: "Meetup API access now uses GraphQL and organizer authorization. OAuth access may require Meetup Pro.",
+      docs: "https://www.meetup.com/graphql/guide/"
+    },
+    {
+      platform: "Eventbrite",
+      auth: "OAuth bearer token stored in Apps Script Properties",
+      endpoint: "https://www.eventbriteapi.com/v3/organizations/{organization_id}/events/",
+      scope: "Read current and future organization events",
+      note: "Keep OAuth/private tokens out of the browser and Sheets. Start with curated public URLs when possible.",
+      docs: "https://www.eventbrite.com/platform/docs/authentication"
+    },
+    {
+      platform: "Partiful",
+      auth: "Public URL or manual review",
+      endpoint: "Public event or organizer URL",
+      scope: "Curated review only",
+      note: "Use public event pages unless an official export or approved API path exists.",
+      docs: "https://partiful.com/"
+    },
+    {
+      platform: "iCal feed",
+      auth: "No secret for public feeds",
+      endpoint: "Public .ics URL",
+      scope: "Public event fields only",
+      note: "Use the feed fetcher to pull ICS text into the manual preview queue before publishing.",
+      docs: "https://icalendar.org/"
+    },
+    {
+      platform: "Google Calendar",
+      auth: "Public iCal URL or future OAuth connector",
+      endpoint: "Public calendar .ics URL",
+      scope: "Public event fields only",
+      note: "Prefer public iCal exports for the first version. Do not import private attendee data.",
+      docs: "https://support.google.com/calendar/answer/37648"
+    }
+  ];
+
+  var SAMPLE_ICS = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Founders and Builders//Demo Event Import//EN",
+    "BEGIN:VEVENT",
+    "UID:demo-ical-founder-coffee@example.invalid",
+    "SUMMARY:Demo Founder Coffee",
+    "DTSTART:20990212T083000Z",
+    "LOCATION:Example Cafe",
+    "DESCRIPTION:Demo-only imported iCal event. Replace with a real public feed.",
+    "URL:https://example.invalid/founder-coffee",
+    "CATEGORIES:Meetup",
+    "END:VEVENT",
+    "END:VCALENDAR"
+  ].join("\n");
 
   var DEMO = {
     profile: [{
@@ -583,7 +650,12 @@
     return record;
   }
 
-  function fetchType(type, cb) {
+  function fetchType(type, options, cb) {
+    if (typeof options === "function") {
+      cb = options;
+      options = {};
+    }
+    options = options || {};
     var sample = (DEMO[type] || []).map(function (item) { return normalizeRecord(type, item); });
     if (!hasBackend) {
       cb(null, sample, true);
@@ -622,7 +694,8 @@
       cb(new Error("Network error"), sample, true);
     };
     script.src = API + (API.indexOf("?") === -1 ? "?" : "&") + "type=" + encodeURIComponent(type)
-      + "&callback=" + encodeURIComponent(cbName) + "&t=" + Date.now();
+      + "&callback=" + encodeURIComponent(cbName) + "&t=" + Date.now()
+      + (options.adminToken ? "&adminToken=" + encodeURIComponent(options.adminToken) : "");
     document.body.appendChild(script);
   }
 
@@ -643,7 +716,7 @@
       return;
     }
     types.forEach(function (type) {
-      fetchType(type, function (err, list, demo) {
+      fetchType(type, options, function (err, list, demo) {
         if (err) errors.push({ type: type, error: err });
         if (demo) usedDemo = true;
         byType[type] = list || [];
@@ -667,6 +740,101 @@
       body: JSON.stringify(data)
     }).then(function () {
       return { ok: true };
+    });
+  }
+
+  function getAdminToken() {
+    try {
+      return localStorage.getItem(ADMIN_TOKEN_KEY) || "";
+    } catch (err) {
+      return "";
+    }
+  }
+
+  function saveAdminToken(token) {
+    try {
+      localStorage.setItem(ADMIN_TOKEN_KEY, token || "");
+    } catch (err) {
+      return false;
+    }
+    return true;
+  }
+
+  function clearAdminToken() {
+    try {
+      localStorage.removeItem(ADMIN_TOKEN_KEY);
+    } catch (err) {}
+  }
+
+  function requireAdminToken(statusEl) {
+    var token = getAdminToken();
+    if (!hasBackend) return "";
+    if (!token) {
+      if (statusEl) statusEl.textContent = "Enter the admin token before using this admin action.";
+      return null;
+    }
+    return token;
+  }
+
+  function withAdminToken(data, statusEl) {
+    var token = requireAdminToken(statusEl);
+    if (token == null) return null;
+    var out = {};
+    Object.keys(data || {}).forEach(function (key) { out[key] = data[key]; });
+    if (token) out.adminToken = token;
+    return out;
+  }
+
+  function postAdminRecord(type, data, statusEl) {
+    var payload = withAdminToken(data, statusEl);
+    if (!payload) return Promise.reject(new Error("Missing admin token"));
+    return postRecord(type, payload);
+  }
+
+  function postAdminUpdateRecord(type, targetId, updates, statusEl) {
+    var payload = {};
+    Object.keys(updates || {}).forEach(function (key) { payload[key] = updates[key]; });
+    payload.adminOperation = "updateRecord";
+    payload.targetId = targetId;
+    return postAdminRecord(type, payload, statusEl);
+  }
+
+  function fetchPublicIcalFeed(url, statusEl) {
+    if (!hasBackend) return Promise.resolve({ ok: true, content: SAMPLE_ICS, demo: true });
+    var token = requireAdminToken(statusEl);
+    if (token == null) return Promise.reject(new Error("Missing admin token"));
+    return new Promise(function (resolve, reject) {
+      var cbName = "fb_ical_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
+      var script = document.createElement("script");
+      var done = false;
+      var timer = setTimeout(function () {
+        cleanup();
+        reject(new Error("Request timed out"));
+      }, 20000);
+
+      function cleanup() {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        try { delete window[cbName]; } catch (err) { window[cbName] = null; }
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+
+      window[cbName] = function (res) {
+        cleanup();
+        if (res && res.ok) resolve(res);
+        else reject(new Error(res && res.error || "Could not fetch iCal feed"));
+      };
+      script.onerror = function () {
+        cleanup();
+        reject(new Error("Network error"));
+      };
+      script.src = API + (API.indexOf("?") === -1 ? "?" : "&")
+        + "action=fetchIcal&url=" + encodeURIComponent(url)
+        + "&adminToken=" + encodeURIComponent(token)
+        + "&callback=" + encodeURIComponent(cbName)
+        + "&t=" + Date.now();
+      document.body.appendChild(script);
     });
   }
 
@@ -1435,6 +1603,104 @@
     });
   }
 
+  function eventTextKey(value) {
+    return toText(value).toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
+  }
+
+  function eventCityKey(event) {
+    return eventTextKey(normalizeEventCity(event && event.city) || event && event.city || event && event.location || "");
+  }
+
+  function eventSourceKey(event) {
+    return eventTextKey(event && event.sourcePlatform || "");
+  }
+
+  function eventFingerprint(event) {
+    var title = eventTextKey(event && event.title);
+    var date = normalizeDate(event && event.date);
+    var city = eventCityKey(event);
+    if (!title || !date) return "";
+    return [title, date, city].join("|");
+  }
+
+  function eventDuplicateInfo(event, existingEvents) {
+    event = event || {};
+    existingEvents = existingEvents || [];
+    var externalId = eventTextKey(event.sourceEventId);
+    var platform = eventSourceKey(event);
+    var fingerprint = eventFingerprint(event);
+    for (var i = 0; i < existingEvents.length; i++) {
+      var existing = existingEvents[i] || {};
+      if (moderationValue(existing) === "archived" || moderationValue(existing) === "deleted") continue;
+      if (externalId && eventTextKey(existing.sourceEventId) === externalId) {
+        var existingPlatform = eventSourceKey(existing);
+        if (!platform || !existingPlatform || platform === existingPlatform) {
+          return {
+            kind: "sourceEventId",
+            message: "Matches existing source event ID",
+            matchId: existing._id || existing.id || "",
+            matchTitle: existing._title || existing.title || "Existing event"
+          };
+        }
+      }
+      if (fingerprint && eventFingerprint(existing) === fingerprint) {
+        return {
+          kind: "fingerprint",
+          message: "Same title, date, and city as an existing event",
+          matchId: existing._id || existing.id || "",
+          matchTitle: existing._title || existing.title || "Existing event"
+        };
+      }
+    }
+    return null;
+  }
+
+  function annotateEventDrafts(drafts, existingEvents) {
+    var seen = {};
+    return (drafts || []).map(function (event) {
+      var duplicate = eventDuplicateInfo(event, existingEvents);
+      var fingerprint = eventFingerprint(event);
+      if (!duplicate && fingerprint && seen[fingerprint]) {
+        duplicate = {
+          kind: "previewBatch",
+          message: "Duplicate within this preview batch",
+          matchId: "",
+          matchTitle: seen[fingerprint]
+        };
+      }
+      if (fingerprint && !seen[fingerprint]) seen[fingerprint] = event.title || "Earlier preview event";
+      event._duplicate = duplicate;
+      event._include = !duplicate;
+      return event;
+    });
+  }
+
+  function todayStart() {
+    var now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }
+
+  function eventAgeDays(event) {
+    var date = normalizeDate(event && event.date);
+    if (!date) return null;
+    var parts = date.split("-");
+    if (parts.length !== 3) return null;
+    var eventDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    if (isNaN(eventDate.getTime())) return null;
+    return Math.floor((todayStart().getTime() - eventDate.getTime()) / 86400000);
+  }
+
+  function expiredEventCandidates(events, olderThanDays) {
+    olderThanDays = Math.max(0, Number(olderThanDays || 0));
+    return (events || []).filter(function (event) {
+      if (["archived", "deleted", "hidden", "rejected"].indexOf(moderationValue(event)) !== -1) return false;
+      var age = eventAgeDays(event);
+      return age != null && age > olderThanDays;
+    }).sort(function (a, b) {
+      return toText(a.date).localeCompare(toText(b.date));
+    });
+  }
+
   function draftField(name, value, type) {
     return '<input type="' + esc(type || "text") + '" data-import-field="' + esc(name) + '" value="' + esc(value || "") + '" />';
   }
@@ -1451,8 +1717,10 @@
         '<button class="btn" type="button" data-event-import-publish>Publish selected</button>' +
       "</div>" +
       drafts.map(function (event, i) {
-        return '<article class="event-import-card" data-import-index="' + i + '">' +
-          '<label class="event-import-card__include"><input type="checkbox" data-import-include checked /> Include</label>' +
+        var duplicate = event._duplicate;
+        return '<article class="event-import-card' + (duplicate ? " event-import-card--duplicate" : "") + '" data-import-index="' + i + '" data-imported-from="' + esc(event.importedFromSourceId || "") + '" data-duplicate-id="' + esc(duplicate && duplicate.matchId || "") + '">' +
+          '<label class="event-import-card__include"><input type="checkbox" data-import-include' + (event._include !== false ? " checked" : "") + " /> Include</label>" +
+          (duplicate ? '<div class="event-import-card__warning"><strong>Possible duplicate:</strong> ' + esc(duplicate.message) + (duplicate.matchTitle ? " · " + esc(duplicate.matchTitle) : "") + "</div>" : "") +
           '<div class="event-import-card__grid">' +
             '<label class="field"><span class="field__label">Title</span>' + draftField("title", event.title) + "</label>" +
             '<label class="field"><span class="field__label">Host</span>' + draftField("host", event.host) + "</label>" +
@@ -1482,6 +1750,7 @@
       });
       event._include = !!(card.querySelector("[data-import-include]") && card.querySelector("[data-import-include]").checked);
       event.importedFromSourceId = card.getAttribute("data-imported-from") || "";
+      event._duplicateMatchId = card.getAttribute("data-duplicate-id") || "";
       event.importStatus = "Imported";
       return event;
     });
@@ -1507,6 +1776,98 @@
       importedFromSourceId: source._id,
       importStatus: "Imported"
     };
+  }
+
+  function renderEventCleanup(el, events) {
+    if (!el) return;
+    if (!events.length) {
+      el.innerHTML = emptyHTML("No expired public events match the current cleanup window.");
+      return;
+    }
+    el.innerHTML = events.map(function (event, i) {
+      var age = eventAgeDays(event);
+      return '<article class="event-import-card event-cleanup-card" data-cleanup-index="' + i + '" data-event-id="' + esc(event._id || event.id || "") + '">' +
+        '<label class="event-import-card__include"><input type="checkbox" data-cleanup-include checked /> Archive</label>' +
+        '<div class="event-cleanup-card__body">' +
+          '<h3 class="platform-card__title">' + esc(event._title || event.title || "Untitled event") + "</h3>" +
+          '<p class="platform-card__meta">' + esc([event.date, event.time, event.city, event.sourcePlatform].filter(Boolean).join(" · ")) + "</p>" +
+          (event.sourceName ? '<p class="platform-card__body">Source: ' + esc(event.sourceName) + "</p>" : "") +
+          '<div class="tags"><span class="tag">' + esc(age + " days old") + "</span>" + (event.importStatus ? '<span class="tag">' + esc(event.importStatus) + "</span>" : "") + "</div>" +
+        "</div>" +
+      "</article>";
+    }).join("");
+  }
+
+  function collectCleanupSelection(el, events) {
+    if (!el) return [];
+    return Array.prototype.map.call(el.querySelectorAll("[data-cleanup-index]"), function (card) {
+      var include = !!(card.querySelector("[data-cleanup-include]") && card.querySelector("[data-cleanup-include]").checked);
+      return include ? events[Number(card.getAttribute("data-cleanup-index"))] : null;
+    }).filter(Boolean);
+  }
+
+  function providerGuideHTML(guide) {
+    return '<article class="platform-card provider-guide-card">' +
+      '<div class="platform-card__top">' +
+        '<div class="platform-card__icon">API</div>' +
+        '<div>' +
+          '<p class="platform-card__label">Provider connector</p>' +
+          '<h3 class="platform-card__title">' + esc(guide.platform) + "</h3>" +
+          '<p class="platform-card__meta">' + esc(guide.auth) + "</p>" +
+        "</div>" +
+      "</div>" +
+      '<p class="platform-card__body">' + esc(guide.note) + "</p>" +
+      '<div class="source-review-summary__grid">' +
+        '<div><p class="source-review-summary__label">Endpoint</p><strong>' + esc(guide.endpoint) + "</strong></div>" +
+        '<div><p class="source-review-summary__label">Scope</p><strong>' + esc(guide.scope) + "</strong></div>" +
+      "</div>" +
+      '<div class="platform-card__actions"><a class="mini-btn" href="' + esc(guide.docs) + '" target="_blank" rel="noopener noreferrer">Docs</a></div>' +
+    "</article>";
+  }
+
+  function renderProviderGuides(el) {
+    if (!el) return;
+    el.innerHTML = EVENT_PROVIDER_GUIDES.map(providerGuideHTML).join("");
+  }
+
+  function providerGuideFor(platform) {
+    var key = eventTextKey(platform);
+    return EVENT_PROVIDER_GUIDES.filter(function (guide) {
+      return eventTextKey(guide.platform) === key;
+    })[0] || EVENT_PROVIDER_GUIDES[0];
+  }
+
+  function populateEventProviderSources(selectEl, sources) {
+    if (!selectEl) return;
+    if (!sources.length) {
+      selectEl.innerHTML = '<option value="">No event sources available</option>';
+      selectEl.disabled = true;
+      return;
+    }
+    selectEl.disabled = false;
+    selectEl.innerHTML = '<option value="">Select event source...</option>' + sources.map(function (source) {
+      return '<option value="' + esc(source._key) + '">' + esc(source._title) + " · " + esc(source.platform || "Source") + "</option>";
+    }).join("");
+  }
+
+  function fillProviderFormFromSource(source, fields) {
+    if (!source || !fields) return;
+    if (fields.providerSelect) fields.providerSelect.value = source.platform || fields.providerSelect.value;
+    var guide = providerGuideFor(source.platform || fields.providerSelect && fields.providerSelect.value);
+    if (fields.connectorStatus) fields.connectorStatus.value = source.connectorStatus || source.syncStatus || "Needs secure setup";
+    if (fields.oauthStatus) fields.oauthStatus.value = source.oauthStatus || (eventSourceNeedsSecret(source) ? "Organizer authorization requested" : "No secret required");
+    if (fields.accountId) fields.accountId.value = source.providerAccountId || "";
+    if (fields.calendarId) fields.calendarId.value = source.providerCalendarId || "";
+    if (fields.organizationId) fields.organizationId.value = source.providerOrganizationId || "";
+    if (fields.endpoint) fields.endpoint.value = source.providerEndpoint || guide.endpoint || "";
+    if (fields.scope) fields.scope.value = source.providerScope || guide.scope || "";
+    if (fields.notes) {
+      fields.notes.value = source.providerNotes || [
+        "Provider: " + (source.platform || guide.platform),
+        "Credential handling: " + guide.auth,
+        "Do not paste tokens or API keys into this form. Store them in Apps Script Properties."
+      ].join("\n");
+    }
   }
 
   function cardHTML(record) {
@@ -1911,6 +2272,10 @@
   }
 
   function initAdmin() {
+    var adminTokenInput = document.getElementById("adminTokenInput");
+    var adminTokenSave = document.getElementById("adminTokenSave");
+    var adminTokenClear = document.getElementById("adminTokenClear");
+    var adminAuthStatus = document.getElementById("adminAuthStatus");
     var sourceEl = document.getElementById("eventSourceQueue");
     var sourceReviewForm = document.getElementById("eventSourceReviewForm");
     var sourceReviewSummary = document.getElementById("eventSourceReviewSummary");
@@ -1922,32 +2287,141 @@
     var importDefaultCategory = document.getElementById("eventImportDefaultCategory");
     var importEmail = document.getElementById("eventImportEmail");
     var importHost = document.getElementById("eventImportHost");
+    var importIcalUrl = document.getElementById("eventImportIcalUrl");
     var importRawData = document.getElementById("eventImportRawData");
     var importPreview = document.getElementById("eventImportPreview");
     var importStatus = document.getElementById("eventImportStatus");
+    var importFetchIcalBtn = document.getElementById("eventImportFetchIcalBtn");
     var importClearBtn = document.getElementById("eventImportClearBtn");
+    var cleanupDays = document.getElementById("eventCleanupDays");
+    var cleanupAdminEmail = document.getElementById("eventCleanupAdminEmail");
+    var cleanupRefreshBtn = document.getElementById("eventCleanupRefreshBtn");
+    var cleanupArchiveBtn = document.getElementById("eventCleanupArchiveBtn");
+    var cleanupList = document.getElementById("eventCleanupList");
+    var cleanupStatus = document.getElementById("eventCleanupStatus");
+    var providerGuides = document.getElementById("eventProviderGuides");
+    var providerForm = document.getElementById("eventProviderForm");
+    var providerSourceSelect = document.getElementById("eventProviderSourceSelect");
+    var providerSelect = document.getElementById("eventProviderSelect");
+    var providerConnectorStatus = document.getElementById("eventProviderConnectorStatus");
+    var providerOauthStatus = document.getElementById("eventProviderOauthStatus");
+    var providerAccountId = document.getElementById("eventProviderAccountId");
+    var providerCalendarId = document.getElementById("eventProviderCalendarId");
+    var providerOrganizationId = document.getElementById("eventProviderOrganizationId");
+    var providerEndpoint = document.getElementById("eventProviderEndpoint");
+    var providerScope = document.getElementById("eventProviderScope");
+    var providerAdminEmail = document.getElementById("eventProviderAdminEmail");
+    var providerNotes = document.getElementById("eventProviderNotes");
+    var providerSubmit = document.getElementById("eventProviderSubmit");
+    var providerStatus = document.getElementById("eventProviderStatus");
     var reportEl = document.getElementById("reportQueue");
     var pendingEl = document.getElementById("pendingQueue");
     var actionForm = document.getElementById("adminActionForm");
     var eventSources = [];
     var adminActions = [];
+    var existingEvents = [];
+    var cleanupCandidates = [];
     var importableSources = [];
     var selectedEventSource = null;
     var importDrafts = [];
 
     setReviewFormEnabled(sourceReviewForm, false);
+    renderProviderGuides(providerGuides);
+    initAdminAuth();
+    loadAdminData();
 
-    fetchAll({ types: CONTENT_TYPES.concat(["eventSource", "report", "account", "savedItem", "adminAction", "conciergeRequest"]) }, function (data) {
-      eventSources = data.byType.eventSource || [];
-      adminActions = data.byType.adminAction || [];
-      importableSources = populateEventImportSources(importSourceSelect, eventSources, adminActions);
-      renderEventSourceQueue(sourceEl, eventSources, selectedEventSource && selectedEventSource._key);
-      renderCards(reportEl, data.byType.report || [], "No reports have been submitted.");
-      var pending = data.all.filter(function (record) {
-        return ["pending review", "flagged"].indexOf(moderationValue(record)) !== -1;
+    function sayAdminAuth(message) {
+      if (adminAuthStatus) adminAuthStatus.textContent = message || "";
+    }
+
+    function initAdminAuth() {
+      if (adminTokenInput) adminTokenInput.value = getAdminToken();
+      sayAdminAuth(hasBackend
+        ? (getAdminToken() ? "Admin token saved on this device." : "Token required for private queues and admin writes.")
+        : "Demo mode. Admin token is not required locally.");
+      if (adminTokenSave) {
+        adminTokenSave.addEventListener("click", function () {
+          saveAdminToken(adminTokenInput && adminTokenInput.value.trim() || "");
+          sayAdminAuth(getAdminToken() ? "Admin token saved on this device." : "Paste a token before saving.");
+          loadAdminData();
+        });
+      }
+      if (adminTokenClear) {
+        adminTokenClear.addEventListener("click", function () {
+          clearAdminToken();
+          if (adminTokenInput) adminTokenInput.value = "";
+          sayAdminAuth("Admin token cleared from this device.");
+          loadAdminData();
+        });
+      }
+    }
+
+    function renderLockedAdmin() {
+      selectedEventSource = null;
+      setReviewFormEnabled(sourceReviewForm, false);
+      renderSelectedEventSource(null, sourceReviewSummary);
+      if (sourceReviewSubmit) sourceReviewSubmit.disabled = true;
+      renderEventSourceQueue(sourceEl, [], null);
+      renderCards(reportEl, [], "Enter the admin token to load private reports.");
+      renderCards(pendingEl, [], "Enter the admin token to load pending records.");
+      populateEventImportSources(importSourceSelect, [], []);
+      populateEventProviderSources(providerSourceSelect, []);
+      existingEvents = [];
+      cleanupCandidates = [];
+      renderEventCleanup(cleanupList, []);
+      if (sourceEl) sourceEl.innerHTML = emptyHTML("Enter the admin token to load event source requests.");
+      if (importStatus) importStatus.textContent = "Admin token required before importing external events.";
+    }
+
+    function refreshCleanup() {
+      cleanupCandidates = expiredEventCandidates(existingEvents, cleanupDays && cleanupDays.value || 7);
+      renderEventCleanup(cleanupList, cleanupCandidates);
+      if (cleanupStatus) cleanupStatus.textContent = cleanupCandidates.length
+        ? cleanupCandidates.length + " expired event" + (cleanupCandidates.length === 1 ? "" : "s") + " ready for review."
+        : "No expired events match this cleanup window.";
+    }
+
+    function loadAdminData() {
+      var adminToken = getAdminToken();
+      if (hasBackend && !adminToken) {
+        renderLockedAdmin();
+        return;
+      }
+      fetchAll({
+        types: CONTENT_TYPES.concat(["eventSource", "report", "account", "savedItem", "adminAction", "conciergeRequest"]),
+        adminToken: adminToken
+      }, function (data) {
+        var privateReadFailed = hasBackend && (data.errors || []).some(function (entry) {
+          return ["eventSource", "report", "account", "savedItem", "adminAction", "conciergeRequest"].indexOf(entry.type) !== -1;
+        });
+        if (privateReadFailed) {
+          sayAdminAuth("Could not load private admin queues. Check the token configured in Apps Script.");
+          selectedEventSource = null;
+          setReviewFormEnabled(sourceReviewForm, false);
+          renderSelectedEventSource(null, sourceReviewSummary);
+          if (sourceReviewSubmit) sourceReviewSubmit.disabled = true;
+          data.byType.eventSource = [];
+          data.byType.report = [];
+          data.byType.account = [];
+          data.byType.savedItem = [];
+          data.byType.adminAction = [];
+          data.byType.conciergeRequest = [];
+          data.all = (data.byType.event || []).slice();
+        }
+        eventSources = data.byType.eventSource || [];
+        adminActions = data.byType.adminAction || [];
+        existingEvents = data.byType.event || [];
+        importableSources = populateEventImportSources(importSourceSelect, eventSources, adminActions);
+        populateEventProviderSources(providerSourceSelect, eventSources);
+        renderEventSourceQueue(sourceEl, eventSources, selectedEventSource && selectedEventSource._key);
+        renderCards(reportEl, data.byType.report || [], "No reports have been submitted.");
+        var pending = data.all.filter(function (record) {
+          return ["pending review", "flagged"].indexOf(moderationValue(record)) !== -1;
+        });
+        renderCards(pendingEl, pending, "No records are currently marked pending review or flagged.");
+        refreshCleanup();
       });
-      renderCards(pendingEl, pending, "No records are currently marked pending review or flagged.");
-    });
+    }
 
     if (sourceEl) {
       sourceEl.addEventListener("click", function (e) {
@@ -1987,8 +2461,8 @@
           sourceReviewSubmit.disabled = true;
           sourceReviewSubmit.textContent = "Recording...";
         }
-        postRecord("adminAction", formData).then(function () {
-          if (sourceReviewStatus) sourceReviewStatus.textContent = "Source review recorded in Admin Actions.";
+        postAdminRecord("adminAction", formData, sourceReviewStatus).then(function () {
+          if (sourceReviewStatus) sourceReviewStatus.textContent = "Source review sent to Admin Actions.";
           var localAction = {};
           Object.keys(formData).forEach(function (key) { localAction[key] = formData[key]; });
           localAction.timestamp = new Date().toISOString();
@@ -2024,7 +2498,38 @@
         var source = selectedImportSource();
         if (importEmail && source && !importEmail.value) importEmail.value = source.organizerEmail || "";
         if (importHost && source && !importHost.value) importHost.value = source.sourceName || "";
-        sayImport(source ? "Source selected. Paste event data to preview imports." : "");
+        if (importIcalUrl && source && !importIcalUrl.value) importIcalUrl.value = source.feedUrl || source.sourceUrl || "";
+        sayImport(source ? "Source selected. Paste event data or fetch a public iCal feed to preview imports." : "");
+      });
+    }
+
+    if (importFetchIcalBtn) {
+      importFetchIcalBtn.addEventListener("click", function () {
+        var source = selectedImportSource();
+        if (!source) {
+          sayImport("Select an approved event source before fetching a feed.");
+          return;
+        }
+        var url = importIcalUrl && importIcalUrl.value.trim() || source.feedUrl || source.sourceUrl || "";
+        if (!url) {
+          sayImport("Add a public iCal feed URL before fetching.");
+          return;
+        }
+        importFetchIcalBtn.disabled = true;
+        importFetchIcalBtn.textContent = "Fetching...";
+        fetchPublicIcalFeed(url, importStatus).then(function (res) {
+          if (importRawData) importRawData.value = res.content || "";
+          if (importForm) importForm.dispatchEvent(new Event("submit"));
+          sayImport(res.demo
+            ? "Demo iCal loaded. Review the sample event before publishing."
+            : "Feed fetched. Review parsed events before publishing.");
+          importFetchIcalBtn.disabled = false;
+          importFetchIcalBtn.textContent = "Fetch iCal feed";
+        }).catch(function (err) {
+          sayImport(err && err.message || "Could not fetch that iCal feed.");
+          importFetchIcalBtn.disabled = false;
+          importFetchIcalBtn.textContent = "Fetch iCal feed";
+        });
       });
     }
 
@@ -2047,10 +2552,11 @@
           email: importEmail && importEmail.value,
           host: importHost && importHost.value
         };
-        importDrafts = parseEventImportInput(raw, source, defaults);
+        importDrafts = annotateEventDrafts(parseEventImportInput(raw, source, defaults), existingEvents);
         renderEventImportPreview(importPreview, importDrafts);
+        var duplicateCount = importDrafts.filter(function (event) { return !!event._duplicate; }).length;
         sayImport(importDrafts.length
-          ? importDrafts.length + " event" + (importDrafts.length === 1 ? "" : "s") + " parsed. Review before publishing."
+          ? importDrafts.length + " event" + (importDrafts.length === 1 ? "" : "s") + " parsed. " + duplicateCount + " possible duplicate" + (duplicateCount === 1 ? "" : "s") + " unchecked."
           : "No events could be parsed. Try iCal VEVENT data, JSON, CSV headers, or labeled event blocks.");
       });
     }
@@ -2089,12 +2595,19 @@
           sayImport("Each selected event needs a title, date, and valid contact email before publishing.");
           return;
         }
+        var selectedDuplicates = selected.map(function (event) {
+          return eventDuplicateInfo(event, existingEvents);
+        }).filter(Boolean);
+        if (selectedDuplicates.length) {
+          sayImport(selectedDuplicates.length + " selected event" + (selectedDuplicates.length === 1 ? "" : "s") + " appear to already exist. Uncheck duplicates before publishing.");
+          return;
+        }
         publishBtn.disabled = true;
         publishBtn.textContent = "Publishing...";
         selected.reduce(function (chain, event) {
-          return chain.then(function () { return postRecord("event", event); });
+          return chain.then(function () { return postAdminRecord("event", event, importStatus); });
         }, Promise.resolve()).then(function () {
-          return postRecord("adminAction", {
+          return postAdminRecord("adminAction", {
             targetType: "eventSource",
             targetId: source._id,
             targetTitle: source._title,
@@ -2104,16 +2617,177 @@
             sourceUrl: source.sourceUrl || "",
             feedUrl: source.feedUrl || "",
             organizerEmail: source.organizerEmail || "",
-            importCount: String(selected.length)
-          });
+            importCount: String(selected.length),
+            duplicateCount: String(importDrafts.filter(function (event) { return !!event._duplicate; }).length)
+          }, importStatus);
         }).then(function () {
+          existingEvents = selected.map(function (event) {
+            event.id = event.id || "local-import-" + Date.now() + "-" + Math.random().toString(36).slice(2, 6);
+            return normalizeRecord("event", event);
+          }).concat(existingEvents);
           sayImport("Published " + selected.length + " event" + (selected.length === 1 ? "" : "s") + " to the public calendar.");
+          refreshCleanup();
           publishBtn.disabled = false;
           publishBtn.textContent = "Publish selected";
         }).catch(function () {
-          sayImport("Could not publish the selected events. Try again.");
+          sayImport("Could not publish the selected events. Check the admin token and try again.");
           publishBtn.disabled = false;
           publishBtn.textContent = "Publish selected";
+        });
+      });
+    }
+
+    if (cleanupRefreshBtn) {
+      cleanupRefreshBtn.addEventListener("click", refreshCleanup);
+    }
+
+    if (cleanupArchiveBtn) {
+      cleanupArchiveBtn.addEventListener("click", function () {
+        var selected = collectCleanupSelection(cleanupList, cleanupCandidates);
+        if (!selected.length) {
+          if (cleanupStatus) cleanupStatus.textContent = "Select at least one expired event to archive.";
+          return;
+        }
+        cleanupArchiveBtn.disabled = true;
+        cleanupArchiveBtn.textContent = "Archiving...";
+        var now = new Date().toISOString();
+        selected.reduce(function (chain, event) {
+          return chain.then(function () {
+            return postAdminUpdateRecord("event", event._id || event.id, {
+              moderationStatus: "Archived",
+              importStatus: "Archived",
+              lastUpdated: now
+            }, cleanupStatus);
+          });
+        }, Promise.resolve()).then(function () {
+          return postAdminRecord("adminAction", {
+            targetType: "event",
+            targetId: selected.map(function (event) { return event._id || event.id; }).join(", "),
+            targetTitle: "Expired event cleanup",
+            action: "Archived expired events",
+            notes: "Archived " + selected.length + " expired event(s) from the public calendar.",
+            adminEmail: cleanupAdminEmail && cleanupAdminEmail.value.trim() || "",
+            archivedCount: String(selected.length)
+          }, cleanupStatus);
+        }).then(function () {
+          var selectedIds = {};
+          selected.forEach(function (event) { selectedIds[event._id || event.id] = true; });
+          existingEvents.forEach(function (event) {
+            if (selectedIds[event._id || event.id]) {
+              event.moderationStatus = "Archived";
+              event.importStatus = "Archived";
+            }
+          });
+          refreshCleanup();
+          if (cleanupStatus) cleanupStatus.textContent = "Archived " + selected.length + " expired event" + (selected.length === 1 ? "" : "s") + ".";
+          cleanupArchiveBtn.disabled = false;
+          cleanupArchiveBtn.textContent = "Archive selected";
+        }).catch(function () {
+          if (cleanupStatus) cleanupStatus.textContent = "Could not archive events. Check the admin token and try again.";
+          cleanupArchiveBtn.disabled = false;
+          cleanupArchiveBtn.textContent = "Archive selected";
+        });
+      });
+    }
+
+    function selectedProviderSource() {
+      var key = providerSourceSelect && providerSourceSelect.value;
+      return eventSources.filter(function (source) {
+        return source._key === key;
+      })[0] || null;
+    }
+
+    function providerFields() {
+      return {
+        providerSelect: providerSelect,
+        connectorStatus: providerConnectorStatus,
+        oauthStatus: providerOauthStatus,
+        accountId: providerAccountId,
+        calendarId: providerCalendarId,
+        organizationId: providerOrganizationId,
+        endpoint: providerEndpoint,
+        scope: providerScope,
+        notes: providerNotes
+      };
+    }
+
+    if (providerSourceSelect) {
+      providerSourceSelect.addEventListener("change", function () {
+        fillProviderFormFromSource(selectedProviderSource(), providerFields());
+        if (providerStatus) providerStatus.textContent = selectedProviderSource()
+          ? "Source selected. Record connector state after credentials are handled securely."
+          : "";
+      });
+    }
+
+    if (providerSelect) {
+      providerSelect.addEventListener("change", function () {
+        var guide = providerGuideFor(providerSelect.value);
+        if (providerEndpoint && !providerEndpoint.value) providerEndpoint.value = guide.endpoint || "";
+        if (providerScope && !providerScope.value) providerScope.value = guide.scope || "";
+        if (providerNotes && !providerNotes.value) {
+          providerNotes.value = "Provider: " + guide.platform + "\nCredential handling: " + guide.auth + "\nDo not paste tokens or API keys into this form.";
+        }
+      });
+    }
+
+    if (providerForm) {
+      providerForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var source = selectedProviderSource();
+        if (!source) {
+          if (providerStatus) providerStatus.textContent = "Select an event source before recording connector setup.";
+          return;
+        }
+        var provider = providerSelect && providerSelect.value || source.platform || "";
+        var now = new Date().toISOString();
+        var updates = {
+          providerAccountId: providerAccountId && providerAccountId.value.trim() || "",
+          providerCalendarId: providerCalendarId && providerCalendarId.value.trim() || "",
+          providerOrganizationId: providerOrganizationId && providerOrganizationId.value.trim() || "",
+          providerEndpoint: providerEndpoint && providerEndpoint.value.trim() || "",
+          providerScope: providerScope && providerScope.value.trim() || "",
+          connectorStatus: providerConnectorStatus && providerConnectorStatus.value || "",
+          oauthStatus: providerOauthStatus && providerOauthStatus.value || "",
+          lastProviderSyncAt: "",
+          lastChecked: now,
+          providerNotes: providerNotes && providerNotes.value.trim() || "",
+          notes: providerNotes && providerNotes.value.trim() || source.notes || ""
+        };
+        if (updates.connectorStatus === "Active") updates.syncStatus = "Active";
+        if (providerSubmit) {
+          providerSubmit.disabled = true;
+          providerSubmit.textContent = "Recording...";
+        }
+        postAdminUpdateRecord("eventSource", source._id, updates, providerStatus).then(function () {
+          return postAdminRecord("adminAction", {
+            targetType: "eventSource",
+            targetId: source._id,
+            targetTitle: source._title,
+            action: "Configured provider connector",
+            notes: updates.providerNotes || "Provider connector state recorded.",
+            adminEmail: providerAdminEmail && providerAdminEmail.value.trim() || "",
+            sourcePlatform: provider,
+            sourceUrl: source.sourceUrl || "",
+            feedUrl: source.feedUrl || "",
+            organizerEmail: source.organizerEmail || "",
+            provider: provider,
+            providerOperation: updates.connectorStatus || "Connector setup recorded"
+          }, providerStatus);
+        }).then(function () {
+          Object.keys(updates).forEach(function (key) { source[key] = updates[key]; });
+          source.platform = source.platform || provider;
+          if (providerStatus) providerStatus.textContent = "Connector setup sent. Store or rotate any credentials only in Apps Script Properties.";
+          if (providerSubmit) {
+            providerSubmit.disabled = false;
+            providerSubmit.textContent = "Record connector setup";
+          }
+        }).catch(function () {
+          if (providerStatus) providerStatus.textContent = "Could not record connector setup. Check the admin token and try again.";
+          if (providerSubmit) {
+            providerSubmit.disabled = false;
+            providerSubmit.textContent = "Record connector setup";
+          }
         });
       });
     }
@@ -2125,10 +2799,13 @@
         Array.prototype.forEach.call(actionForm.elements, function (el) {
           if (el.name) formData[el.name] = el.value.trim();
         });
-        postRecord("adminAction", formData).then(function () {
+        postAdminRecord("adminAction", formData, document.getElementById("adminActionStatus")).then(function () {
           actionForm.reset();
           var status = document.getElementById("adminActionStatus");
-          if (status) status.textContent = "Action note recorded.";
+          if (status) status.textContent = "Action note sent.";
+        }).catch(function () {
+          var status = document.getElementById("adminActionStatus");
+          if (status) status.textContent = "Enter the admin token before recording an action.";
         });
       });
     }

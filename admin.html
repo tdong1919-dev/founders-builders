@@ -39,19 +39,32 @@
         <a class="back-link" href="dashboard.html">Back to dashboard</a>
         <span class="kicker">Trust infrastructure</span>
         <h1 class="platform-hero__title">Moderation before scale.</h1>
-        <p class="platform-hero__sub">A Sheets-first admin surface for reports, pending review, verification notes, seed-content policy, and funding/investor caution. Secure role-based admin can be added later without throwing this workflow away.</p>
+        <p class="platform-hero__sub">A Sheets-first admin surface for reports, event-source imports, moderation notes, seed-content policy, and funding/investor caution. Protected admin actions use the Apps Script admin token while the public site stays lightweight.</p>
       </div>
     </section>
 
     <section class="container platform-shell">
       <aside class="platform-sidebar">
+        <div class="platform-panel">
+          <h2 class="platform-panel__title">Admin access</h2>
+          <p class="platform-panel__copy">Enter the admin token configured in Apps Script to load private queues and publish imported events.</p>
+          <label class="field">
+            <span class="field__label">Admin token</span>
+            <input id="adminTokenInput" type="password" autocomplete="current-password" placeholder="Paste token" />
+          </label>
+          <div class="platform-card__actions">
+            <button class="mini-btn" type="button" id="adminTokenSave">Save</button>
+            <button class="mini-btn" type="button" id="adminTokenClear">Clear</button>
+          </div>
+          <p class="form-status" id="adminAuthStatus" role="status" aria-live="polite"></p>
+        </div>
         <div class="platform-panel platform-panel--gold">
           <h2 class="platform-panel__title">Funding disclaimer</h2>
           <p class="platform-panel__copy">Funding and investor records are discovery surfaces only. They are not investment advice, recommendations, offers to sell securities, legal advice, tax advice, or diligence.</p>
         </div>
         <div class="platform-panel">
           <h2 class="platform-panel__title">Admin model</h2>
-          <p class="platform-panel__copy">Reports and action notes are append-only records. Content hiding is controlled by moderation fields in the Sheet until a secure admin auth layer exists.</p>
+          <p class="platform-panel__copy">Private queues and admin writes require the Apps Script admin token. Public member submissions still use the existing lightweight forms.</p>
         </div>
         <div class="platform-panel">
           <h2 class="platform-panel__title">Event source rule</h2>
@@ -85,7 +98,7 @@
             </div>
           </div>
           <div class="notice">
-            <p>This review records an audit note. Until secure admin auth exists, update the Event Sources row in Sheets after review instead of letting the public web app mutate it directly.</p>
+            <p>This review records an audit note. Use the admin token before recording decisions, publishing imports, or updating source rows.</p>
           </div>
           <div class="source-review-summary" id="eventSourceReviewSummary">
             <p>Select an event source request above to start a review.</p>
@@ -224,17 +237,129 @@
                 <input id="eventImportHost" placeholder="Uses source name when blank" />
               </label>
               <label class="field field--full">
+                <span class="field__label">Public iCal feed URL</span>
+                <input id="eventImportIcalUrl" type="url" placeholder="https://example.com/calendar.ics" />
+              </label>
+              <label class="field field--full">
                 <span class="field__label">Paste event data</span>
                 <textarea id="eventImportRawData" rows="10" placeholder="Paste VEVENT/iCal text, a JSON array of events, CSV with headers, or blocks like:&#10;Title: Founder Coffee&#10;Date: 2026-09-12&#10;Time: 8:30 AM&#10;Location: Downtown&#10;RSVP: https://..."></textarea>
               </label>
             </div>
             <div class="platform-card__actions">
+              <button class="btn btn--secondary" type="button" id="eventImportFetchIcalBtn">Fetch iCal feed</button>
               <button class="btn" type="submit" id="eventImportParseBtn">Preview events</button>
               <button class="btn btn--secondary" type="button" id="eventImportClearBtn">Clear preview</button>
             </div>
             <p class="form-status" id="eventImportStatus" role="status" aria-live="polite"></p>
           </form>
           <div class="event-import-preview" id="eventImportPreview"></div>
+        </section>
+
+        <section class="platform-section" id="eventCleanupSection">
+          <div class="platform-section__head">
+            <div>
+              <h2 class="platform-section__title">Event expiration cleanup</h2>
+              <p class="platform-section__desc">Archive stale calendar rows so old imports do not stay visible forever.</p>
+            </div>
+          </div>
+          <div class="field-grid">
+            <label class="field">
+              <span class="field__label">Archive events older than</span>
+              <input id="eventCleanupDays" type="number" min="0" step="1" value="7" />
+            </label>
+            <label class="field">
+              <span class="field__label">Admin email</span>
+              <input id="eventCleanupAdminEmail" type="email" placeholder="admin@example.com" />
+            </label>
+          </div>
+          <div class="platform-card__actions">
+            <button class="btn btn--secondary" type="button" id="eventCleanupRefreshBtn">Refresh expired events</button>
+            <button class="btn" type="button" id="eventCleanupArchiveBtn">Archive selected</button>
+          </div>
+          <p class="form-status" id="eventCleanupStatus" role="status" aria-live="polite"></p>
+          <div class="event-import-preview" id="eventCleanupList"></div>
+        </section>
+
+        <section class="platform-section" id="eventProviderSection">
+          <div class="platform-section__head">
+            <div>
+              <h2 class="platform-section__title">Provider connector setup</h2>
+              <p class="platform-section__desc">Track OAuth/API readiness for Luma, Meetup, Eventbrite, Partiful, public iCal, and future providers without storing secrets in Sheets.</p>
+            </div>
+          </div>
+          <div class="platform-grid platform-grid--two" id="eventProviderGuides"></div>
+          <form class="compact-form" id="eventProviderForm">
+            <div class="field-grid">
+              <label class="field field--full">
+                <span class="field__label">Event source</span>
+                <select id="eventProviderSourceSelect" disabled>
+                  <option value="">Load event sources...</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Provider</span>
+                <select id="eventProviderSelect">
+                  <option>Luma</option>
+                  <option>Meetup</option>
+                  <option>Eventbrite</option>
+                  <option>Partiful</option>
+                  <option>Google Calendar</option>
+                  <option>iCal feed</option>
+                  <option>Other website</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Connector status</span>
+                <select id="eventProviderConnectorStatus">
+                  <option>Needs secure setup</option>
+                  <option>Pending review</option>
+                  <option>Active</option>
+                  <option>Paused</option>
+                  <option>Error</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">OAuth/API status</span>
+                <select id="eventProviderOauthStatus">
+                  <option>Not configured</option>
+                  <option>Organizer authorization requested</option>
+                  <option>Credential stored in Apps Script Properties</option>
+                  <option>No secret required</option>
+                  <option>Revoked</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Provider account ID</span>
+                <input id="eventProviderAccountId" />
+              </label>
+              <label class="field">
+                <span class="field__label">Calendar ID</span>
+                <input id="eventProviderCalendarId" />
+              </label>
+              <label class="field">
+                <span class="field__label">Organization/group ID</span>
+                <input id="eventProviderOrganizationId" />
+              </label>
+              <label class="field">
+                <span class="field__label">Provider endpoint</span>
+                <input id="eventProviderEndpoint" />
+              </label>
+              <label class="field">
+                <span class="field__label">Scope</span>
+                <input id="eventProviderScope" placeholder="Read public/organizer events only" />
+              </label>
+              <label class="field">
+                <span class="field__label">Admin email</span>
+                <input id="eventProviderAdminEmail" type="email" placeholder="admin@example.com" />
+              </label>
+              <label class="field field--full">
+                <span class="field__label">Connector notes</span>
+                <textarea id="eventProviderNotes" rows="5"></textarea>
+              </label>
+            </div>
+            <button class="btn" type="submit" id="eventProviderSubmit">Record connector setup</button>
+            <p class="form-status" id="eventProviderStatus" role="status" aria-live="polite"></p>
+          </form>
         </section>
 
         <section class="platform-section">
@@ -293,6 +418,8 @@
                   <option>Event source rejected</option>
                   <option>Event source paused</option>
                   <option>Imported events from source</option>
+                  <option>Archived expired events</option>
+                  <option>Configured provider connector</option>
                 </select>
               </label>
               <label class="field field--full">
