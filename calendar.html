@@ -30,7 +30,7 @@
         <a href="funding.html">Funding</a>
         <a href="calendar.html" aria-current="page">Calendar</a>
       </nav>
-      <a href="add-event.html" class="btn btn--sm">Post an event</a>
+      <a href="add-event-source.html" class="btn btn--sm">Add event source</a>
       <button class="nav__toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
@@ -46,8 +46,9 @@
         <p class="hub-head__sub">
           Virtual and in-person events, workshops, meetups, hack nights, demo days,
           office hours, and pitch competitions — launching in Boise ID, Atlanta GA,
-          Washington DC, and Madison AL. Hosting on Eventbrite, Luma, or Meetup? Post it
-          here too — your RSVP link takes people straight there.
+          Washington DC, and Madison. Hosting on Eventbrite, Luma, Meetup, Partiful,
+          or another platform? Add the source once, keep RSVPs on the original site,
+          and let F&amp;B surface the right founder events.
         </p>
       </div>
     </section>
@@ -80,6 +81,18 @@
             <option>Virtual</option>
             <option>Other</option>
           </select>
+          <select id="sourceSelect" class="select-filter" aria-label="Filter by source">
+            <option value="">All sources</option>
+            <option value="Founders & Builders">F&amp;B posted</option>
+            <option>Luma</option>
+            <option>Eventbrite</option>
+            <option>Meetup</option>
+            <option>Partiful</option>
+            <option>Google Calendar</option>
+            <option>iCal feed</option>
+            <option>Other website</option>
+            <option>Other</option>
+          </select>
           <button class="chip is-active" id="viewList" data-view="list" type="button">List</button>
           <button class="chip" id="viewCalendar" data-view="calendar" type="button">Calendar</button>
         </div>
@@ -93,7 +106,10 @@
 
       <div class="empty" id="emptyState" hidden>
         <p>No events match that search yet.</p>
-        <a href="add-event.html" class="btn">Be the first — post an event</a>
+        <div class="hero__cta">
+          <a href="add-event.html" class="btn">Post an event</a>
+          <a href="add-event-source.html" class="btn btn--secondary">Add event source</a>
+        </div>
       </div>
 
       <div class="calendar-view" id="calendarView" hidden>
@@ -115,8 +131,11 @@
     <section class="hub-cta">
       <div class="container narrow center">
         <h2 class="section__title">Running an event?</h2>
-        <p class="lead">Post it so the community can find it and show up.</p>
-        <a href="add-event.html" class="btn btn--lg">Post an event</a>
+        <p class="lead">Post a single event, or add an approved external source for recurring founder events.</p>
+        <div class="hero__cta">
+          <a href="add-event.html" class="btn btn--lg">Post an event</a>
+          <a href="add-event-source.html" class="btn btn--lg btn--secondary">Add event source</a>
+        </div>
       </div>
     </section>
   </main>

@@ -196,6 +196,13 @@ Required: `title`, `email`
 | description | string | |
 | rsvpLink | string (URL) | Can point to Eventbrite, Luma, Meetup, or any external RSVP page |
 | email | string | |
+| sourcePlatform | string | External platform label, e.g. `Luma`, `Meetup`, `Eventbrite`, `Partiful`, `Google Calendar`, `iCal feed`, or `Other website`. Blank for native F&B posts. |
+| sourceName | string | Organizer/source name to show for attribution. |
+| sourceUrl | string (URL) | Public source calendar, organizer, or event URL. |
+| sourceEventId | string | Optional event ID from the original platform. |
+| importStatus | string | Review/import state for aggregated events, e.g. `Pending review`, `Approved`, `Imported`, `Skipped`, or `Error`. |
+| importedFromSourceId | string | Optional ID linking the event to an `eventSource` row. |
+| externalUpdatedAt | string | Optional timestamp from the original source for sync comparisons. |
 
 ## `collab` — sheet `Collabs` (Co-Host & Collaborate hub)
 
@@ -273,6 +280,38 @@ Required: `targetType`, `targetId`
 | ownerKey, accountEmail | string | Links save to lightweight identity |
 | targetType, targetId, targetTitle | string | Saved hub record |
 | notes | string | Optional |
+
+### `eventSource` — sheet `Event Sources`
+
+Required: `sourceName`, `organizerEmail`, `platform`, `authMethod`,
+`permissionConfirmed`, `attributionAccepted`, `reviewAccepted`
+
+This is the private intake queue for event aggregation sources. It stores organizer
+metadata, source URLs, permission acknowledgements, review state, and next steps. It does
+**not** store OAuth tokens, API keys, passwords, or private guest data. Store approved
+secrets in Apps Script Properties with the helper functions in `Code.gs`, then update the
+row's `secretStatus` manually.
+
+| Column | Type | Notes |
+|---|---|---|
+| id, timestamp | — | see conventions |
+| sourceName | string | Organizer/community/calendar name |
+| organizerEmail | string | Organizer/admin contact email |
+| contactName | string | Optional human contact |
+| platform | enum | `Luma` · `Meetup` · `Eventbrite` · `Partiful` · `Google Calendar` · `iCal feed` · `Other website` · `Other` |
+| authMethod | enum | `Public calendar/feed URL` · `Public organizer/event URL` · `OAuth setup request` · `API key setup request` · `Manual review only` |
+| chapter | string | Primary chapter or location |
+| sourceUrl, feedUrl | string (URL) | Public URLs only; do not paste private tokenized feed URLs without admin approval |
+| importMode | enum | `Curated review` · `Auto-sync when supported` · `Manual submission`; defaults to `Curated review` |
+| cadence | enum | `Occasional` · `Weekly` · `Monthly` · `Quarterly` · `Unknown` |
+| fitNotes | string | What kinds of events should be imported |
+| permissionConfirmed, attributionAccepted, reviewAccepted | string ("Yes" \| "") | Organizer acknowledgements required by the intake form |
+| syncStatus | enum | `Requested` · `Needs secure setup` · `Pending review` · `Active` · `Paused` · `Rejected` · `Error`; defaults to `Pending review` |
+| approvalStatus | enum | `Pending review` · `Approved` · `Rejected` · `Paused`; defaults to `Pending review` |
+| secretStatus | enum | `Not collected - admin follow-up required` · `No secret required` · `Stored in Script Properties` · `Revoked`; defaults to `No secret required` |
+| lastChecked | string | Optional last sync/review timestamp |
+| lastImportCount | string/number | Optional count from the most recent import |
+| nextStep, notes | string | Admin follow-up and review notes |
 
 ### `report` — sheet `Reports`
 

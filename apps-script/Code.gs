@@ -144,10 +144,44 @@ var ENTITIES = {
       'id', 'timestamp', 'title', 'host', 'category', 'city', 'date', 'time',
       'location', 'description', 'rsvpLink', 'email'
     ],
+    extraHeaders: [
+      'sourcePlatform', 'sourceName', 'sourceUrl', 'sourceEventId',
+      'importStatus', 'importedFromSourceId', 'externalUpdatedAt'
+    ],
     required: ['title', 'email'],
     enums: {
       category: ['Workshop', 'Meetup', 'AMA', 'Demo Day', 'Pitch Competition', 'Office Hours', 'Hack Night', 'Panel', 'Other'],
       city: ['Boise, ID', 'Atlanta, GA', 'Washington, DC', 'Madison, AL', 'Virtual', 'Other']
+    }
+  },
+  eventSource: {
+    sheetName: 'Event Sources',
+    headers: [
+      'id', 'timestamp', 'sourceName', 'organizerEmail', 'contactName',
+      'platform', 'authMethod', 'chapter', 'sourceUrl', 'feedUrl',
+      'importMode', 'cadence', 'fitNotes', 'permissionConfirmed',
+      'attributionAccepted', 'reviewAccepted', 'syncStatus', 'approvalStatus',
+      'secretStatus', 'lastChecked', 'lastImportCount', 'nextStep', 'notes'
+    ],
+    required: [
+      'sourceName', 'organizerEmail', 'platform', 'authMethod',
+      'permissionConfirmed', 'attributionAccepted', 'reviewAccepted'
+    ],
+    public: false,
+    enums: {
+      platform: ['Luma', 'Meetup', 'Eventbrite', 'Partiful', 'Google Calendar', 'iCal feed', 'Other website', 'Other'],
+      authMethod: ['Public calendar/feed URL', 'Public organizer/event URL', 'OAuth setup request', 'API key setup request', 'Manual review only'],
+      importMode: ['Curated review', 'Auto-sync when supported', 'Manual submission'],
+      cadence: ['Occasional', 'Weekly', 'Monthly', 'Quarterly', 'Unknown'],
+      syncStatus: ['Requested', 'Needs secure setup', 'Pending review', 'Active', 'Paused', 'Rejected', 'Error'],
+      approvalStatus: ['Pending review', 'Approved', 'Rejected', 'Paused'],
+      secretStatus: ['Not collected - admin follow-up required', 'No secret required', 'Stored in Script Properties', 'Revoked']
+    },
+    defaults: {
+      importMode: 'Curated review',
+      syncStatus: 'Pending review',
+      approvalStatus: 'Pending review',
+      secretStatus: 'No secret required'
     }
   },
   collab: {
@@ -332,6 +366,34 @@ function headerFor_(sheet, entity) {
     .map(function (key) { return String(key || ''); });
   while (header.length && header[header.length - 1] === '') header.pop();
   return header.length ? header : headersFor_(entity);
+}
+
+function eventSourceSecretKey_(sourceId, secretType) {
+  if (!sourceId || !secretType) throw new Error('sourceId and secretType are required');
+  var safeSource = String(sourceId).replace(/[^A-Za-z0-9_-]/g, '_');
+  var safeType = String(secretType).replace(/[^A-Za-z0-9_-]/g, '_').toUpperCase();
+  return 'EVENT_SOURCE_SECRET_' + safeSource + '_' + safeType;
+}
+
+/**
+ * Manual admin helper for OAuth/API event-source credentials.
+ *
+ * Do not send tokens or API keys through public forms or store them in sheet rows.
+ * Run this from the Apps Script editor after an organizer has explicitly approved
+ * access, then mark that Event Sources row's secretStatus as "Stored in Script
+ * Properties" and syncStatus as appropriate.
+ */
+function setEventSourceSecret(sourceId, secretType, secretValue) {
+  if (!secretValue) throw new Error('secretValue is required');
+  PropertiesService.getScriptProperties()
+    .setProperty(eventSourceSecretKey_(sourceId, secretType), String(secretValue));
+  return { ok: true, key: eventSourceSecretKey_(sourceId, secretType) };
+}
+
+function deleteEventSourceSecret(sourceId, secretType) {
+  PropertiesService.getScriptProperties()
+    .deleteProperty(eventSourceSecretKey_(sourceId, secretType));
+  return { ok: true, key: eventSourceSecretKey_(sourceId, secretType) };
 }
 
 /** Read: returns all records for the requested type as JSON (supports ?callback= for JSONP). */

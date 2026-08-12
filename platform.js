@@ -151,6 +151,18 @@
       email: "email",
       action: "RSVP"
     },
+    eventSource: {
+      label: "Event source",
+      plural: "Event sources",
+      page: "add-event-source.html",
+      title: ["sourceName"],
+      subtitle: ["platform", "authMethod", "syncStatus"],
+      body: ["fitNotes", "nextStep", "sourceUrl", "feedUrl"],
+      tags: ["platform", "authMethod", "syncStatus", "chapter"],
+      location: ["chapter"],
+      email: "organizerEmail",
+      public: false
+    },
     collab: {
       label: "Collaboration",
       plural: "Collaborations",
@@ -382,6 +394,20 @@
       description: "Placeholder event for testing chapter views.",
       email: "demo-event@example.invalid",
       moderationStatus: "Demo"
+    }],
+    eventSource: [{
+      id: "demo-event-source-template",
+      sourceName: "Demo external founder calendar",
+      organizerEmail: "demo-source@example.invalid",
+      platform: "Luma",
+      authMethod: "API key setup request",
+      chapter: "Washington, DC",
+      sourceUrl: "https://example.invalid/calendar",
+      importMode: "Curated review",
+      syncStatus: "Needs secure setup",
+      secretStatus: "Not collected - admin follow-up required",
+      fitNotes: "Template record for event-source review flow testing.",
+      nextStep: "Admin follow-up for secure OAuth/API setup"
     }],
     collab: [{
       id: "demo-collab-template",
@@ -794,6 +820,7 @@
     else if (record._type === "raise") text = record._title + " is raising" + (record.stage ? " at " + record.stage : "");
     else if (record._type === "investor") text = record._title + " is open to relevant founder outreach";
     else if (record._type === "event") text = record._title + " is coming up" + (record.city ? " in " + record.city : "");
+    else if (record._type === "eventSource") text = record._title + " requested event-source review";
     else if (record._type === "collab") text = record._title + " is looking for collaborators";
     else if (record._type === "podcast") text = record._title + " is looking for " + (record.lookingFor || "community connections");
     else if (record._type === "resource") text = record._title + " was added to the resource library";
@@ -875,6 +902,7 @@
   function cardHTML(record) {
     var meta = metaFor(record._type);
     var email = record[meta.email] || record.email;
+    var isPrivate = meta.public === false;
     var saved = isSaved(record._key);
     var tagsHTML = record._tags.slice(0, 4).map(function (tag) {
       return '<span class="tag">' + esc(tag) + "</span>";
@@ -894,8 +922,8 @@
         '<div class="platform-card__actions">' +
           '<a class="mini-btn" href="' + esc(meta.page) + '">' + esc(meta.action || "Open") + "</a>" +
           (email ? '<a class="mini-btn" href="mailto:' + esc(email) + '">Email</a>' : "") +
-          '<button class="mini-btn' + (saved ? " is-active" : "") + '" type="button" data-platform-action="save" data-record-key="' + esc(record._key) + '">' + (saved ? "Saved" : "Save") + "</button>" +
-          '<a class="mini-btn" href="report-listing.html?type=' + encodeURIComponent(record._type) + '&id=' + encodeURIComponent(record._id) + '&title=' + encodeURIComponent(record._title) + '">Report</a>' +
+          (isPrivate ? "" : '<button class="mini-btn' + (saved ? " is-active" : "") + '" type="button" data-platform-action="save" data-record-key="' + esc(record._key) + '">' + (saved ? "Saved" : "Save") + "</button>") +
+          (isPrivate ? "" : '<a class="mini-btn" href="report-listing.html?type=' + encodeURIComponent(record._type) + '&id=' + encodeURIComponent(record._id) + '&title=' + encodeURIComponent(record._title) + '">Report</a>') +
         "</div>" +
       "</article>"
     );
@@ -1273,10 +1301,12 @@
   }
 
   function initAdmin() {
+    var sourceEl = document.getElementById("eventSourceQueue");
     var reportEl = document.getElementById("reportQueue");
     var pendingEl = document.getElementById("pendingQueue");
     var actionForm = document.getElementById("adminActionForm");
-    fetchAll({ types: CONTENT_TYPES.concat(["report", "account", "savedItem", "adminAction", "conciergeRequest"]) }, function (data) {
+    fetchAll({ types: CONTENT_TYPES.concat(["eventSource", "report", "account", "savedItem", "adminAction", "conciergeRequest"]) }, function (data) {
+      renderCards(sourceEl, data.byType.eventSource || [], "No event source requests have been submitted.");
       renderCards(reportEl, data.byType.report || [], "No reports have been submitted.");
       var pending = data.all.filter(function (record) {
         return ["pending review", "flagged"].indexOf(moderationValue(record)) !== -1;

@@ -54,6 +54,11 @@
           <p class="platform-panel__copy">Reports and action notes are append-only records. Content hiding is controlled by moderation fields in the Sheet until a secure admin auth layer exists.</p>
         </div>
         <div class="platform-panel">
+          <h2 class="platform-panel__title">Event source rule</h2>
+          <p class="platform-panel__copy">Organizer source requests can be reviewed in Sheets, but OAuth tokens and API keys should only be stored in Apps Script Properties or a future secure auth store.</p>
+          <a class="mini-btn" href="add-event-source.html">Add source</a>
+        </div>
+        <div class="platform-panel">
           <h2 class="platform-panel__title">Seed content rule</h2>
           <p class="platform-panel__copy">Do not fabricate real people, investors, funds, companies, jobs, or testimonials. Use templates, placeholders, or explicitly sourced/permissioned records only.</p>
           <a class="mini-btn" href="seed-content/README.md">Open seed guide</a>
@@ -61,6 +66,17 @@
       </aside>
 
       <div class="platform-main">
+        <section class="platform-section">
+          <div class="platform-section__head">
+            <div>
+              <h2 class="platform-section__title">Event source requests</h2>
+              <p class="platform-section__desc">Organizer-submitted calendars, feeds, and authorization requests waiting for review or secure setup.</p>
+            </div>
+            <a class="mini-btn" href="add-event-source.html">Add source</a>
+          </div>
+          <div class="platform-grid platform-grid--two" id="eventSourceQueue"></div>
+        </section>
+
         <section class="platform-section">
           <div class="platform-section__head">
             <div>

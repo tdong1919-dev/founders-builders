@@ -48,13 +48,14 @@
       id: "edemo1", title: "Founder Demo Night", host: "Founders & Builders", category: "Demo Day",
       city: "Boise, ID", date: inDays(9), time: "6:00 PM MT", location: "Trailhead Boise",
       description: "Five founders, five minutes each, real feedback from the room.",
-      rsvpLink: "example.com/rsvp", email: "events@example.com"
+      rsvpLink: "example.com/rsvp", email: "events@example.com", sourcePlatform: "Founders & Builders"
     },
     {
       id: "edemo2", title: "AMA: Raising a Pre-Seed Round", host: "Demo Member B", category: "AMA",
       city: "Virtual", date: inDays(3), time: "12:00 PM ET", location: "Zoom link on RSVP",
       description: "Bring your questions about fundraising, term sheets, and investor outreach.",
-      rsvpLink: "example.com/rsvp", email: "marcus@example.com"
+      rsvpLink: "example.com/rsvp", email: "marcus@example.com", sourcePlatform: "Luma",
+      sourceName: "Demo external calendar", sourceUrl: "https://example.com/luma-calendar", importStatus: "Approved"
     },
     {
       id: "edemo3", title: "Builders Hack Night", host: "Atlanta Founders", category: "Hack Night",
@@ -66,7 +67,8 @@
       id: "edemo4", title: "DC Founders Meetup", host: "Founders & Builders DC", category: "Meetup",
       city: "Washington, DC", date: inDays(23), time: "6:00 PM ET", location: "Arlington, VA",
       description: "Monthly meetup for the DC-area chapter — come meet other local founders and builders.",
-      rsvpLink: "example.com/rsvp", email: "dc@example.com"
+      rsvpLink: "example.com/rsvp", email: "dc@example.com", sourcePlatform: "Meetup",
+      sourceName: "Demo partner meetup", sourceUrl: "https://example.com/meetup", importStatus: "Approved"
     },
     {
       id: "edemo5", title: "Madison Founders Coffee", host: "Founders & Builders AL", category: "Meetup",
@@ -114,6 +116,7 @@
     var searchInput = document.getElementById("searchInput");
     var categorySelect = document.getElementById("categorySelect");
     var citySelect = document.getElementById("citySelect");
+    var sourceSelect = document.getElementById("sourceSelect");
     var viewList = document.getElementById("viewList");
     var viewCalendar = document.getElementById("viewCalendar");
     var calendarView = document.getElementById("calendarView");
@@ -147,9 +150,14 @@
       if (cat && e.category !== cat) return false;
       var city = citySelect && citySelect.value;
       if (city && e.city !== city) return false;
+      var source = sourceSelect && sourceSelect.value;
+      if (source) {
+        var eventSource = e.sourcePlatform || "Founders & Builders";
+        if (eventSource !== source) return false;
+      }
       var q = (searchInput && searchInput.value || "").trim().toLowerCase();
       if (!q) return true;
-      var hay = [e.title, e.host, e.location, e.category, e.description].join(" ").toLowerCase();
+      var hay = [e.title, e.host, e.location, e.category, e.description, e.sourcePlatform, e.sourceName].join(" ").toLowerCase();
       return hay.indexOf(q) !== -1;
     }
 
@@ -237,6 +245,7 @@
     if (searchInput) searchInput.addEventListener("input", render);
     if (categorySelect) categorySelect.addEventListener("change", render);
     if (citySelect) citySelect.addEventListener("change", render);
+    if (sourceSelect) sourceSelect.addEventListener("change", render);
     if (viewList) viewList.addEventListener("click", function () { switchView("list"); });
     if (viewCalendar) viewCalendar.addEventListener("click", function () { switchView("calendar"); });
     if (calPrev) calPrev.addEventListener("click", function () {
@@ -253,8 +262,16 @@
     var out = "";
     if (e.category) out += '<span class="badge">' + esc(e.category) + "</span>";
     if (e.city) out += '<span class="badge badge--mentor">' + esc(e.city) + "</span>";
+    if (e.sourcePlatform && e.sourcePlatform !== "Founders & Builders") {
+      out += '<span class="badge badge--active">External · ' + esc(e.sourcePlatform) + "</span>";
+    }
     if (isPast(e.date)) out += '<span class="badge badge--podcast">Past</span>';
     return out;
+  }
+
+  function sourceLabel(e) {
+    if (!e.sourcePlatform || e.sourcePlatform === "Founders & Builders") return "";
+    return e.sourceName ? e.sourcePlatform + " · " + e.sourceName : e.sourcePlatform;
   }
 
   function cardHTML(e) {
@@ -310,8 +327,13 @@
       "</div>" +
       detailBlock("Description", e.description) +
       detailBlock("Location", e.location) +
+      detailBlock("External source", sourceLabel(e)) +
+      detailBlock("Import status", e.importStatus) +
+      (e.sourceUrl
+        ? '<a class="btn btn--lg btn--ghost modal__contact" href="' + esc(normUrl(e.sourceUrl)) + '" target="_blank" rel="noopener noreferrer">View source</a>'
+        : "") +
       (e.rsvpLink
-        ? '<a class="btn btn--lg modal__contact" href="' + esc(normUrl(e.rsvpLink)) + '" target="_blank" rel="noopener noreferrer">RSVP</a>'
+        ? '<a class="btn btn--lg modal__contact" href="' + esc(normUrl(e.rsvpLink)) + '" target="_blank" rel="noopener noreferrer">RSVP' + (e.sourcePlatform && e.sourcePlatform !== "Founders & Builders" ? " on " + esc(e.sourcePlatform) : "") + '</a>'
         : "") +
       (e.email
         ? '<a class="btn btn--lg btn--ghost modal__contact" href="mailto:' + esc(e.email) + "?subject=" + encodeURIComponent("Re: " + e.title) + '">Contact the host</a>'
