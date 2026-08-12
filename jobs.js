@@ -29,13 +29,13 @@
   /* ---------- sample data (used when no backend is configured) ---------- */
   var SAMPLE = [
     {
-      id: "jdemo1", title: "Founding Engineer", company: "Tinkerlab", category: "Full-time",
+      id: "jdemo1", title: "Founding Engineer", company: "Demo Startup A", category: "Full-time",
       location: "Boise, ID", remote: "Yes", compensation: "$110–140k + equity",
       description: "Join as the first engineering hire to build our AI copilot product.",
       applyLink: "example.com/apply", email: "jobs@tinkerlab.example"
     },
     {
-      id: "jdemo2", title: "Fractional CMO", company: "Craftly", category: "Fractional",
+      id: "jdemo2", title: "Fractional CMO", company: "Demo Marketplace C", category: "Fractional",
       location: "Remote", remote: "Yes", compensation: "$3k/mo, 10hrs/wk",
       description: "Help a Series-seed marketplace startup build out growth marketing.",
       email: "hello@craftly.example"

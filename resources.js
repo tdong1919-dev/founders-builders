@@ -27,17 +27,17 @@
     {
       id: "rdemo1", title: "Seed Deck Template", category: "Template",
       description: "A 12-slide pitch deck template covering problem, solution, traction, and ask.",
-      link: "example.com/deck-template", submittedBy: "Dana Ellis"
+      link: "example.com/deck-template", submittedBy: "Demo Advisor D"
     },
     {
       id: "rdemo2", title: "Cold Outreach Prompt Pack", category: "AI Prompt",
       description: "A set of prompts for drafting cold intro emails to investors and customers.",
-      link: "example.com/prompts", submittedBy: "Ava Chen"
+      link: "example.com/prompts", submittedBy: "Demo Member A"
     },
     {
       id: "rdemo3", title: "Startup Grant Database", category: "Grant Database",
       description: "A running list of non-dilutive grants for early-stage founders, sorted by industry.",
-      link: "example.com/grants", submittedBy: "Priya Nair"
+      link: "example.com/grants", submittedBy: "Demo Member C"
     }
   ];
 

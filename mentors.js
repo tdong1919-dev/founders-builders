@@ -28,7 +28,7 @@
   /* ---------- sample data (used when no backend is configured) ---------- */
   var SAMPLE = [
     {
-      id: "mdemo1", name: "Dana Ellis", title: "Fractional CTO", company: "Ellis Consulting",
+      id: "mdemo1", name: "Demo Advisor D", title: "Fractional CTO", company: "Demo Advisory Firm",
       industry: "DevTools / SaaS", expertise: "Engineering leadership, Architecture, Hiring",
       stages: "MVP, Pre-seed, Seed", experience: "15 years", availability: "3 hrs/month",
       officeHours: "Fridays 2-4pm ET",
@@ -36,7 +36,7 @@
       email: "dana@example.com", linkedin: "linkedin.com/in/example", website: ""
     },
     {
-      id: "mdemo2", name: "Marcus Reed", title: "Fundraising Advisor", company: "Reed Finance",
+      id: "mdemo2", name: "Demo Member B", title: "Fundraising Advisor", company: "Demo Service Provider B",
       industry: "Fintech", expertise: "Fundraising, Financial modeling, Investor relations",
       stages: "Pre-seed, Seed, Growth", experience: "20 years", availability: "2 hrs/month",
       officeHours: "Book via link",
@@ -44,7 +44,7 @@
       email: "marcus@example.com", linkedin: "", website: "example.com"
     },
     {
-      id: "mdemo3", name: "Priya Nair", title: "Growth & Community Lead", company: "Craftly",
+      id: "mdemo3", name: "Demo Member C", title: "Growth & Community Lead", company: "Demo Marketplace C",
       industry: "E-commerce / Marketplaces", expertise: "Community building, Brand, Marketing",
       stages: "Idea, MVP, Growth", experience: "8 years", availability: "Ad hoc",
       officeHours: "",

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Member Dashboard — Founders &amp; Builders</title>
+  <meta name="description" content="Your Founders & Builders command center: identity, saved opportunities, matchmaking, and action-oriented community activity." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="profiles.css" />
+  <link rel="stylesheet" href="platform.css" />
+</head>
+<body data-platform-page="dashboard">
+  <header class="nav scrolled" id="nav">
+    <div class="nav__inner">
+      <a href="index.html" class="brand">
+        <svg class="icon brand__mark" viewBox="0 0 24 24"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg>
+        <span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span>
+      </a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="dashboard.html" aria-current="page">Dashboard</a>
+        <a href="search.html">Search</a>
+        <a href="concierge.html">Ask F&amp;B</a>
+        <a href="chapters.html">Chapters</a>
+        <a href="activity.html">Activity</a>
+      </nav>
+      <a href="create-profile.html" class="btn btn--sm">Create profile</a>
+      <button class="nav__toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="platform-hero">
+      <div class="container platform-hero__grid">
+        <div>
+          <a class="back-link" href="index.html">Back to home</a>
+          <span class="kicker">Member command center</span>
+          <h1 class="platform-hero__title">Welcome to <span id="dashboardName">your network</span>.</h1>
+          <p class="platform-hero__sub">A practical dashboard for what you need, what you can offer, who you should meet, and which opportunities deserve action.</p>
+        </div>
+        <form class="platform-rail" id="dashboardSearchForm">
+          <label class="field">
+            <span class="field__label">What do you need today?</span>
+            <input type="search" name="q" placeholder="Find AI founders in DC, beta testers, mentors, investors..." />
+          </label>
+          <button class="btn" type="submit">Search the network</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="container platform-shell">
+      <aside class="platform-sidebar">
+        <div class="platform-panel">
+          <h2 class="platform-panel__title">Persistent identity</h2>
+          <div id="identitySummary"></div>
+          <form class="compact-form" id="identityForm">
+            <label class="field">
+              <span class="field__label">Name</span>
+              <input name="name" autocomplete="name" />
+            </label>
+            <label class="field">
+              <span class="field__label">Email</span>
+              <input name="email" type="email" autocomplete="email" required />
+            </label>
+            <label class="field">
+              <span class="field__label">Home chapter</span>
+              <select name="chapter"></select>
+            </label>
+            <label class="field">
+              <span class="field__label">What I need</span>
+              <textarea name="needs" rows="3" placeholder="Customers, legal help, funding, hiring..."></textarea>
+            </label>
+            <label class="field">
+              <span class="field__label">What I can help with</span>
+              <textarea name="offers" rows="3" placeholder="Design, finance, GTM, technical reviews..."></textarea>
+            </label>
+            <label class="field">
+              <span class="field__label">Current goals</span>
+              <textarea name="goals" rows="2"></textarea>
+            </label>
+            <label class="field">
+              <span class="field__label">Skills</span>
+              <input name="skills" placeholder="Comma-separated" />
+            </label>
+            <button class="btn" type="submit">Save identity</button>
+            <button class="mini-btn" type="button" id="clearIdentity">Clear this device</button>
+          </form>
+        </div>
+
+        <div class="platform-panel platform-panel--gold">
+          <h2 class="platform-panel__title">Not a social feed</h2>
+          <p class="platform-panel__copy">This dashboard is designed around actions: meet someone, answer an ask, apply, RSVP, save, report, or add useful records.</p>
+        </div>
+      </aside>
+
+      <div class="platform-main">
+        <section class="platform-section">
+          <div class="platform-section__head">
+            <div>
+              <h2 class="platform-section__title">Network snapshot</h2>
+              <p class="platform-section__desc">Counts come from the current Google Sheets-backed hub records.</p>
+            </div>
+            <a class="mini-btn" href="network.html">View graph</a>
+          </div>
+          <div class="stat-grid" id="dashboardStats"></div>
+        </section>
+
+        <section class="platform-section">
+          <div class="platform-section__head">
+            <div>
+              <h2 class="platform-section__title">People and opportunities to act on</h2>
+              <p class="platform-section__desc">Rule-based matchmaking from needs, offers, skills, chapter, industry, and hub records.</p>
+            </div>
+            <a class="mini-btn" href="concierge.html">Ask F&amp;B</a>
+          </div>
+          <div class="platform-grid platform-grid--two" id="matchGrid"></div>
+        </section>
+
+        <section class="platform-section">
+          <div class="platform-section__head">
+            <div>
+              <h2 class="platform-section__title">Opportunity activity</h2>
+              <p class="platform-section__desc">Every item should point to a practical next step.</p>
+            </div>
+            <a class="mini-btn" href="activity.html">Open feed</a>
+          </div>
+          <div class="activity-feed" id="dashboardActivity"></div>
+        </section>
+
+        <section class="platform-section">
+          <div class="platform-section__head">
+            <div>
+              <h2 class="platform-section__title">Saved items</h2>
+              <p class="platform-section__desc">Saved locally now, mirrored to Sheets when the backend is connected.</p>
+            </div>
+          </div>
+          <div class="platform-grid platform-grid--two" id="savedGrid"></div>
+        </section>
+
+        <section class="platform-section">
+          <div class="platform-section__head">
+            <div>
+              <h2 class="platform-section__title">My records</h2>
+              <p class="platform-section__desc">Records linked to your email or device owner key.</p>
+            </div>
+            <a class="mini-btn" href="create-profile.html">Edit profile signal</a>
+          </div>
+          <div class="platform-grid platform-grid--two" id="myRecordsGrid"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="brand">
+        <svg class="icon brand__mark" viewBox="0 0 24 24"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg>
+        <span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span>
+      </div>
+      <p class="footer__copy">&copy; <span id="year"></span> Founders &amp; Builders. Community-built.</p>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+  <script src="platform.js"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Universal Search — Founders &amp; Builders</title>
+  <meta name="description" content="Search members, businesses, marketplace listings, jobs, mentors, help requests, funding, events, collaborations, podcasts, and resources in one place." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="profiles.css" />
+  <link rel="stylesheet" href="platform.css" />
+</head>
+<body data-platform-page="search">
+  <header class="nav scrolled" id="nav">
+    <div class="nav__inner">
+      <a href="index.html" class="brand">
+        <svg class="icon brand__mark" viewBox="0 0 24 24"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg>
+        <span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span>
+      </a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="search.html" aria-current="page">Search</a>
+        <a href="concierge.html">Ask F&amp;B</a>
+        <a href="chapters.html">Chapters</a>
+        <a href="network.html">Network</a>
+      </nav>
+      <a href="dashboard.html" class="btn btn--sm">Open dashboard</a>
+      <button class="nav__toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="platform-hero">
+      <div class="container">
+        <a class="back-link" href="dashboard.html">Back to dashboard</a>
+        <span class="kicker">Universal Search</span>
+        <h1 class="platform-hero__title">Search the whole ecosystem.</h1>
+        <p class="platform-hero__sub">One query can find people, businesses, jobs, help requests, mentors, events, capital signals, resources, podcasts, collaborators, and marketplace offers.</p>
+      </div>
+    </section>
+
+    <section class="container platform-main" style="padding:36px 0 84px">
+      <section class="platform-section">
+        <form id="universalSearchForm">
+          <div class="search-bar">
+            <input id="universalSearchInput" type="search" placeholder="Try: AI founders in DC looking for marketing help" aria-label="Universal search" />
+            <button class="btn" type="submit">Search</button>
+          </div>
+          <div class="filter-strip">
+            <select class="select-filter" id="hubFilter" aria-label="Filter by hub"></select>
+            <select class="select-filter" id="chapterFilter" aria-label="Filter by chapter"></select>
+          </div>
+        </form>
+        <p class="results-meta" id="searchMeta" aria-live="polite"></p>
+      </section>
+
+      <section class="platform-section">
+        <div class="platform-section__head">
+          <div>
+            <h2 class="platform-section__title">Results</h2>
+            <p class="platform-section__desc">Results are scored locally from the current records; no fabricated matches are created.</p>
+          </div>
+          <a class="mini-btn" href="report-listing.html">Report an issue</a>
+        </div>
+        <div class="results-list" id="searchResults"></div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="brand"><span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span></div>
+      <p class="footer__copy">&copy; <span id="year"></span> Founders &amp; Builders. Community-built.</p>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+  <script src="platform.js"></script>
+</body>
+</html>

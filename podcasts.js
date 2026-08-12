@@ -28,19 +28,19 @@
   /* ---------- sample data (used when no backend is configured) ---------- */
   var SAMPLE = [
     {
-      id: "pdemo1", showName: "Founders, Unfiltered", host: "Ava Chen", format: "Interview",
+      id: "pdemo1", showName: "Founders, Unfiltered", host: "Demo Member A", format: "Interview",
       topics: "AI, Product, Solo founders", lookingFor: "Guests", city: "Remote",
       description: "Weekly conversations with early-stage founders about what's actually hard right now.",
       listenLink: "example.com/listen", email: "ava@example.com", linkedin: "linkedin.com/in/example"
     },
     {
-      id: "pdemo2", showName: "The Fundraising Files", host: "Marcus Reed", format: "Solo",
+      id: "pdemo2", showName: "The Fundraising Files", host: "Demo Member B", format: "Solo",
       topics: "Fundraising, Finance, VC", lookingFor: "Sponsors", city: "Atlanta",
       description: "Short solo episodes breaking down one fundraising concept at a time.",
       listenLink: "", email: "marcus@example.com", linkedin: "linkedin.com/in/example"
     },
     {
-      id: "pdemo3", showName: "Built Different", host: "Priya Nair", format: "Co-hosted",
+      id: "pdemo3", showName: "Built Different", host: "Demo Member C", format: "Co-hosted",
       topics: "Marketplaces, Community, Design", lookingFor: "Co-host", city: "Boise",
       description: "Two co-hosts, one live studio audience, real questions from the local founder community.",
       listenLink: "example.com/listen", email: "priya@example.com", linkedin: ""
