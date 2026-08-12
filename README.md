@@ -136,8 +136,10 @@ saved).
 **Event aggregation:** organizers can submit external event sources through
 [`add-event-source.html`](add-event-source.html). The request goes to a private
 `Event Sources` tab for review; approved external events appear in the public `Events`
-tab with source attribution and RSVP links back to the original platform. The operating
-guide is in [`docs/EVENT_SOURCE_AGGREGATION.md`](docs/EVENT_SOURCE_AGGREGATION.md).
+tab with source attribution and RSVP links back to the original platform. Admins can
+review selected source requests in [`admin.html`](admin.html), which records append-only
+review actions and recommended status changes. The operating guide is in
+[`docs/EVENT_SOURCE_AGGREGATION.md`](docs/EVENT_SOURCE_AGGREGATION.md).
 
 **Schema:** every entity's exact columns, types, required fields, and allowed values
 (enums) are documented in [`apps-script/SCHEMA.md`](apps-script/SCHEMA.md) — that's the

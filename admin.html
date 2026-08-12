@@ -77,6 +77,99 @@
           <div class="platform-grid platform-grid--two" id="eventSourceQueue"></div>
         </section>
 
+        <section class="platform-section" id="eventSourceReviewSection">
+          <div class="platform-section__head">
+            <div>
+              <h2 class="platform-section__title">Review selected source</h2>
+              <p class="platform-section__desc">Record the review decision, recommended status changes, and import plan as an append-only admin action.</p>
+            </div>
+          </div>
+          <div class="notice">
+            <p>This review records an audit note. Until secure admin auth exists, update the Event Sources row in Sheets after review instead of letting the public web app mutate it directly.</p>
+          </div>
+          <div class="source-review-summary" id="eventSourceReviewSummary">
+            <p>Select an event source request above to start a review.</p>
+          </div>
+          <form class="compact-form" id="eventSourceReviewForm">
+            <input type="hidden" name="targetType" value="eventSource" />
+            <input type="hidden" name="sourcePlatform" />
+            <input type="hidden" name="sourceUrl" />
+            <input type="hidden" name="feedUrl" />
+            <input type="hidden" name="organizerEmail" />
+            <div class="field-grid">
+              <label class="field">
+                <span class="field__label">Source ID</span>
+                <input name="targetId" readonly />
+              </label>
+              <label class="field">
+                <span class="field__label">Source name</span>
+                <input name="targetTitle" readonly />
+              </label>
+              <label class="field">
+                <span class="field__label">Decision</span>
+                <select name="action" id="eventSourceReviewAction" disabled>
+                  <option>Event source approved</option>
+                  <option>Event source ready for manual import</option>
+                  <option>Event source needs secure setup</option>
+                  <option>Event source rejected</option>
+                  <option>Event source paused</option>
+                  <option>Needs follow-up</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Approval status</span>
+                <select name="recommendedApprovalStatus" disabled>
+                  <option>Pending review</option>
+                  <option>Approved</option>
+                  <option>Rejected</option>
+                  <option>Paused</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Sync status</span>
+                <select name="recommendedSyncStatus" disabled>
+                  <option>Requested</option>
+                  <option>Needs secure setup</option>
+                  <option>Pending review</option>
+                  <option>Active</option>
+                  <option>Paused</option>
+                  <option>Rejected</option>
+                  <option>Error</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Secret status</span>
+                <select name="recommendedSecretStatus" disabled>
+                  <option>Not collected - admin follow-up required</option>
+                  <option>No secret required</option>
+                  <option>Stored in Script Properties</option>
+                  <option>Revoked</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Import plan</span>
+                <select name="importPlan" disabled>
+                  <option>No import yet</option>
+                  <option>Manual import approved</option>
+                  <option>Curated review only</option>
+                  <option>Auto-sync when supported</option>
+                  <option>Needs organizer follow-up</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Admin email</span>
+                <input name="adminEmail" type="email" placeholder="admin@example.com" disabled />
+              </label>
+              <label class="field field--full">
+                <span class="field__label">Review notes</span>
+                <textarea name="notes" rows="7" disabled></textarea>
+              </label>
+            </div>
+            <button class="btn" type="submit" id="eventSourceReviewSubmit" disabled>Record source review</button>
+            <p class="form-status" id="eventSourceReviewStatus" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+
         <section class="platform-section">
           <div class="platform-section__head">
             <div>
@@ -127,6 +220,11 @@
                   <option>Marked duplicate</option>
                   <option>Hidden in Sheet</option>
                   <option>Rejected in Sheet</option>
+                  <option>Event source approved</option>
+                  <option>Event source ready for manual import</option>
+                  <option>Event source needs secure setup</option>
+                  <option>Event source rejected</option>
+                  <option>Event source paused</option>
                 </select>
               </label>
               <label class="field field--full">

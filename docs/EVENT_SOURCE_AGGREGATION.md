@@ -13,7 +13,10 @@ calendar with clear attribution and RSVP links back to the original platform.
 4. Organizer confirms permission, attribution, and review terms.
 5. The request is written to the private `Event Sources` sheet tab as `eventSource`.
 6. Admin reviews the request in `admin.html`.
-7. Approved events are added to the public `Events` tab with source attribution fields.
+7. Admin records a source-review action with the recommended approval/sync/secret status.
+8. Admin updates the `Event Sources` row in Sheets and handles any secure setup outside
+   the public form.
+9. Approved events are added to the public `Events` tab with source attribution fields.
 
 ## Connection Methods
 
@@ -43,6 +46,9 @@ before building automated importers.
 - Do not store OAuth tokens, API keys, passwords, or private guest data in Google Sheets.
 - Store approved secrets in Apps Script Properties using `setEventSourceSecret` from
   `apps-script/Code.gs`, then update `secretStatus` in the `Event Sources` row.
+- The admin review panel records append-only rows in `Admin Actions`. It does not mutate
+  source rows because the current public Apps Script endpoint does not have secure
+  role-based admin authentication.
 - Keep `approvalStatus` as `Pending review` until the organizer/source has been checked.
 - Keep `syncStatus` as `Needs secure setup` for OAuth/API requests until credentials are
   approved and stored.

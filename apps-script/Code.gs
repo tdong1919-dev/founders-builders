@@ -257,10 +257,24 @@ var ENTITIES = {
       'id', 'timestamp', 'targetType', 'targetId', 'targetTitle', 'action',
       'notes', 'adminEmail'
     ],
+    extraHeaders: [
+      'recommendedApprovalStatus', 'recommendedSyncStatus',
+      'recommendedSecretStatus', 'importPlan', 'sourcePlatform', 'sourceUrl',
+      'feedUrl', 'organizerEmail'
+    ],
     required: ['action'],
     public: false,
     enums: {
-      action: ['Reviewed', 'Verified', 'Needs follow-up', 'Marked duplicate', 'Hidden in Sheet', 'Rejected in Sheet']
+      action: [
+        'Reviewed', 'Verified', 'Needs follow-up', 'Marked duplicate',
+        'Hidden in Sheet', 'Rejected in Sheet', 'Event source approved',
+        'Event source rejected', 'Event source paused',
+        'Event source needs secure setup', 'Event source ready for manual import'
+      ],
+      recommendedApprovalStatus: ['Pending review', 'Approved', 'Rejected', 'Paused'],
+      recommendedSyncStatus: ['Requested', 'Needs secure setup', 'Pending review', 'Active', 'Paused', 'Rejected', 'Error'],
+      recommendedSecretStatus: ['Not collected - admin follow-up required', 'No secret required', 'Stored in Script Properties', 'Revoked'],
+      importPlan: ['No import yet', 'Manual import approved', 'Curated review only', 'Auto-sync when supported', 'Needs organizer follow-up']
     }
   },
   chapter: {

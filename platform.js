@@ -456,6 +456,12 @@
     });
   }
 
+  function normUrl(u) {
+    u = String(u || "").trim();
+    if (!u) return "";
+    return /^https?:\/\//i.test(u) ? u : "https://" + u;
+  }
+
   function toText(value) {
     if (Array.isArray(value)) return value.join(", ");
     return String(value == null ? "" : value);
@@ -899,6 +905,177 @@
     return id || "Unassigned";
   }
 
+  function eventSourceNeedsSecret(record) {
+    var method = toText(record && record.authMethod).toLowerCase();
+    return method.indexOf("oauth") !== -1 || method.indexOf("api key") !== -1;
+  }
+
+  function eventSourceHasPublicInput(record) {
+    return !!(record && (record.feedUrl || record.sourceUrl));
+  }
+
+  function eventSourceRecommendation(record) {
+    if (eventSourceNeedsSecret(record)) {
+      return {
+        action: "Event source needs secure setup",
+        approval: "Pending review",
+        sync: "Needs secure setup",
+        secret: "Not collected - admin follow-up required",
+        importPlan: "No import yet"
+      };
+    }
+    if (!eventSourceHasPublicInput(record) || record.authMethod === "Manual review only") {
+      return {
+        action: "Needs follow-up",
+        approval: "Pending review",
+        sync: "Pending review",
+        secret: "No secret required",
+        importPlan: "Curated review only"
+      };
+    }
+    return {
+      action: "Event source ready for manual import",
+      approval: "Approved",
+      sync: "Pending review",
+      secret: "No secret required",
+      importPlan: "Manual import approved"
+    };
+  }
+
+  function yesNo(value) {
+    return toText(value).toLowerCase() === "yes" ? "Yes" : "No";
+  }
+
+  function eventSourceReviewNotes(record, recommendation) {
+    return [
+      "Source reviewed: " + (record._title || record.sourceName || ""),
+      "Platform: " + (record.platform || ""),
+      "Connection method: " + (record.authMethod || ""),
+      "Organizer email: " + (record.organizerEmail || ""),
+      "Public source URL: " + (record.sourceUrl || ""),
+      "Feed URL: " + (record.feedUrl || ""),
+      "Permission confirmed: " + yesNo(record.permissionConfirmed),
+      "Attribution accepted: " + yesNo(record.attributionAccepted),
+      "Review terms accepted: " + yesNo(record.reviewAccepted),
+      "",
+      "Recommended Event Sources row updates:",
+      "- approvalStatus: " + recommendation.approval,
+      "- syncStatus: " + recommendation.sync,
+      "- secretStatus: " + recommendation.secret,
+      "- nextStep: " + (
+        recommendation.action === "Event source needs secure setup"
+          ? "Admin follow-up for secure OAuth/API setup"
+          : recommendation.importPlan
+      ),
+      "",
+      "Import plan: " + recommendation.importPlan
+    ].join("\n");
+  }
+
+  function reviewCheck(label, value) {
+    var ok = yesNo(value) === "Yes";
+    return '<span class="review-check review-check--' + (ok ? "ok" : "warn") + '">' + esc(label) + ": " + (ok ? "Yes" : "No") + "</span>";
+  }
+
+  function eventSourceCardHTML(record, selectedKey) {
+    var selected = selectedKey && record._key === selectedKey;
+    var status = record.approvalStatus || record.syncStatus || "Pending review";
+    var method = [record.platform, record.authMethod].filter(Boolean).join(" · ");
+    var publicUrl = record.feedUrl || record.sourceUrl;
+    return (
+      '<article class="platform-card source-review-card' + (selected ? " is-selected" : "") + '" data-record-key="' + esc(record._key) + '">' +
+        '<div class="platform-card__top">' +
+          '<div class="platform-card__icon">E</div>' +
+          '<div>' +
+            '<p class="platform-card__label">Event source' + (record._chapter ? " · " + esc(chapterLabel(record._chapter)) : "") + "</p>" +
+            '<h3 class="platform-card__title">' + esc(record._title) + "</h3>" +
+            (method ? '<p class="platform-card__meta">' + esc(method) + "</p>" : "") +
+          "</div>" +
+        "</div>" +
+        (record.fitNotes ? '<p class="platform-card__body">' + esc(record.fitNotes) + "</p>" : "") +
+        '<div class="review-checks">' +
+          reviewCheck("Permission", record.permissionConfirmed) +
+          reviewCheck("Attribution", record.attributionAccepted) +
+          reviewCheck("Review", record.reviewAccepted) +
+        "</div>" +
+        '<div class="tags">' +
+          '<span class="tag">' + esc(status) + "</span>" +
+          (record.secretStatus ? '<span class="tag">' + esc(record.secretStatus) + "</span>" : "") +
+        "</div>" +
+        '<div class="platform-card__actions">' +
+          '<button class="mini-btn' + (selected ? " is-active" : "") + '" type="button" data-admin-source-select data-record-key="' + esc(record._key) + '">' + (selected ? "Selected" : "Review") + "</button>" +
+          (record.organizerEmail ? '<a class="mini-btn" href="mailto:' + esc(record.organizerEmail) + '">Email</a>' : "") +
+          (publicUrl ? '<a class="mini-btn" href="' + esc(normUrl(publicUrl)) + '" target="_blank" rel="noopener noreferrer">Open source</a>' : "") +
+        "</div>" +
+      "</article>"
+    );
+  }
+
+  function renderEventSourceQueue(el, records, selectedKey) {
+    if (!el) return;
+    if (!records.length) {
+      el.innerHTML = emptyHTML("No event source requests have been submitted.");
+      return;
+    }
+    el.innerHTML = records.map(function (record) {
+      return eventSourceCardHTML(record, selectedKey);
+    }).join("");
+  }
+
+  function setFormValue(form, name, value) {
+    if (form && form.elements[name]) form.elements[name].value = value || "";
+  }
+
+  function setReviewFormEnabled(form, enabled) {
+    if (!form) return;
+    Array.prototype.forEach.call(form.elements, function (el) {
+      if (el.name !== "targetType") el.disabled = !enabled;
+    });
+  }
+
+  function renderSelectedEventSource(record, el) {
+    if (!el) return;
+    if (!record) {
+      el.innerHTML = "<p>Select an event source request above to start a review.</p>";
+      return;
+    }
+    var links = [
+      record.sourceUrl ? '<a class="mini-btn" href="' + esc(normUrl(record.sourceUrl)) + '" target="_blank" rel="noopener noreferrer">Source URL</a>' : "",
+      record.feedUrl ? '<a class="mini-btn" href="' + esc(normUrl(record.feedUrl)) + '" target="_blank" rel="noopener noreferrer">Feed URL</a>' : "",
+      record.organizerEmail ? '<a class="mini-btn" href="mailto:' + esc(record.organizerEmail) + '">Email organizer</a>' : ""
+    ].filter(Boolean).join("");
+    el.innerHTML =
+      '<div class="source-review-summary__grid">' +
+        '<div><p class="source-review-summary__label">Selected source</p><strong>' + esc(record._title) + "</strong></div>" +
+        '<div><p class="source-review-summary__label">Platform</p><strong>' + esc(record.platform || "Unknown") + "</strong></div>" +
+        '<div><p class="source-review-summary__label">Connection</p><strong>' + esc(record.authMethod || "Not specified") + "</strong></div>" +
+        '<div><p class="source-review-summary__label">Current status</p><strong>' + esc(record.approvalStatus || record.syncStatus || "Pending review") + "</strong></div>" +
+      "</div>" +
+      (record.fitNotes ? '<p class="source-review-summary__notes">' + esc(record.fitNotes) + "</p>" : "") +
+      (links ? '<div class="platform-card__actions">' + links + "</div>" : "");
+  }
+
+  function selectEventSourceForReview(record, form, summaryEl, submitEl) {
+    if (!record || !form) return;
+    var recommendation = eventSourceRecommendation(record);
+    setReviewFormEnabled(form, true);
+    setFormValue(form, "targetType", "eventSource");
+    setFormValue(form, "targetId", record._id);
+    setFormValue(form, "targetTitle", record._title);
+    setFormValue(form, "action", recommendation.action);
+    setFormValue(form, "recommendedApprovalStatus", recommendation.approval);
+    setFormValue(form, "recommendedSyncStatus", recommendation.sync);
+    setFormValue(form, "recommendedSecretStatus", recommendation.secret);
+    setFormValue(form, "importPlan", recommendation.importPlan);
+    setFormValue(form, "sourcePlatform", record.platform);
+    setFormValue(form, "sourceUrl", record.sourceUrl);
+    setFormValue(form, "feedUrl", record.feedUrl);
+    setFormValue(form, "organizerEmail", record.organizerEmail);
+    setFormValue(form, "notes", eventSourceReviewNotes(record, recommendation));
+    renderSelectedEventSource(record, summaryEl);
+    if (submitEl) submitEl.disabled = false;
+  }
+
   function cardHTML(record) {
     var meta = metaFor(record._type);
     var email = record[meta.email] || record.email;
@@ -1302,17 +1479,82 @@
 
   function initAdmin() {
     var sourceEl = document.getElementById("eventSourceQueue");
+    var sourceReviewForm = document.getElementById("eventSourceReviewForm");
+    var sourceReviewSummary = document.getElementById("eventSourceReviewSummary");
+    var sourceReviewStatus = document.getElementById("eventSourceReviewStatus");
+    var sourceReviewSubmit = document.getElementById("eventSourceReviewSubmit");
     var reportEl = document.getElementById("reportQueue");
     var pendingEl = document.getElementById("pendingQueue");
     var actionForm = document.getElementById("adminActionForm");
+    var eventSources = [];
+    var selectedEventSource = null;
+
+    setReviewFormEnabled(sourceReviewForm, false);
+
     fetchAll({ types: CONTENT_TYPES.concat(["eventSource", "report", "account", "savedItem", "adminAction", "conciergeRequest"]) }, function (data) {
-      renderCards(sourceEl, data.byType.eventSource || [], "No event source requests have been submitted.");
+      eventSources = data.byType.eventSource || [];
+      renderEventSourceQueue(sourceEl, eventSources, selectedEventSource && selectedEventSource._key);
       renderCards(reportEl, data.byType.report || [], "No reports have been submitted.");
       var pending = data.all.filter(function (record) {
         return ["pending review", "flagged"].indexOf(moderationValue(record)) !== -1;
       });
       renderCards(pendingEl, pending, "No records are currently marked pending review or flagged.");
     });
+
+    if (sourceEl) {
+      sourceEl.addEventListener("click", function (e) {
+        var btn = e.target.closest("[data-admin-source-select]");
+        if (!btn) return;
+        var key = btn.getAttribute("data-record-key");
+        selectedEventSource = eventSources.filter(function (record) {
+          return record._key === key;
+        })[0] || null;
+        if (!selectedEventSource) return;
+        renderEventSourceQueue(sourceEl, eventSources, selectedEventSource._key);
+        selectEventSourceForReview(selectedEventSource, sourceReviewForm, sourceReviewSummary, sourceReviewSubmit);
+        if (sourceReviewStatus) sourceReviewStatus.textContent = "";
+      });
+    }
+
+    if (sourceReviewForm) {
+      sourceReviewForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (!selectedEventSource) {
+          if (sourceReviewStatus) sourceReviewStatus.textContent = "Select an event source before recording a review.";
+          return;
+        }
+        var formData = {};
+        Array.prototype.forEach.call(sourceReviewForm.elements, function (el) {
+          if (!el.name) return;
+          formData[el.name] = el.value.trim();
+        });
+        formData.targetType = "eventSource";
+        formData.targetId = selectedEventSource._id;
+        formData.targetTitle = selectedEventSource._title;
+        formData.sourcePlatform = selectedEventSource.platform || formData.sourcePlatform;
+        formData.sourceUrl = selectedEventSource.sourceUrl || formData.sourceUrl;
+        formData.feedUrl = selectedEventSource.feedUrl || formData.feedUrl;
+        formData.organizerEmail = selectedEventSource.organizerEmail || formData.organizerEmail;
+        if (sourceReviewSubmit) {
+          sourceReviewSubmit.disabled = true;
+          sourceReviewSubmit.textContent = "Recording...";
+        }
+        postRecord("adminAction", formData).then(function () {
+          if (sourceReviewStatus) sourceReviewStatus.textContent = "Source review recorded in Admin Actions.";
+          if (sourceReviewSubmit) {
+            sourceReviewSubmit.disabled = false;
+            sourceReviewSubmit.textContent = "Record source review";
+          }
+        }).catch(function () {
+          if (sourceReviewStatus) sourceReviewStatus.textContent = "Could not record this source review. Try again.";
+          if (sourceReviewSubmit) {
+            sourceReviewSubmit.disabled = false;
+            sourceReviewSubmit.textContent = "Record source review";
+          }
+        });
+      });
+    }
+
     if (actionForm) {
       actionForm.addEventListener("submit", function (e) {
         e.preventDefault();

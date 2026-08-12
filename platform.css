@@ -227,6 +227,82 @@
 .compact-form { display: grid; gap: 12px; }
 .compact-form .field { gap: 5px; }
 
+.source-review-card {
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.source-review-card.is-selected {
+  border-color: var(--brand);
+  box-shadow: var(--shadow-hover);
+}
+
+.review-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.review-check {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 5px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--bg);
+  color: var(--text-secondary);
+}
+
+.review-check--ok {
+  background: var(--cat-active-soft);
+  border-color: var(--cat-active);
+  color: var(--text);
+}
+
+.review-check--warn {
+  background: var(--gold-soft);
+  border-color: var(--gold);
+  color: var(--text);
+}
+
+.source-review-summary {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--bg);
+  padding: 16px;
+  margin: 14px 0;
+  color: var(--text-secondary);
+}
+
+.source-review-summary p { margin: 0; }
+
+.source-review-summary__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.source-review-summary__label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin: 0 0 3px;
+}
+
+.source-review-summary strong {
+  display: block;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.source-review-summary__notes {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-top: 12px;
+}
+
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -441,6 +517,7 @@
   .platform-grid--two,
   .platform-grid--four,
   .stat-grid,
+  .source-review-summary__grid,
   .chapter-map { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
@@ -452,6 +529,7 @@
   .platform-grid--two,
   .platform-grid--four,
   .stat-grid,
+  .source-review-summary__grid,
   .chapter-map,
   .result-row,
   .search-bar { grid-template-columns: 1fr; }
