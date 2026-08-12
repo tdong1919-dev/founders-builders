@@ -156,6 +156,16 @@ place to look before adding a field or a new hub. The backend validates required
 and enum values server-side, so a submission with a bad category/stage/type value is
 rejected rather than silently written.
 
+## Supabase migration
+
+The project now has a Supabase database foundation under `fb_`-prefixed tables, with
+RLS, indexes, seeded launch chapters, event import run tables, and a migration bridge
+from the current Google Sheets/App Script backend. The live frontend remains pointed at
+Google Sheets through `DATA_BACKEND: "google-sheets"` until migrated data is verified.
+
+See [`docs/SUPABASE_MIGRATION.md`](docs/SUPABASE_MIGRATION.md) for the table list,
+service-role migration command, security notes, and cutover process.
+
 **How it works:** each directory **reads** via JSONP (bypasses CORS, `?type=<hub>`), and
 each form **writes** by POSTing `{ type: "<hub>", ... }` to the same endpoint. A hidden
 honeypot field on every form filters basic spam bots.
