@@ -37,6 +37,11 @@
 //              style entities)
 //   `city`     - a value from the platform's defined chapter list (used on
 //              event/collab/podcast entities); see the `city` enum on `event`
+var PUBLIC_RECORD_HEADERS = [
+  'ownerKey', 'accountEmail', 'chapter', 'moderationStatus', 'verified',
+  'reportCount', 'expiresAt', 'lastUpdated'
+];
+
 var ENTITIES = {
   profile: {
     sheetName: 'Profiles',
@@ -46,6 +51,7 @@ var ENTITIES = {
       'x', 'portfolio', 'bio', 'goals', 'lookingFor', 'canHelp',
       'mentor', 'investor', 'podcast', 'speaker', 'volunteer'
     ],
+    extraHeaders: ['needs', 'offers'],
     required: ['name', 'email'],
     enums: {
       stage: ['Idea', 'Pre-launch', 'MVP / Beta', 'Early revenue', 'Growth', 'Scaling', 'Established']
@@ -114,6 +120,7 @@ var ENTITIES = {
       'amountSeeking', 'raisedSoFar', 'useOfFunds', 'description', 'email',
       'website', 'linkedin'
     ],
+    extraHeaders: ['disclaimerAccepted'],
     required: ['company', 'email'],
     enums: {
       stage: ['Idea', 'Pre-seed', 'Seed', 'Series A', 'Series B+', 'Bridge / Note']
@@ -125,6 +132,7 @@ var ENTITIES = {
       'id', 'timestamp', 'name', 'firm', 'type', 'checkSize', 'stages',
       'industries', 'thesis', 'email', 'website', 'linkedin'
     ],
+    extraHeaders: ['disclaimerAccepted'],
     required: ['name', 'email'],
     enums: {
       type: ['Angel', 'VC Fund', 'Family Office', 'Syndicate', 'Corporate VC', 'Accelerator']
@@ -175,6 +183,102 @@ var ENTITIES = {
     enums: {
       category: ['Template', 'Playbook', 'AI Prompt', 'Startup Guide', 'Grant Database', 'Accelerator Database', 'Checklist', 'SOP', 'Software / Tool', 'Other']
     }
+  },
+  account: {
+    sheetName: 'Accounts',
+    headers: [
+      'id', 'timestamp', 'ownerKey', 'name', 'email', 'chapter', 'location',
+      'needs', 'offers', 'goals', 'skills', 'lastSeen', 'moderationStatus'
+    ],
+    required: ['email'],
+    public: false,
+    defaults: { moderationStatus: 'Active' }
+  },
+  savedItem: {
+    sheetName: 'Saved Items',
+    headers: [
+      'id', 'timestamp', 'ownerKey', 'accountEmail', 'targetType', 'targetId',
+      'targetTitle', 'notes'
+    ],
+    required: ['targetType', 'targetId'],
+    public: false
+  },
+  report: {
+    sheetName: 'Reports',
+    headers: [
+      'id', 'timestamp', 'targetType', 'targetId', 'targetTitle', 'reason',
+      'details', 'reporterEmail', 'status'
+    ],
+    required: ['reason'],
+    public: false,
+    enums: {
+      reason: ['Spam', 'Duplicate', 'Outdated', 'Inaccurate', 'Safety concern', 'Funding or investor concern', 'Other'],
+      status: ['Open', 'Reviewing', 'Resolved', 'Dismissed']
+    },
+    defaults: { status: 'Open' }
+  },
+  adminAction: {
+    sheetName: 'Admin Actions',
+    headers: [
+      'id', 'timestamp', 'targetType', 'targetId', 'targetTitle', 'action',
+      'notes', 'adminEmail'
+    ],
+    required: ['action'],
+    public: false,
+    enums: {
+      action: ['Reviewed', 'Verified', 'Needs follow-up', 'Marked duplicate', 'Hidden in Sheet', 'Rejected in Sheet']
+    }
+  },
+  chapter: {
+    sheetName: 'Chapters',
+    headers: [
+      'id', 'timestamp', 'name', 'city', 'slug', 'status', 'focus', 'leadName',
+      'leadEmail', 'notes'
+    ],
+    required: ['name'],
+    public: false,
+    enums: {
+      status: ['Launch chapter', 'Pilot', 'Planning', 'Paused']
+    }
+  },
+  activity: {
+    sheetName: 'Activity',
+    headers: [
+      'id', 'timestamp', 'title', 'summary', 'targetType', 'targetId', 'chapter',
+      'actionLabel', 'actionUrl', 'status'
+    ],
+    required: ['title'],
+    public: false,
+    defaults: { status: 'Active' }
+  },
+  graphEdge: {
+    sheetName: 'Graph Edges',
+    headers: [
+      'id', 'timestamp', 'sourceType', 'sourceId', 'sourceTitle',
+      'relationship', 'targetType', 'targetId', 'targetTitle', 'basis', 'weight'
+    ],
+    required: ['sourceTitle', 'relationship', 'targetTitle'],
+    public: false
+  },
+  conciergeRequest: {
+    sheetName: 'Concierge Requests',
+    headers: [
+      'id', 'timestamp', 'question', 'email', 'context', 'matchedTypes', 'status',
+      'notes'
+    ],
+    required: ['question'],
+    public: false,
+    defaults: { status: 'Open' }
+  },
+  seedTemplate: {
+    sheetName: 'Seed Templates',
+    headers: [
+      'id', 'timestamp', 'title', 'targetType', 'sourcePolicy', 'templateUrl',
+      'permissionStatus', 'moderationStatus', 'notes'
+    ],
+    required: ['title', 'targetType'],
+    public: false,
+    defaults: { permissionStatus: 'Template only', moderationStatus: 'Needs review' }
   }
 };
 
@@ -184,18 +288,50 @@ function entityFor_(type) {
   return entity;
 }
 
+function headersFor_(entity) {
+  var headers = [];
+  function add(list) {
+    (list || []).forEach(function (key) {
+      if (headers.indexOf(key) === -1) headers.push(key);
+    });
+  }
+  add(entity.headers);
+  add(entity.extraHeaders);
+  if (entity.public !== false) add(PUBLIC_RECORD_HEADERS);
+  return headers;
+}
+
 function getSheet_(entity) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(entity.sheetName);
   if (!sheet) {
     sheet = ss.insertSheet(entity.sheetName);
   }
-  var firstRow = sheet.getRange(1, 1, 1, entity.headers.length).getValues()[0];
+  var expected = headersFor_(entity);
+  var lastColumn = Math.max(sheet.getLastColumn(), expected.length);
+  var firstRow = sheet.getRange(1, 1, 1, lastColumn).getValues()[0];
   if (firstRow.join('') === '' || firstRow[0] !== 'id') {
-    sheet.getRange(1, 1, 1, entity.headers.length).setValues([entity.headers]);
+    sheet.getRange(1, 1, 1, expected.length).setValues([expected]);
     sheet.setFrozenRows(1);
+  } else {
+    var current = firstRow.map(function (key) { return String(key || ''); });
+    while (current.length && current[current.length - 1] === '') current.pop();
+    expected.forEach(function (key) {
+      if (current.indexOf(key) === -1) current.push(key);
+    });
+    if (current.join('|') !== firstRow.slice(0, current.length).join('|')) {
+      sheet.getRange(1, 1, 1, current.length).setValues([current]);
+    }
   }
   return sheet;
+}
+
+function headerFor_(sheet, entity) {
+  var lastColumn = Math.max(sheet.getLastColumn(), headersFor_(entity).length);
+  var header = sheet.getRange(1, 1, 1, lastColumn).getValues()[0]
+    .map(function (key) { return String(key || ''); });
+  while (header.length && header[header.length - 1] === '') header.pop();
+  return header.length ? header : headersFor_(entity);
 }
 
 /** Read: returns all records for the requested type as JSON (supports ?callback= for JSONP). */
@@ -205,7 +341,7 @@ function doGet(e) {
     var entity = entityFor_(e && e.parameter && e.parameter.type);
     var sheet = getSheet_(entity);
     var values = sheet.getDataRange().getValues();
-    var header = values.shift() || entity.headers;
+    var header = values.shift() || headersFor_(entity);
     var records = values
       .filter(function (row) { return String(row[0]).length > 0; })
       .map(function (row) {
@@ -256,12 +392,18 @@ function doPost(e) {
     }
 
     var sheet = getSheet_(entity);
+    var header = headerFor_(sheet, entity);
     var id = Utilities.getUuid().slice(0, 8);
     var now = new Date().toISOString();
-    var row = entity.headers.map(function (key) {
+    var row = header.map(function (key) {
       if (key === 'id') return id;
       if (key === 'timestamp') return now;
-      return data[key] || '';
+      if (key === 'lastUpdated') return data[key] || now;
+      if (data[key] != null) return data[key];
+      if (entity.defaults && entity.defaults[key] != null) return entity.defaults[key];
+      if (entity.public !== false && key === 'moderationStatus') return 'Active';
+      if (entity.public !== false && key === 'reportCount') return '0';
+      return '';
     });
     sheet.appendRow(row);
 

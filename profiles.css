@@ -98,6 +98,13 @@
 .tags { display: flex; flex-wrap: wrap; gap: 7px; }
 .tag { font-size: 12px; padding: 4px 10px; border-radius: var(--radius-pill); background: var(--brand-soft); border: 1px solid var(--brand-soft-2); color: var(--brand); }
 
+.signal-grid { display: grid; gap: 9px; }
+.signal { display: grid; gap: 5px; }
+.signal__label {
+  color: var(--text-secondary); font-size: 11.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em;
+}
+
 .badges { display: flex; flex-wrap: wrap; gap: 6px; }
 .badge { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: var(--radius-pill); background: var(--bg); border: 1px solid var(--border); color: var(--text-secondary); white-space: nowrap; }
 .badge--mentor { color: var(--cat-mentor); border-color: var(--cat-mentor); background: var(--cat-mentor-soft); }
@@ -119,6 +126,13 @@
 /* empty state */
 .empty { text-align: center; padding: 56px 0 24px; }
 .empty p { color: var(--text-secondary); margin-bottom: 18px; }
+
+.notice {
+  border: 1px solid var(--gold); border-radius: var(--radius-card);
+  background: var(--gold-soft); padding: 14px 16px; color: var(--text);
+  font-size: 14px;
+}
+.notice p { margin: 0; }
 
 /* hub CTA */
 .hub-cta { padding: 80px 0 96px; margin-top: 24px; background: var(--bg); }
@@ -153,6 +167,7 @@
 .modal__links a { font-size: 13.5px; font-weight: 500; padding: 8px 14px; border-radius: var(--radius-pill); background: var(--bg); border: 1px solid var(--border); color: var(--text); transition: border-color .15s ease; }
 .modal__links a:hover { border-color: var(--brand); color: var(--brand); }
 .modal__contact { width: 100%; margin-top: 24px; }
+.modal__report { width: 100%; margin-top: 10px; }
 
 /* ---------- form ---------- */
 .profile-form { padding: 16px 0 48px; }

@@ -93,12 +93,29 @@
               <span class="field__label">Location</span>
               <input type="text" name="location" placeholder="City, State / Remote" />
             </label>
+            <label class="field">
+              <span class="field__label">Home chapter</span>
+              <select name="chapter">
+                <option value="">Select…</option>
+                <option>Washington, DC</option>
+                <option>Atlanta, GA</option>
+                <option>Boise, ID</option>
+                <option>Madison</option>
+                <option>Virtual</option>
+                <option>Other</option>
+              </select>
+            </label>
           </div>
         </fieldset>
 
         <fieldset class="fieldset">
           <legend>What you offer</legend>
           <div class="field-grid">
+            <label class="field field--full">
+              <span class="field__label">What I can help with</span>
+              <input type="text" name="offers" placeholder="Comma-separated: fundraising, design, intros, automation" />
+              <span class="field__hint">These structured tags power matchmaking.</span>
+            </label>
             <label class="field field--full">
               <span class="field__label">Skills &amp; expertise</span>
               <input type="text" name="skills" placeholder="Comma-separated: e.g. React, Growth, Fundraising, Design" />
@@ -118,6 +135,11 @@
         <fieldset class="fieldset">
           <legend>What you're looking for</legend>
           <div class="field-grid">
+            <label class="field field--full">
+              <span class="field__label">What I need</span>
+              <input type="text" name="needs" placeholder="Comma-separated: beta users, legal, sales, investors, hiring" />
+              <span class="field__hint">These structured tags help F&amp;B recommend people and opportunities.</span>
+            </label>
             <label class="field field--full">
               <span class="field__label">Current goals</span>
               <textarea name="goals" rows="2" placeholder="What are you focused on right now?"></textarea>

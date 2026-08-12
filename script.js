@@ -18,6 +18,17 @@
   // Mobile nav toggle
   var toggle = document.getElementById("navToggle");
   var links = document.querySelector(".nav__links");
+  if (links && !links.querySelector('a[href="dashboard.html"]')) {
+    [
+      ["dashboard.html", "Dashboard"],
+      ["search.html", "Search"]
+    ].reverse().forEach(function (item) {
+      var a = document.createElement("a");
+      a.href = item[0];
+      a.textContent = item[1];
+      links.insertBefore(a, links.firstChild);
+    });
+  }
   if (toggle && links) {
     toggle.addEventListener("click", function () {
       var open = links.classList.toggle("open");
@@ -30,6 +41,60 @@
       });
     });
   }
+
+  // Lightweight persistent identity for the static site. This is not password
+  // authentication; it lets members keep a device-level identity and attach
+  // ownership metadata to public submissions until a full auth provider exists.
+  function readIdentity() {
+    try {
+      var identity = JSON.parse(localStorage.getItem("fb_member_identity") || "null");
+      return identity && identity.email ? identity : null;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function ensureHidden(form, name, value) {
+    var input = form.querySelector('input[name="' + name + '"]');
+    if (!input) {
+      input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      form.appendChild(input);
+    }
+    input.value = value || "";
+  }
+
+  function syncIdentityToForms() {
+    var identity = readIdentity();
+    if (!identity) return;
+    Array.prototype.forEach.call(document.querySelectorAll("form"), function (form) {
+      if (form.id === "signupForm" || form.id === "identityForm") return;
+      var email = form.querySelector('[name="email"]');
+      var name = form.querySelector('[name="name"]');
+      var founder = form.querySelector('[name="founder"]');
+      var chapter = form.querySelector('[name="chapter"]');
+      if (email && !email.value) email.value = identity.email || "";
+      if (name && !name.value) name.value = identity.name || "";
+      if (founder && !founder.value) founder.value = identity.name || "";
+      if (chapter && !chapter.value) chapter.value = identity.chapter || "";
+    });
+  }
+
+  document.addEventListener("submit", function (e) {
+    var form = e.target;
+    if (!form || form.id === "signupForm" || form.id === "identityForm") return;
+    var identity = readIdentity();
+    if (!identity) return;
+    ensureHidden(form, "ownerKey", identity.ownerKey);
+    ensureHidden(form, "accountEmail", identity.email);
+    ensureHidden(form, "accountName", identity.name);
+    if (identity.chapter && !form.querySelector('[name="chapter"]')) {
+      ensureHidden(form, "chapter", identity.chapter);
+    }
+  }, true);
+
+  syncIdentityToForms();
 
   // Feature slider
   var featureTrack = document.getElementById("featureTrack");

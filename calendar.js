@@ -51,7 +51,7 @@
       rsvpLink: "example.com/rsvp", email: "events@example.com"
     },
     {
-      id: "edemo2", title: "AMA: Raising a Pre-Seed Round", host: "Marcus Reed", category: "AMA",
+      id: "edemo2", title: "AMA: Raising a Pre-Seed Round", host: "Demo Member B", category: "AMA",
       city: "Virtual", date: inDays(3), time: "12:00 PM ET", location: "Zoom link on RSVP",
       description: "Bring your questions about fundraising, term sheets, and investor outreach.",
       rsvpLink: "example.com/rsvp", email: "marcus@example.com"

@@ -29,19 +29,19 @@
   /* ---------- sample data (used when no backend is configured) ---------- */
   var SAMPLE = [
     {
-      id: "cdemo1", title: "Co-host a founder AMA on fundraising", name: "Marcus Reed",
+      id: "cdemo1", title: "Co-host a founder AMA on fundraising", name: "Demo Member B",
       category: "AMA", format: "Virtual", city: "Virtual",
       description: "Looking for a co-host with product or growth experience to balance out the finance angle.",
       email: "marcus@example.com", linkedin: "linkedin.com/in/example"
     },
     {
-      id: "cdemo2", title: "Cross-promote our newsletters", name: "Priya Nair",
+      id: "cdemo2", title: "Cross-promote our newsletters", name: "Demo Member C",
       category: "Cross-promotion", format: "", city: "Remote",
       description: "I write a weekly newsletter for early-stage marketplace founders, ~2k subscribers. Open to a swap.",
       email: "priya@example.com", linkedin: ""
     },
     {
-      id: "cdemo3", title: "Run a hands-on pricing workshop", name: "Ava Chen",
+      id: "cdemo3", title: "Run a hands-on pricing workshop", name: "Demo Member A",
       category: "Workshop", format: "", city: "Boise",
       description: "Want to co-run an in-person workshop on pricing for SaaS founders. Looking for a co-facilitator.",
       email: "ava@example.com", linkedin: "linkedin.com/in/example"

@@ -25,19 +25,19 @@
   /* ---------- sample data (used when no backend is configured) ---------- */
   var SAMPLE = [
     {
-      id: "hdemo1", title: "Technical co-founder for a fintech MVP", name: "Marcus Reed",
+      id: "hdemo1", title: "Technical co-founder for a fintech MVP", name: "Demo Member B",
       category: "Technical co-founder", urgency: "ASAP",
       description: "Non-technical founder with 10 years in banking, have paying pilot customers lined up. Need an engineer to build the MVP with me.",
       email: "marcus@example.com", linkedin: "linkedin.com/in/example"
     },
     {
-      id: "hdemo2", title: "5 beta testers for an AI copilot", name: "Ava Chen",
+      id: "hdemo2", title: "5 beta testers for an AI copilot", name: "Demo Member A",
       category: "Beta testers", urgency: "This month",
       description: "Looking for indie founders willing to try our AI copilot for two weeks and give structured feedback.",
       email: "ava@example.com", linkedin: ""
     },
     {
-      id: "hdemo3", title: "Intro to a lawyer for SAFE docs", name: "Priya Nair",
+      id: "hdemo3", title: "Intro to a lawyer for SAFE docs", name: "Demo Member C",
       category: "Legal", urgency: "No rush",
       description: "Raising a small pre-seed round and need someone to review SAFE agreements before we sign.",
       email: "priya@example.com", linkedin: "linkedin.com/in/example"

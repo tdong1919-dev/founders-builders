@@ -32,21 +32,21 @@
   /* ---------- sample data (used when no backend is configured) ---------- */
   var SAMPLE = [
     {
-      id: "bdemo1", name: "Tinkerlab", category: "Startup", industry: "AI / SaaS",
+      id: "bdemo1", name: "Demo Startup A", category: "Startup", industry: "AI / SaaS",
       description: "An AI copilot that helps indie founders ship faster.",
-      products: "Tinkerlab Copilot", services: "", team: "Solo founder", hiring: "Open to great people",
+      products: "Demo Startup Tool", services: "", team: "Solo founder", hiring: "Open to great people",
       website: "example.com", linkedin: "linkedin.com/company/example", email: "hello@tinkerlab.example"
     },
     {
-      id: "bdemo2", name: "Reed Finance", category: "Service provider", industry: "Fintech",
+      id: "bdemo2", name: "Demo Service Provider B", category: "Service provider", industry: "Fintech",
       description: "Fractional CFO services for early-stage startups.",
       products: "", services: "Financial modeling, Fundraising prep, Bookkeeping", team: "3 people", hiring: "Not currently hiring",
       website: "example.com", email: "hello@reedfinance.example"
     },
     {
-      id: "bdemo3", name: "Craftly", category: "Product", industry: "E-commerce",
+      id: "bdemo3", name: "Demo Marketplace C", category: "Product", industry: "E-commerce",
       description: "A marketplace connecting local makers with buyers nearby.",
-      products: "Craftly Marketplace", services: "", team: "5 people", hiring: "Hiring now",
+      products: "Demo Marketplace Offer", services: "", team: "5 people", hiring: "Hiring now",
       website: "example.com", instagram: "instagram.com/example", email: "hello@craftly.example"
     }
   ];

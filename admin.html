@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trust &amp; Admin — Founders &amp; Builders</title>
+  <meta name="description" content="Founders & Builders trust, moderation, report queue, seed-content policy, and admin action log." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="profiles.css" />
+  <link rel="stylesheet" href="platform.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%80%3C/text%3E%3C/svg%3E" />
+</head>
+<body data-platform-page="admin">
+  <header class="nav scrolled" id="nav">
+    <div class="nav__inner">
+      <a href="index.html" class="brand">
+        <svg class="icon brand__mark" viewBox="0 0 24 24"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg>
+        <span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span>
+      </a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="search.html">Search</a>
+        <a href="admin.html" aria-current="page">Trust</a>
+        <a href="network.html">Network</a>
+      </nav>
+      <a href="report-listing.html" class="btn btn--sm">Report listing</a>
+      <button class="nav__toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="platform-hero">
+      <div class="container">
+        <a class="back-link" href="dashboard.html">Back to dashboard</a>
+        <span class="kicker">Trust infrastructure</span>
+        <h1 class="platform-hero__title">Moderation before scale.</h1>
+        <p class="platform-hero__sub">A Sheets-first admin surface for reports, pending review, verification notes, seed-content policy, and funding/investor caution. Secure role-based admin can be added later without throwing this workflow away.</p>
+      </div>
+    </section>
+
+    <section class="container platform-shell">
+      <aside class="platform-sidebar">
+        <div class="platform-panel platform-panel--gold">
+          <h2 class="platform-panel__title">Funding disclaimer</h2>
+          <p class="platform-panel__copy">Funding and investor records are discovery surfaces only. They are not investment advice, recommendations, offers to sell securities, legal advice, tax advice, or diligence.</p>
+        </div>
+        <div class="platform-panel">
+          <h2 class="platform-panel__title">Admin model</h2>
+          <p class="platform-panel__copy">Reports and action notes are append-only records. Content hiding is controlled by moderation fields in the Sheet until a secure admin auth layer exists.</p>
+        </div>
+        <div class="platform-panel">
+          <h2 class="platform-panel__title">Seed content rule</h2>
+          <p class="platform-panel__copy">Do not fabricate real people, investors, funds, companies, jobs, or testimonials. Use templates, placeholders, or explicitly sourced/permissioned records only.</p>
+          <a class="mini-btn" href="seed-content/README.md">Open seed guide</a>
+        </div>
+      </aside>
+
+      <div class="platform-main">
+        <section class="platform-section">
+          <div class="platform-section__head">
+            <div>
+              <h2 class="platform-section__title">Report queue</h2>
+              <p class="platform-section__desc">Member-submitted issues for admin review.</p>
+            </div>
+          </div>
+          <div class="platform-grid platform-grid--two" id="reportQueue"></div>
+        </section>
+
+        <section class="platform-section">
+          <div class="platform-section__head">
+            <div>
+              <h2 class="platform-section__title">Pending or flagged records</h2>
+              <p class="platform-section__desc">Records with moderation status set to Pending review or Flagged.</p>
+            </div>
+          </div>
+          <div class="platform-grid platform-grid--two" id="pendingQueue"></div>
+        </section>
+
+        <section class="platform-section">
+          <div class="platform-section__head">
+            <div>
+              <h2 class="platform-section__title">Record an admin action</h2>
+              <p class="platform-section__desc">This creates an audit note in Sheets. It does not mutate the target record.</p>
+            </div>
+          </div>
+          <form class="compact-form" id="adminActionForm">
+            <div class="field-grid">
+              <label class="field">
+                <span class="field__label">Target type</span>
+                <input name="targetType" placeholder="profile, job, investor..." />
+              </label>
+              <label class="field">
+                <span class="field__label">Target ID</span>
+                <input name="targetId" />
+              </label>
+              <label class="field">
+                <span class="field__label">Target title</span>
+                <input name="targetTitle" />
+              </label>
+              <label class="field">
+                <span class="field__label">Action</span>
+                <select name="action">
+                  <option>Reviewed</option>
+                  <option>Verified</option>
+                  <option>Needs follow-up</option>
+                  <option>Marked duplicate</option>
+                  <option>Hidden in Sheet</option>
+                  <option>Rejected in Sheet</option>
+                </select>
+              </label>
+              <label class="field field--full">
+                <span class="field__label">Notes</span>
+                <textarea name="notes" rows="4"></textarea>
+              </label>
+            </div>
+            <button class="btn" type="submit">Record action</button>
+            <p class="form-status" id="adminActionStatus" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="brand"><span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span></div>
+      <p class="footer__copy">&copy; <span id="year"></span> Founders &amp; Builders. Community-built.</p>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+  <script src="platform.js"></script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ask F&amp;B — Founders &amp; Builders</title>
+  <meta name="description" content="Ask Founders & Builders to find relevant members, mentors, events, jobs, resources, funding signals, and collaborators from current platform records." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="profiles.css" />
+  <link rel="stylesheet" href="platform.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%80%3C/text%3E%3C/svg%3E" />
+</head>
+<body data-platform-page="concierge">
+  <header class="nav scrolled" id="nav">
+    <div class="nav__inner">
+      <a href="index.html" class="brand">
+        <svg class="icon brand__mark" viewBox="0 0 24 24"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg>
+        <span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span>
+      </a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="search.html">Search</a>
+        <a href="concierge.html" aria-current="page">Ask F&amp;B</a>
+        <a href="activity.html">Activity</a>
+        <a href="admin.html">Admin</a>
+      </nav>
+      <a href="create-profile.html" class="btn btn--sm">Create profile</a>
+      <button class="nav__toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="platform-hero">
+      <div class="container platform-hero__grid">
+        <div>
+          <a class="back-link" href="dashboard.html">Back to dashboard</a>
+          <span class="kicker">Community Concierge</span>
+          <h1 class="platform-hero__title">Ask F&amp;B what to do next.</h1>
+          <p class="platform-hero__sub">Ask in plain language. F&amp;B searches its own ecosystem and returns current people, companies, events, resources, opportunities, and capital signals. It does not invent records.</p>
+        </div>
+        <div class="platform-rail">
+          <div class="platform-rail__row">
+            <span class="platform-rail__label">Positioning</span>
+            <strong class="platform-rail__value">Practical, not social</strong>
+          </div>
+          <div class="platform-rail__row">
+            <span class="platform-rail__label">Funding care</span>
+            <strong class="platform-rail__value">Discovery only</strong>
+          </div>
+          <div class="platform-rail__row">
+            <span class="platform-rail__label">Source</span>
+            <strong class="platform-rail__value">Current hub records</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container platform-main" style="padding:36px 0 84px">
+      <section class="platform-section">
+        <form id="conciergeForm" class="compact-form">
+          <label class="field">
+            <span class="field__label">What are you trying to do?</span>
+            <textarea id="conciergeQuestion" rows="4" placeholder="I'm launching a healthcare startup in Atlanta. I need a technical cofounder, an attorney, and fundraising help."></textarea>
+          </label>
+          <button class="btn" type="submit">Ask F&amp;B</button>
+        </form>
+        <div class="filter-strip" id="conciergeExamples" aria-label="Example questions">
+          <button class="chip" type="button" data-question="I need beta users and product feedback in DC">Beta users in DC</button>
+          <button class="chip" type="button" data-question="Find mentors who can help with fundraising and go to market">Fundraising mentors</button>
+          <button class="chip" type="button" data-question="What events and resources should an early founder in Atlanta look at?">Atlanta founder path</button>
+        </div>
+      </section>
+
+      <div class="platform-main" id="conciergeResults"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="brand"><span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span></div>
+      <p class="footer__copy">&copy; <span id="year"></span> Founders &amp; Builders. Community-built.</p>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+  <script src="platform.js"></script>
+</body>
+</html>

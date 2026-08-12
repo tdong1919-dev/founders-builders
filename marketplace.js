@@ -25,7 +25,7 @@
   /* ---------- sample data (used when no backend is configured) ---------- */
   var SAMPLE = [
     {
-      id: "ldemo1", name: "Tinkerlab Copilot", category: "AI tools",
+      id: "ldemo1", name: "Demo Startup Tool", category: "AI tools",
       description: "An AI copilot that helps indie founders ship faster — from idea to launch.",
       pricing: "$29/mo", demo: "example.com/demo", website: "example.com",
       email: "hello@tinkerlab.example"

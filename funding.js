@@ -30,14 +30,14 @@
   /* ---------- sample data (used when no backend is configured) ---------- */
   var SAMPLE_RAISE = [
     {
-      id: "rdemo1", company: "Tinkerlab", founder: "Ava Chen", stage: "Seed", industry: "AI / SaaS",
+      id: "rdemo1", company: "Demo Startup A", founder: "Demo Member A", stage: "Seed", industry: "AI / SaaS",
       amountSeeking: "$750k", raisedSoFar: "$150k friends & family",
       useOfFunds: "Engineering hires, go-to-market",
       description: "An AI copilot for indie founders. 40 paying beta users, $3k MRR, growing 20% m/m.",
       email: "ava@example.com", website: "example.com", linkedin: "linkedin.com/in/example"
     },
     {
-      id: "rdemo2", company: "Reed Finance", founder: "Marcus Reed", stage: "Pre-seed", industry: "Fintech",
+      id: "rdemo2", company: "Demo Service Provider B", founder: "Demo Member B", stage: "Pre-seed", industry: "Fintech",
       amountSeeking: "$250k", raisedSoFar: "$0",
       useOfFunds: "Founding engineer, compliance review",
       description: "Fractional CFO tooling for startups. Piloting with 5 agencies, building the self-serve product now.",
@@ -46,13 +46,13 @@
   ];
   var SAMPLE_INVESTOR = [
     {
-      id: "idemo1", name: "Priya Nair", firm: "Craftly Ventures", type: "Angel", checkSize: "$10k–25k",
+      id: "idemo1", name: "Demo Member C", firm: "Demo Capital Template", type: "Angel", checkSize: "$10k–25k",
       stages: "Idea, Pre-seed", industries: "E-commerce, Marketplaces, Consumer",
       thesis: "I back designer-founders building community-driven products. Warm intro or cold email both fine.",
       email: "priya@example.com", website: "", linkedin: "linkedin.com/in/example"
     },
     {
-      id: "idemo2", name: "Dana Ellis", firm: "Ellis Capital", type: "VC Fund", checkSize: "$100k–500k",
+      id: "idemo2", name: "Demo Advisor D", firm: "Demo Capital Template", type: "VC Fund", checkSize: "$100k–500k",
       stages: "Seed, Series A", industries: "DevTools, SaaS, Infrastructure",
       thesis: "We lead or co-lead seed rounds for technical founding teams with early revenue.",
       email: "dana@example.com", website: "example.com", linkedin: ""
@@ -341,6 +341,10 @@
       }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
         say("Please enter a valid email address.", "err");
+        return;
+      }
+      if (formEl.querySelector('[name="disclaimerAccepted"]') && !data.disclaimerAccepted) {
+        say("Please acknowledge the Funding Hub disclaimer before submitting.", "err");
         return;
       }
 

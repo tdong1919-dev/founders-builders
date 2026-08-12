@@ -27,7 +27,10 @@ vision and gathers early community feedback.
 - 💕 **Founder Diagnostic** — JIDOKA-powered bottleneck assessment for post-MVP founders
 - 📚 **Resource Library** — templates, playbooks, prompts, grant & accelerator databases
 - 📖 **Philosophical Topic Generator** — *"Do Not Open If You Want Peace"*
-- 🤖 **Future AI Agents** — matchmaking, recommendations & a community concierge
+- 🧭 **Member Dashboard + Universal Search** — persistent identity, saved items & cross-hub discovery
+- 🤖 **Matchmaker + Ask F&B** — rule-based recommendations and a concierge grounded in current records
+- 🛡️ **Trust & Moderation** — reporting, admin action notes, seed-content policy & funding disclaimers
+- 🗺️ **City Chapters + Network Intelligence** — DC, Atlanta, Boise, Madison, activity feed & graph layer
 
 ## Tech
 
@@ -83,6 +86,18 @@ resources.html         # 📚 Resource Library (hub #11)
 add-resource.html      # resource submission form
 resources.js           # directory + form logic (reads/writes the sheet)
 
+dashboard.html         # unified member dashboard + persistent local identity
+search.html            # universal search across all 11 hubs
+concierge.html         # Ask F&B community concierge
+chapters.html          # DC / Atlanta / Boise / Madison chapter dashboards
+activity.html          # action-oriented opportunities feed
+network.html           # explainable network intelligence graph
+admin.html             # trust, report queue, admin action notes
+report-listing.html    # listing report intake
+platform.js            # shared data, identity, search, matchmaking, graph logic
+platform.css           # shared styles for connected platform pages
+seed-content/          # seed/import policy and intake templates
+
 profiles.css          # shared hub styling (cards, modal, forms, toolbar)
 config.js             # paste your Apps Script Web App URL here (shared by all hubs)
 apps-script/Code.gs   # Google Sheets backend — one Web App serves every hub
@@ -110,7 +125,9 @@ deploy once no matter how many hubs get added.
 deployment rather than creating a new one — the URL in `config.js` stays valid:
 **Deploy → Manage deployments → Edit (pencil) → Version: New → Deploy**.
 
-Each sheet tab and its headers are created automatically on first use. Until
+Each sheet tab and its headers are created automatically on first use. Existing tabs are
+migrated safely: when new columns are added to `Code.gs`, the script appends missing
+headers instead of replacing old data. Until
 `config.js` is set, every hub shows sample data and forms run in demo mode (nothing is
 saved).
 
@@ -153,6 +170,15 @@ python3 -m http.server 8000
 - [x] **🎤 Co-Host & Collaborate** — collab board for events, workshops, AMAs & cross-promotion, Google Sheets backend
 - [x] **🎙️ Podcast Hub** — show directory, find guests/co-hosts/sponsors, Google Sheets backend
 - [x] **📚 Resource Library** — templates, playbooks, prompts & tools, Google Sheets backend
-- [ ] 🤖 AI agents
+- [x] **Member dashboard** — device-level persistent identity, saved items, my records
+- [x] **Universal search** — one search surface across all 11 hubs
+- [x] **Needs/offers profile mechanic** — structured `needs` and `offers` signals
+- [x] **Matchmaking engine** — rule-based recommendations grounded in current records
+- [x] **Ask F&B** — concierge-style search assistant without fabricated matches
+- [x] **Trust/moderation infrastructure** — reports, admin action log, status fields
+- [x] **Seed-content infrastructure** — import policy and review template, no fabricated people
+- [x] **City chapters** — DC, Atlanta, Boise, Madison, plus virtual/remote support
+- [x] **Action-oriented activity feed** — opportunities and asks, not a social feed
+- [x] **Network intelligence layer** — explainable graph of people, companies, skills, needs, capital, events, resources, and relationships
 
 Contributions and feedback welcome — **the door is open. Let's build this together.**

@@ -31,23 +31,26 @@
   /* ---------- sample data (used when no backend is configured) ---------- */
   var SAMPLE = [
     {
-      id: "demo1", name: "Ava Chen", building: "An AI copilot for indie founders",
-      business: "Tinkerlab", stage: "MVP / Beta", industry: "AI / SaaS", location: "Boise, ID",
+      id: "demo1", name: "Demo Member A", building: "An AI copilot for indie founders",
+      business: "Demo Startup A", stage: "MVP / Beta", industry: "AI / SaaS", location: "Boise, ID",
       skills: "Product, Machine Learning, Growth", canHelp: "Happy to review AI product ideas and pricing.",
+      offers: "Product feedback, Pricing, AI product review", needs: "Technical co-founder, Beta users",
       lookingFor: "A technical co-founder and first 10 beta users.", bio: "Ex-product lead, now building solo.",
       website: "example.com", linkedin: "linkedin.com/in/example", mentor: "Yes", speaker: "Yes"
     },
     {
-      id: "demo2", name: "Marcus Reed", building: "Fractional CFO services for startups",
-      business: "Reed Finance", stage: "Early revenue", industry: "Fintech", location: "Atlanta, GA",
+      id: "demo2", name: "Demo Member B", building: "Fractional CFO services for startups",
+      business: "Demo Service Provider B", stage: "Early revenue", industry: "Fintech", location: "Atlanta, GA",
       skills: "Finance, Fundraising, Operations", canHelp: "Financial modeling and fundraising prep.",
+      offers: "Financial modeling, Fundraising prep", needs: "Seed founder referrals",
       lookingFor: "Referrals to seed-stage founders.", bio: "20 years in startup finance.",
       website: "example.com", investor: "Yes", mentor: "Yes"
     },
     {
-      id: "demo3", name: "Priya Nair", building: "A marketplace for local makers",
-      business: "Craftly", stage: "Growth", industry: "E-commerce", location: "Remote",
+      id: "demo3", name: "Demo Member C", building: "A marketplace for local makers",
+      business: "Demo Marketplace C", stage: "Growth", industry: "E-commerce", location: "Remote",
       skills: "Design, Marketing, Community", canHelp: "Brand and community-building advice.",
+      offers: "Brand feedback, Community building", needs: "Senior engineer, Marketing partner",
       lookingFor: "A senior engineer and marketing partner.", bio: "Designer-founder, community nerd.",
       website: "example.com", podcast: "Yes", speaker: "Yes"
     }
@@ -106,7 +109,7 @@
       if (activeFilter !== "all" && !truthy(p[activeFilter])) return false;
       var q = (searchInput && searchInput.value || "").trim().toLowerCase();
       if (!q) return true;
-      var hay = [p.name, p.building, p.business, p.industry, p.location, p.skills, p.lookingFor, p.canHelp]
+      var hay = [p.name, p.building, p.business, p.industry, p.location, p.chapter, p.skills, p.needs, p.offers, p.lookingFor, p.canHelp]
         .join(" ").toLowerCase();
       return hay.indexOf(q) !== -1;
     }
@@ -145,11 +148,20 @@
     if (truthy(p.investor)) out += '<span class="badge badge--investor">Investor</span>';
     if (truthy(p.speaker)) out += '<span class="badge badge--speaker">Speaker</span>';
     if (truthy(p.podcast)) out += '<span class="badge badge--podcast">Podcast</span>';
+    if (truthy(p.verified)) out += '<span class="badge badge--verified">Verified</span>';
     return out;
   }
 
+  function signalHTML(label, value) {
+    var list = tags(value).slice(0, 3);
+    if (!list.length) return "";
+    return '<div class="signal"><span class="signal__label">' + esc(label) + '</span><div class="tags">' +
+      list.map(function (t) { return '<span class="tag">' + esc(t) + "</span>"; }).join("") +
+      "</div></div>";
+  }
+
   function cardHTML(p) {
-    var skillTags = tags(p.skills).slice(0, 4).map(function (t) {
+    var skillTags = tags(p.skills).slice(0, 3).map(function (t) {
       return '<span class="tag">' + esc(t) + "</span>";
     }).join("");
     return (
@@ -163,8 +175,12 @@
         "</div>" +
         (p.building ? '<p class="pcard__building">' + esc(p.building) + "</p>" : "") +
         (skillTags ? '<div class="tags">' + skillTags + "</div>" : "") +
+        '<div class="signal-grid">' +
+          signalHTML("Can help", p.offers || p.canHelp) +
+          signalHTML("Needs", p.needs || p.lookingFor) +
+        "</div>" +
         '<div class="pcard__foot">' +
-          '<span class="pcard__loc">' + (p.location ? esc(p.location) : "") + "</span>" +
+          '<span class="pcard__loc">' + (p.chapter || p.location ? esc(p.chapter || p.location) : "") + "</span>" +
           '<div class="badges">' + badges(p) + "</div>" +
         "</div>" +
       "</article>"
@@ -219,11 +235,12 @@
       (skillTags ? '<div class="tags">' + skillTags + "</div>" : "") +
       detailBlock("Bio", p.bio) +
       detailBlock("Current goals", p.goals) +
-      detailBlock("What they're looking for", p.lookingFor) +
-      detailBlock("How they can help", p.canHelp) +
+      detailBlock("What I need", p.needs || p.lookingFor) +
+      detailBlock("What I can help with", p.offers || p.canHelp) +
       detailBlock("Products &amp; services", p.products) +
       linkRow(p) +
-      (p.email ? '<a class="btn btn--lg modal__contact" href="mailto:' + esc(p.email) + '">Get in touch</a>' : "");
+      (p.email ? '<a class="btn btn--lg modal__contact" href="mailto:' + esc(p.email) + '">Get in touch</a>' : "") +
+      '<a class="mini-btn modal__report" href="report-listing.html?type=profile&id=' + encodeURIComponent(p.id || "") + '&title=' + encodeURIComponent(p.name || "Profile") + '">Report listing</a>';
     modal.hidden = false;
     document.body.style.overflow = "hidden";
   }
