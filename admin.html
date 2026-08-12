@@ -54,6 +54,11 @@
           <p class="platform-panel__copy">Reports and action notes are append-only records. Content hiding is controlled by moderation fields in the Sheet until a secure admin auth layer exists.</p>
         </div>
         <div class="platform-panel">
+          <h2 class="platform-panel__title">Event source rule</h2>
+          <p class="platform-panel__copy">Organizer source requests can be reviewed in Sheets, but OAuth tokens and API keys should only be stored in Apps Script Properties or a future secure auth store.</p>
+          <a class="mini-btn" href="add-event-source.html">Add source</a>
+        </div>
+        <div class="platform-panel">
           <h2 class="platform-panel__title">Seed content rule</h2>
           <p class="platform-panel__copy">Do not fabricate real people, investors, funds, companies, jobs, or testimonials. Use templates, placeholders, or explicitly sourced/permissioned records only.</p>
           <a class="mini-btn" href="seed-content/README.md">Open seed guide</a>
@@ -61,6 +66,177 @@
       </aside>
 
       <div class="platform-main">
+        <section class="platform-section">
+          <div class="platform-section__head">
+            <div>
+              <h2 class="platform-section__title">Event source requests</h2>
+              <p class="platform-section__desc">Organizer-submitted calendars, feeds, and authorization requests waiting for review or secure setup.</p>
+            </div>
+            <a class="mini-btn" href="add-event-source.html">Add source</a>
+          </div>
+          <div class="platform-grid platform-grid--two" id="eventSourceQueue"></div>
+        </section>
+
+        <section class="platform-section" id="eventSourceReviewSection">
+          <div class="platform-section__head">
+            <div>
+              <h2 class="platform-section__title">Review selected source</h2>
+              <p class="platform-section__desc">Record the review decision, recommended status changes, and import plan as an append-only admin action.</p>
+            </div>
+          </div>
+          <div class="notice">
+            <p>This review records an audit note. Until secure admin auth exists, update the Event Sources row in Sheets after review instead of letting the public web app mutate it directly.</p>
+          </div>
+          <div class="source-review-summary" id="eventSourceReviewSummary">
+            <p>Select an event source request above to start a review.</p>
+          </div>
+          <form class="compact-form" id="eventSourceReviewForm">
+            <input type="hidden" name="targetType" value="eventSource" />
+            <input type="hidden" name="sourcePlatform" />
+            <input type="hidden" name="sourceUrl" />
+            <input type="hidden" name="feedUrl" />
+            <input type="hidden" name="organizerEmail" />
+            <div class="field-grid">
+              <label class="field">
+                <span class="field__label">Source ID</span>
+                <input name="targetId" readonly />
+              </label>
+              <label class="field">
+                <span class="field__label">Source name</span>
+                <input name="targetTitle" readonly />
+              </label>
+              <label class="field">
+                <span class="field__label">Decision</span>
+                <select name="action" id="eventSourceReviewAction" disabled>
+                  <option>Event source approved</option>
+                  <option>Event source ready for manual import</option>
+                  <option>Event source needs secure setup</option>
+                  <option>Event source rejected</option>
+                  <option>Event source paused</option>
+                  <option>Needs follow-up</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Approval status</span>
+                <select name="recommendedApprovalStatus" disabled>
+                  <option>Pending review</option>
+                  <option>Approved</option>
+                  <option>Rejected</option>
+                  <option>Paused</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Sync status</span>
+                <select name="recommendedSyncStatus" disabled>
+                  <option>Requested</option>
+                  <option>Needs secure setup</option>
+                  <option>Pending review</option>
+                  <option>Active</option>
+                  <option>Paused</option>
+                  <option>Rejected</option>
+                  <option>Error</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Secret status</span>
+                <select name="recommendedSecretStatus" disabled>
+                  <option>Not collected - admin follow-up required</option>
+                  <option>No secret required</option>
+                  <option>Stored in Script Properties</option>
+                  <option>Revoked</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Import plan</span>
+                <select name="importPlan" disabled>
+                  <option>No import yet</option>
+                  <option>Manual import approved</option>
+                  <option>Curated review only</option>
+                  <option>Auto-sync when supported</option>
+                  <option>Needs organizer follow-up</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Admin email</span>
+                <input name="adminEmail" type="email" placeholder="admin@example.com" disabled />
+              </label>
+              <label class="field field--full">
+                <span class="field__label">Review notes</span>
+                <textarea name="notes" rows="7" disabled></textarea>
+              </label>
+            </div>
+            <button class="btn" type="submit" id="eventSourceReviewSubmit" disabled>Record source review</button>
+            <p class="form-status" id="eventSourceReviewStatus" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+
+        <section class="platform-section" id="eventImportSection">
+          <div class="platform-section__head">
+            <div>
+              <h2 class="platform-section__title">Manual event import</h2>
+              <p class="platform-section__desc">Paste iCal, JSON, CSV, or structured event text from an approved source, preview it, edit it, then publish selected events to the public calendar.</p>
+            </div>
+          </div>
+          <div class="notice">
+            <p>Only import public event details. Do not paste attendee lists, private guest data, API keys, OAuth tokens, or private calendar URLs.</p>
+          </div>
+          <form class="compact-form" id="eventImportForm">
+            <div class="field-grid">
+              <label class="field field--full">
+                <span class="field__label">Approved source</span>
+                <select id="eventImportSourceSelect" disabled>
+                  <option value="">Load approved sources...</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Fallback city</span>
+                <select id="eventImportDefaultCity">
+                  <option value="">Use pasted value</option>
+                  <option>Boise, ID</option>
+                  <option>Atlanta, GA</option>
+                  <option>Washington, DC</option>
+                  <option>Madison, AL</option>
+                  <option>Virtual</option>
+                  <option>Other</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Fallback category</span>
+                <select id="eventImportDefaultCategory">
+                  <option value="">Use pasted value</option>
+                  <option>Workshop</option>
+                  <option>Meetup</option>
+                  <option>AMA</option>
+                  <option>Demo Day</option>
+                  <option>Pitch Competition</option>
+                  <option>Office Hours</option>
+                  <option>Hack Night</option>
+                  <option>Panel</option>
+                  <option>Other</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Calendar contact email</span>
+                <input id="eventImportEmail" type="email" placeholder="Uses organizer email when available" />
+              </label>
+              <label class="field">
+                <span class="field__label">Default host</span>
+                <input id="eventImportHost" placeholder="Uses source name when blank" />
+              </label>
+              <label class="field field--full">
+                <span class="field__label">Paste event data</span>
+                <textarea id="eventImportRawData" rows="10" placeholder="Paste VEVENT/iCal text, a JSON array of events, CSV with headers, or blocks like:&#10;Title: Founder Coffee&#10;Date: 2026-09-12&#10;Time: 8:30 AM&#10;Location: Downtown&#10;RSVP: https://..."></textarea>
+              </label>
+            </div>
+            <div class="platform-card__actions">
+              <button class="btn" type="submit" id="eventImportParseBtn">Preview events</button>
+              <button class="btn btn--secondary" type="button" id="eventImportClearBtn">Clear preview</button>
+            </div>
+            <p class="form-status" id="eventImportStatus" role="status" aria-live="polite"></p>
+          </form>
+          <div class="event-import-preview" id="eventImportPreview"></div>
+        </section>
+
         <section class="platform-section">
           <div class="platform-section__head">
             <div>
@@ -111,6 +287,12 @@
                   <option>Marked duplicate</option>
                   <option>Hidden in Sheet</option>
                   <option>Rejected in Sheet</option>
+                  <option>Event source approved</option>
+                  <option>Event source ready for manual import</option>
+                  <option>Event source needs secure setup</option>
+                  <option>Event source rejected</option>
+                  <option>Event source paused</option>
+                  <option>Imported events from source</option>
                 </select>
               </label>
               <label class="field field--full">

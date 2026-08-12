@@ -21,6 +21,10 @@ server, or auth provider.
   `chapter` metadata when a member has saved a local identity.
 - New append-only backend tabs support accounts, saved items, reports, admin actions,
   chapters, curated activity, graph edges, concierge requests, and seed templates.
+- Event aggregation uses the same pattern: organizer source requests are written to a
+  private `Event Sources` tab, while approved external events appear in the public
+  `Events` tab with attribution fields such as `sourcePlatform`, `sourceName`, and
+  `sourceUrl`.
 
 ## Phase coverage
 
@@ -43,3 +47,7 @@ server, or auth provider.
 - No real people, investors, companies, or jobs should be fabricated.
 - Funding and investor flows show discovery-only disclaimers and store an acknowledgement.
 - Admin changes are append-only until secure role-based auth is introduced.
+- Event-source forms never collect API keys, OAuth tokens, passwords, or private guest
+  data. Secure credentials belong in Apps Script Properties or a future OAuth/auth store,
+  and imported events should keep attribution and RSVP links pointed to the original
+  organizer platform.

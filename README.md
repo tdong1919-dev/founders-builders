@@ -23,7 +23,7 @@ vision and gathers early community feedback.
 - 🎤 **Co-Host & Collaborate** — events, workshops, AMAs, cross-promotion
 - 🎙️ **Podcast Hub** — find guests, hosts, and local shows
 - 💰 **Funding Hub** — founder ↔ investor matching (AI-assisted)
-- 📅 **Community Calendar** — launching in **Boise** and **Atlanta**
+- 📅 **Community Calendar** — F&B posts plus reviewed external sources from organizer platforms
 - 💕 **Founder Diagnostic** — JIDOKA-powered bottleneck assessment for post-MVP founders
 - 📚 **Resource Library** — templates, playbooks, prompts, grant & accelerator databases
 - 📖 **Philosophical Topic Generator** — *"Do Not Open If You Want Peace"*
@@ -72,7 +72,9 @@ funding.js             # both directories + both forms (reads/writes the sheet)
 
 calendar.html          # 📅 Community Calendar (hub #8)
 add-event.html         # event posting form
+add-event-source.html  # organizer calendar/source authorization request form
 calendar.js            # directory + form logic (reads/writes the sheet)
+event-sources.js       # event-source intake flow (private admin review queue)
 
 collaborate.html       # 🎤 Co-Host & Collaborate (hub #9)
 add-collab.html        # collab posting form
@@ -131,6 +133,16 @@ headers instead of replacing old data. Until
 `config.js` is set, every hub shows sample data and forms run in demo mode (nothing is
 saved).
 
+**Event aggregation:** organizers can submit external event sources through
+[`add-event-source.html`](add-event-source.html). The request goes to a private
+`Event Sources` tab for review; approved external events appear in the public `Events`
+tab with source attribution and RSVP links back to the original platform. Admins can
+review selected source requests in [`admin.html`](admin.html), which records append-only
+review actions and recommended status changes. Approved sources can then be used in the
+manual import queue to paste iCal/JSON/CSV/text events, preview/edit them, and publish
+selected rows to the public calendar. The operating guide is in
+[`docs/EVENT_SOURCE_AGGREGATION.md`](docs/EVENT_SOURCE_AGGREGATION.md).
+
 **Schema:** every entity's exact columns, types, required fields, and allowed values
 (enums) are documented in [`apps-script/SCHEMA.md`](apps-script/SCHEMA.md) — that's the
 place to look before adding a field or a new hub. The backend validates required fields
@@ -166,7 +178,7 @@ python3 -m http.server 8000
 - [x] **🤝 Mentor Network** — mentor directory + signup form, Google Sheets backend
 - [x] **🆘 Help Board** — post-a-need board with category/urgency filters, Google Sheets backend
 - [x] **💰 Funding Hub** — raising + investing boards, Google Sheets backend (AI-assisted matching is a future upgrade)
-- [x] **📅 Community Calendar** — event listings for Boise & Atlanta + virtual, Google Sheets backend
+- [x] **📅 Community Calendar** — event listings plus reviewed external source intake, Google Sheets backend
 - [x] **🎤 Co-Host & Collaborate** — collab board for events, workshops, AMAs & cross-promotion, Google Sheets backend
 - [x] **🎙️ Podcast Hub** — show directory, find guests/co-hosts/sponsors, Google Sheets backend
 - [x] **📚 Resource Library** — templates, playbooks, prompts & tools, Google Sheets backend
