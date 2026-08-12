@@ -1,11 +1,12 @@
 /**
  * Founders & Builders — front-end config
  *
- * Paste the Google Apps Script Web App URL you got after deploying
- * apps-script/Code.gs. It should end in /exec.
+ * DATA_BACKEND controls the active public datastore:
+ *   "google-sheets" keeps the current Apps Script backend live.
+ *   "supabase" reads/writes through supabase-adapter.js.
  *
- * Until this is set, the Member Profiles directory shows sample data and
- * the create form runs in demo mode (nothing is saved to the sheet).
+ * Keep this on "google-sheets" until Sheet data is migrated and spot-checked
+ * in Supabase.
  */
 window.FB_CONFIG = {
   DATA_BACKEND: "google-sheets",

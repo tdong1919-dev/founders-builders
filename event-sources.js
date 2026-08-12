@@ -3,7 +3,9 @@
   "use strict";
 
   var API = (window.FB_CONFIG && window.FB_CONFIG.PROFILES_API || "").trim();
-  var hasBackend = /^https?:\/\//.test(API);
+  var DATA = window.FBData || null;
+  var hasDataBackend = !!(DATA && DATA.isActive && DATA.isActive());
+  var hasBackend = hasDataBackend || /^https?:\/\//.test(API);
   var TYPE = "eventSource";
 
   var SECURE_METHODS = {
@@ -39,6 +41,17 @@
 
   function secretStatus(data) {
     return hasSecureSetup(data.authMethod) ? "Not collected - admin follow-up required" : "No secret required";
+  }
+
+  function postToBackend(type, data) {
+    if (hasDataBackend) return DATA.postRecord(type, data);
+    data.type = type;
+    return fetch(API, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(data)
+    });
   }
 
   function init() {
@@ -78,7 +91,6 @@
         return;
       }
 
-      data.type = TYPE;
       data.syncStatus = sourceStatus(data);
       data.secretStatus = secretStatus(data);
       data.approvalStatus = "Pending review";
@@ -100,12 +112,7 @@
         return;
       }
 
-      fetch(API, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(data)
-      }).then(function () {
+      postToBackend(TYPE, data).then(function () {
         form.reset();
         say("Event source submitted for review. Redirecting to the calendar...", "ok");
         setTimeout(function () { window.location.href = "calendar.html"; }, 1600);

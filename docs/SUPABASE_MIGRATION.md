@@ -16,6 +16,21 @@ Never put the Supabase service role key in `config.js`, HTML, client JavaScript,
 Netlify public environment variables. Use it only locally or inside trusted server-side
 jobs.
 
+## Frontend Adapter
+
+`supabase-adapter.js` is loaded after `config.js` on the hub and platform pages. When
+`DATA_BACKEND` is set to `"supabase"`, the adapter:
+
+- reads public hub records from the `fb_` tables through Supabase REST;
+- writes public submissions directly to the matching table under RLS;
+- translates the current camelCase frontend fields to Supabase snake_case columns;
+- preserves original submission payloads in `raw_data`;
+- supports admin reads/writes with a Supabase Auth access token;
+- keeps Google Sheets untouched while `DATA_BACKEND` remains `"google-sheets"`.
+
+The frontend should stay on `"google-sheets"` until the migration counts and spot checks
+look right.
+
 ## Tables
 
 The migration creates `fb_`-prefixed tables so it does not collide with other tables
@@ -62,6 +77,13 @@ Private/admin/platform tables:
 - Funding/investor records remain discovery records only; they are not investment,
   legal, tax, or financial advice.
 
+To use the Supabase admin page after cutover:
+
+1. Create a Supabase Auth user for the admin.
+2. Add that user's email or `auth.users.id` to `fb_admins`.
+3. Set `DATA_BACKEND` to `"supabase"`.
+4. Sign in on `admin.html` with the Supabase admin email/password.
+
 ## Migration Files
 
 Local migration files:
@@ -104,6 +126,7 @@ changes. Existing Supabase rows with the same Sheet ID are updated.
 2. Run the real migration with the service role key and Apps Script admin token.
 3. Spot-check public hubs and admin tables in Supabase.
 4. Create at least one `fb_admins` row for your Supabase Auth email.
-5. Build/read from Supabase for one flow first, preferably events and event sources.
-6. Switch `DATA_BACKEND` only after that flow is verified.
-7. Keep Google Sheets as a fallback/export source until the Supabase path is stable.
+5. Switch `DATA_BACKEND` to `"supabase"` in a test branch or preview deploy.
+6. Verify one flow first, preferably events and event sources.
+7. Verify the remaining hubs, dashboard, search, reports, and admin actions.
+8. Keep Google Sheets as a fallback/export source until the Supabase path is stable.

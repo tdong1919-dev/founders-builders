@@ -3,7 +3,9 @@
   "use strict";
 
   var API = (window.FB_CONFIG && window.FB_CONFIG.PROFILES_API || "").trim();
-  var hasBackend = /^https?:\/\//.test(API);
+  var DATA = window.FBData || null;
+  var hasDataBackend = !!(DATA && DATA.isActive && DATA.isActive());
+  var hasBackend = hasDataBackend || /^https?:\/\//.test(API);
   var IDENTITY_KEY = "fb_member_identity";
   var SAVED_KEY = "fb_saved_items_v1";
   var ADMIN_TOKEN_KEY = "fb_admin_token_v1";
@@ -294,7 +296,7 @@
   var EVENT_PROVIDER_GUIDES = [
     {
       platform: "Luma",
-      auth: "API key stored in Apps Script Properties",
+      auth: "API key stored in secure backend secrets",
       endpoint: "https://public-api.luma.com/v1/organizations/events/list",
       scope: "Read calendar or organization events",
       note: "Use public calendar links first. API sync needs a Luma Plus calendar-scoped key.",
@@ -302,7 +304,7 @@
     },
     {
       platform: "Meetup",
-      auth: "OAuth bearer token stored in Apps Script Properties",
+      auth: "OAuth bearer token stored in secure backend secrets",
       endpoint: "https://api.meetup.com/gql-ext",
       scope: "Read approved group events",
       note: "Meetup API access now uses GraphQL and organizer authorization. OAuth access may require Meetup Pro.",
@@ -310,7 +312,7 @@
     },
     {
       platform: "Eventbrite",
-      auth: "OAuth bearer token stored in Apps Script Properties",
+      auth: "OAuth bearer token stored in secure backend secrets",
       endpoint: "https://www.eventbriteapi.com/v3/organizations/{organization_id}/events/",
       scope: "Read current and future organization events",
       note: "Keep OAuth/private tokens out of the browser and Sheets. Start with curated public URLs when possible.",
@@ -661,6 +663,18 @@
       cb(null, sample, true);
       return;
     }
+    if (hasDataBackend) {
+      DATA.fetchType(type, options, function (err, list, demo) {
+        if (err) {
+          cb(err, sample, true);
+          return;
+        }
+        cb(null, (list || []).map(function (item) { return normalizeRecord(type, item); }).filter(function (item) {
+          return isPublicRecord(type, item);
+        }), demo);
+      });
+      return;
+    }
     var cbName = "fb_platform_" + type + "_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
     var script = document.createElement("script");
     var done = false;
@@ -729,10 +743,13 @@
 
   function postRecord(type, data) {
     data = data || {};
-    data.type = type;
     if (!hasBackend || !window.fetch) {
       return Promise.resolve({ ok: true, demo: true });
     }
+    if (hasDataBackend) {
+      return DATA.postRecord(type, data);
+    }
+    data.type = type;
     return fetch(API, {
       method: "POST",
       mode: "no-cors",
@@ -745,6 +762,7 @@
 
   function getAdminToken() {
     try {
+      if (hasDataBackend && DATA.getAccessToken && DATA.getAccessToken()) return DATA.getAccessToken();
       return localStorage.getItem(ADMIN_TOKEN_KEY) || "";
     } catch (err) {
       return "";
@@ -754,6 +772,7 @@
   function saveAdminToken(token) {
     try {
       localStorage.setItem(ADMIN_TOKEN_KEY, token || "");
+      if (hasDataBackend && DATA.saveAccessToken) DATA.saveAccessToken(token || "");
     } catch (err) {
       return false;
     }
@@ -763,6 +782,7 @@
   function clearAdminToken() {
     try {
       localStorage.removeItem(ADMIN_TOKEN_KEY);
+      if (hasDataBackend && DATA.signOut) DATA.signOut();
     } catch (err) {}
   }
 
@@ -770,7 +790,7 @@
     var token = getAdminToken();
     if (!hasBackend) return "";
     if (!token) {
-      if (statusEl) statusEl.textContent = "Enter the admin token before using this admin action.";
+      if (statusEl) statusEl.textContent = "Sign in or save admin access before using this admin action.";
       return null;
     }
     return token;
@@ -787,7 +807,7 @@
 
   function postAdminRecord(type, data, statusEl) {
     var payload = withAdminToken(data, statusEl);
-    if (!payload) return Promise.reject(new Error("Missing admin token"));
+    if (!payload) return Promise.reject(new Error("Missing admin access"));
     return postRecord(type, payload);
   }
 
@@ -802,7 +822,10 @@
   function fetchPublicIcalFeed(url, statusEl) {
     if (!hasBackend) return Promise.resolve({ ok: true, content: SAMPLE_ICS, demo: true });
     var token = requireAdminToken(statusEl);
-    if (token == null) return Promise.reject(new Error("Missing admin token"));
+    if (token == null) return Promise.reject(new Error("Missing admin access"));
+    if (hasDataBackend && DATA.fetchPublicIcalFeed) {
+      return DATA.fetchPublicIcalFeed(url, { adminToken: token });
+    }
     return new Promise(function (resolve, reject) {
       var cbName = "fb_ical_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
       var script = document.createElement("script");
@@ -1865,7 +1888,7 @@
       fields.notes.value = source.providerNotes || [
         "Provider: " + (source.platform || guide.platform),
         "Credential handling: " + guide.auth,
-        "Do not paste tokens or API keys into this form. Store them in Apps Script Properties."
+        "Do not paste tokens or API keys into this form. Store them in secure backend secrets."
       ].join("\n");
     }
   }
@@ -2276,6 +2299,11 @@
     var adminTokenSave = document.getElementById("adminTokenSave");
     var adminTokenClear = document.getElementById("adminTokenClear");
     var adminAuthStatus = document.getElementById("adminAuthStatus");
+    var supabaseAdminAuth = document.getElementById("supabaseAdminAuth");
+    var supabaseAdminEmail = document.getElementById("supabaseAdminEmail");
+    var supabaseAdminPassword = document.getElementById("supabaseAdminPassword");
+    var supabaseAdminSignIn = document.getElementById("supabaseAdminSignIn");
+    var supabaseAdminSignOut = document.getElementById("supabaseAdminSignOut");
     var sourceEl = document.getElementById("eventSourceQueue");
     var sourceReviewForm = document.getElementById("eventSourceReviewForm");
     var sourceReviewSummary = document.getElementById("eventSourceReviewSummary");
@@ -2336,13 +2364,49 @@
 
     function initAdminAuth() {
       if (adminTokenInput) adminTokenInput.value = getAdminToken();
+      if (adminTokenInput && hasDataBackend) adminTokenInput.placeholder = "Paste Supabase access token";
+      if (supabaseAdminAuth) supabaseAdminAuth.hidden = !hasDataBackend;
       sayAdminAuth(hasBackend
-        ? (getAdminToken() ? "Admin token saved on this device." : "Token required for private queues and admin writes.")
-        : "Demo mode. Admin token is not required locally.");
+        ? (getAdminToken() ? "Admin access saved on this device." : "Admin access required for private queues and admin writes.")
+        : "Demo mode. Admin access is not required locally.");
       if (adminTokenSave) {
         adminTokenSave.addEventListener("click", function () {
           saveAdminToken(adminTokenInput && adminTokenInput.value.trim() || "");
-          sayAdminAuth(getAdminToken() ? "Admin token saved on this device." : "Paste a token before saving.");
+          sayAdminAuth(getAdminToken() ? "Admin access saved on this device." : "Paste an admin credential before saving.");
+          loadAdminData();
+        });
+      }
+      if (supabaseAdminSignIn) {
+        supabaseAdminSignIn.addEventListener("click", function () {
+          if (!DATA || !DATA.signInWithPassword) return;
+          var email = supabaseAdminEmail && supabaseAdminEmail.value.trim();
+          var password = supabaseAdminPassword && supabaseAdminPassword.value;
+          if (!email || !password) {
+            sayAdminAuth("Enter the Supabase admin email and password.");
+            return;
+          }
+          supabaseAdminSignIn.disabled = true;
+          supabaseAdminSignIn.textContent = "Signing in...";
+          DATA.signInWithPassword(email, password).then(function () {
+            if (adminTokenInput) adminTokenInput.value = getAdminToken();
+            if (supabaseAdminPassword) supabaseAdminPassword.value = "";
+            sayAdminAuth("Supabase admin access saved on this device.");
+            supabaseAdminSignIn.disabled = false;
+            supabaseAdminSignIn.textContent = "Sign in";
+            loadAdminData();
+          }).catch(function () {
+            sayAdminAuth("Could not sign in. Check the Supabase admin user and fb_admins row.");
+            supabaseAdminSignIn.disabled = false;
+            supabaseAdminSignIn.textContent = "Sign in";
+          });
+        });
+      }
+      if (supabaseAdminSignOut) {
+        supabaseAdminSignOut.addEventListener("click", function () {
+          clearAdminToken();
+          if (adminTokenInput) adminTokenInput.value = "";
+          if (supabaseAdminPassword) supabaseAdminPassword.value = "";
+          sayAdminAuth("Supabase admin access cleared from this device.");
           loadAdminData();
         });
       }
@@ -2350,7 +2414,7 @@
         adminTokenClear.addEventListener("click", function () {
           clearAdminToken();
           if (adminTokenInput) adminTokenInput.value = "";
-          sayAdminAuth("Admin token cleared from this device.");
+          sayAdminAuth("Admin access cleared from this device.");
           loadAdminData();
         });
       }
@@ -2362,15 +2426,15 @@
       renderSelectedEventSource(null, sourceReviewSummary);
       if (sourceReviewSubmit) sourceReviewSubmit.disabled = true;
       renderEventSourceQueue(sourceEl, [], null);
-      renderCards(reportEl, [], "Enter the admin token to load private reports.");
-      renderCards(pendingEl, [], "Enter the admin token to load pending records.");
+      renderCards(reportEl, [], "Sign in or save admin access to load private reports.");
+      renderCards(pendingEl, [], "Sign in or save admin access to load pending records.");
       populateEventImportSources(importSourceSelect, [], []);
       populateEventProviderSources(providerSourceSelect, []);
       existingEvents = [];
       cleanupCandidates = [];
       renderEventCleanup(cleanupList, []);
-      if (sourceEl) sourceEl.innerHTML = emptyHTML("Enter the admin token to load event source requests.");
-      if (importStatus) importStatus.textContent = "Admin token required before importing external events.";
+      if (sourceEl) sourceEl.innerHTML = emptyHTML("Sign in or save admin access to load event source requests.");
+      if (importStatus) importStatus.textContent = "Admin access required before importing external events.";
     }
 
     function refreshCleanup() {
@@ -2630,7 +2694,7 @@
           publishBtn.disabled = false;
           publishBtn.textContent = "Publish selected";
         }).catch(function () {
-          sayImport("Could not publish the selected events. Check the admin token and try again.");
+          sayImport("Could not publish the selected events. Check admin access and try again.");
           publishBtn.disabled = false;
           publishBtn.textContent = "Publish selected";
         });
@@ -2683,7 +2747,7 @@
           cleanupArchiveBtn.disabled = false;
           cleanupArchiveBtn.textContent = "Archive selected";
         }).catch(function () {
-          if (cleanupStatus) cleanupStatus.textContent = "Could not archive events. Check the admin token and try again.";
+          if (cleanupStatus) cleanupStatus.textContent = "Could not archive events. Check admin access and try again.";
           cleanupArchiveBtn.disabled = false;
           cleanupArchiveBtn.textContent = "Archive selected";
         });
@@ -2777,13 +2841,13 @@
         }).then(function () {
           Object.keys(updates).forEach(function (key) { source[key] = updates[key]; });
           source.platform = source.platform || provider;
-          if (providerStatus) providerStatus.textContent = "Connector setup sent. Store or rotate any credentials only in Apps Script Properties.";
+          if (providerStatus) providerStatus.textContent = "Connector setup sent. Store or rotate any credentials only in secure backend secrets.";
           if (providerSubmit) {
             providerSubmit.disabled = false;
             providerSubmit.textContent = "Record connector setup";
           }
         }).catch(function () {
-          if (providerStatus) providerStatus.textContent = "Could not record connector setup. Check the admin token and try again.";
+          if (providerStatus) providerStatus.textContent = "Could not record connector setup. Check admin access and try again.";
           if (providerSubmit) {
             providerSubmit.disabled = false;
             providerSubmit.textContent = "Record connector setup";
@@ -2805,7 +2869,7 @@
           if (status) status.textContent = "Action note sent.";
         }).catch(function () {
           var status = document.getElementById("adminActionStatus");
-          if (status) status.textContent = "Enter the admin token before recording an action.";
+          if (status) status.textContent = "Sign in or save admin access before recording an action.";
         });
       });
     }

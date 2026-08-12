@@ -39,7 +39,7 @@
         <a class="back-link" href="dashboard.html">Back to dashboard</a>
         <span class="kicker">Trust infrastructure</span>
         <h1 class="platform-hero__title">Moderation before scale.</h1>
-        <p class="platform-hero__sub">A Sheets-first admin surface for reports, event-source imports, moderation notes, seed-content policy, and funding/investor caution. Protected admin actions use the Apps Script admin token while the public site stays lightweight.</p>
+        <p class="platform-hero__sub">An admin surface for reports, event-source imports, moderation notes, seed-content policy, and funding/investor caution. Protected admin actions use the active backend's admin credential while the public site stays lightweight.</p>
       </div>
     </section>
 
@@ -47,14 +47,28 @@
       <aside class="platform-sidebar">
         <div class="platform-panel">
           <h2 class="platform-panel__title">Admin access</h2>
-          <p class="platform-panel__copy">Enter the admin token configured in Apps Script to load private queues and publish imported events.</p>
+          <p class="platform-panel__copy">Use the admin token for Apps Script, or sign in with a Supabase admin account after the backend switch.</p>
           <label class="field">
-            <span class="field__label">Admin token</span>
+            <span class="field__label">Admin token / access token</span>
             <input id="adminTokenInput" type="password" autocomplete="current-password" placeholder="Paste token" />
           </label>
           <div class="platform-card__actions">
             <button class="mini-btn" type="button" id="adminTokenSave">Save</button>
             <button class="mini-btn" type="button" id="adminTokenClear">Clear</button>
+          </div>
+          <div id="supabaseAdminAuth" hidden>
+            <label class="field">
+              <span class="field__label">Supabase admin email</span>
+              <input id="supabaseAdminEmail" type="email" autocomplete="username" placeholder="admin@example.com" />
+            </label>
+            <label class="field">
+              <span class="field__label">Supabase password</span>
+              <input id="supabaseAdminPassword" type="password" autocomplete="current-password" />
+            </label>
+            <div class="platform-card__actions">
+              <button class="mini-btn" type="button" id="supabaseAdminSignIn">Sign in</button>
+              <button class="mini-btn" type="button" id="supabaseAdminSignOut">Sign out</button>
+            </div>
           </div>
           <p class="form-status" id="adminAuthStatus" role="status" aria-live="polite"></p>
         </div>
@@ -64,11 +78,11 @@
         </div>
         <div class="platform-panel">
           <h2 class="platform-panel__title">Admin model</h2>
-          <p class="platform-panel__copy">Private queues and admin writes require the Apps Script admin token. Public member submissions still use the existing lightweight forms.</p>
+          <p class="platform-panel__copy">Private queues and admin writes require an admin credential. Public member submissions still use the existing lightweight forms.</p>
         </div>
         <div class="platform-panel">
           <h2 class="platform-panel__title">Event source rule</h2>
-          <p class="platform-panel__copy">Organizer source requests can be reviewed in Sheets, but OAuth tokens and API keys should only be stored in Apps Script Properties or a future secure auth store.</p>
+          <p class="platform-panel__copy">Organizer source requests can be reviewed here, but OAuth tokens and API keys should only be stored in a secure backend secret store.</p>
           <a class="mini-btn" href="add-event-source.html">Add source</a>
         </div>
         <div class="platform-panel">
@@ -98,7 +112,7 @@
             </div>
           </div>
           <div class="notice">
-            <p>This review records an audit note. Use the admin token before recording decisions, publishing imports, or updating source rows.</p>
+            <p>This review records an audit note. Use admin access before recording decisions, publishing imports, or updating source rows.</p>
           </div>
           <div class="source-review-summary" id="eventSourceReviewSummary">
             <p>Select an event source request above to start a review.</p>
@@ -323,7 +337,7 @@
                 <select id="eventProviderOauthStatus">
                   <option>Not configured</option>
                   <option>Organizer authorization requested</option>
-                  <option>Credential stored in Apps Script Properties</option>
+                  <option>Credential stored in secure backend secrets</option>
                   <option>No secret required</option>
                   <option>Revoked</option>
                 </select>
@@ -386,7 +400,7 @@
           <div class="platform-section__head">
             <div>
               <h2 class="platform-section__title">Record an admin action</h2>
-              <p class="platform-section__desc">This creates an audit note in Sheets. It does not mutate the target record.</p>
+              <p class="platform-section__desc">This creates an audit note in the active backend. It does not mutate the target record.</p>
             </div>
           </div>
           <form class="compact-form" id="adminActionForm">
@@ -410,8 +424,8 @@
                   <option>Verified</option>
                   <option>Needs follow-up</option>
                   <option>Marked duplicate</option>
-                  <option>Hidden in Sheet</option>
-                  <option>Rejected in Sheet</option>
+                  <option>Hidden in backend</option>
+                  <option>Rejected in backend</option>
                   <option>Event source approved</option>
                   <option>Event source ready for manual import</option>
                   <option>Event source needs secure setup</option>
@@ -443,6 +457,7 @@
   </footer>
 
   <script src="config.js"></script>
+  <script src="supabase-adapter.js"></script>
   <script src="script.js"></script>
   <script src="platform.js"></script>
 </body>

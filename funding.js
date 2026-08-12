@@ -3,7 +3,9 @@
   "use strict";
 
   var API = (window.FB_CONFIG && window.FB_CONFIG.PROFILES_API || "").trim();
-  var hasBackend = /^https?:\/\//.test(API);
+  var DATA = window.FBData || null;
+  var hasDataBackend = !!(DATA && DATA.isActive && DATA.isActive());
+  var hasBackend = hasDataBackend || /^https?:\/\//.test(API);
 
   var RAISE_STAGES = ["Idea", "Pre-seed", "Seed", "Series A", "Series B+", "Bridge / Note"];
   var INVESTOR_TYPES = ["Angel", "VC Fund", "Family Office", "Syndicate", "Corporate VC", "Accelerator"];
@@ -62,6 +64,7 @@
   /* ---------- JSONP fetch (bypasses CORS for reads) ---------- */
   function fetchType(type, sample, cb) {
     if (!hasBackend) { cb(null, sample, true); return; }
+    if (hasDataBackend) { DATA.fetchType(type, { sample: sample }, cb); return; }
     var cbName = "fbcb_" + Date.now() + "_" + type;
     var timer = setTimeout(function () {
       cleanup();
@@ -83,6 +86,19 @@
       + "&callback=" + cbName + "&t=" + Date.now();
     script.onerror = function () { cleanup(); cb(new Error("Network error"), sample, true); };
     document.body.appendChild(script);
+  }
+
+  function postToBackend(type, data) {
+    if (hasDataBackend) return DATA.postRecord(type, data);
+    var payload = {};
+    Object.keys(data || {}).forEach(function (key) { payload[key] = data[key]; });
+    payload.type = type;
+    return fetch(API, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
   }
 
   /* =====================================================================
@@ -143,7 +159,7 @@
     function render() {
       var list = data[view].filter(matches);
       if (meta) {
-        var demoPrefix = isDemo[view] ? "Showing sample " + (view === "raise" ? "raises" : "investors") + " — connect your sheet to go live. " : "";
+        var demoPrefix = isDemo[view] ? "Showing sample " + (view === "raise" ? "raises" : "investors") + " — connect a backend to go live. " : "";
         meta.textContent = demoPrefix + list.length
           + (view === "raise"
             ? (list.length === 1 ? " company raising" : " companies raising")
@@ -360,13 +376,7 @@
         return;
       }
 
-      data.type = type;
-      fetch(API, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(data)
-      }).then(function () {
+      postToBackend(type, data).then(function () {
         formEl.reset();
         say(labels.ok, "ok");
         setTimeout(function () { window.location.href = redirectTo; }, 1600);
@@ -400,7 +410,7 @@
       missing: "Please fill in your company name and contact email.",
       submitting: "Posting…",
       submit: "Post your raise",
-      demoOk: "Demo mode — your raise looks great! Connect the Google Sheet backend to publish it for real.",
+      demoOk: "Demo mode — your raise looks great! Connect the live backend to publish it for real.",
       ok: "Your raise is live! Redirecting you to the Funding Hub…",
       err: "Something went wrong posting your raise. Please try again."
     });
@@ -412,7 +422,7 @@
       missing: "Please fill in your name and contact email.",
       submitting: "Submitting…",
       submit: "List me as an investor",
-      demoOk: "Demo mode — your investor profile looks great! Connect the Google Sheet backend to publish it for real.",
+      demoOk: "Demo mode — your investor profile looks great! Connect the live backend to publish it for real.",
       ok: "You're listed! Redirecting you to the Funding Hub…",
       err: "Something went wrong sending your info. Please try again."
     });

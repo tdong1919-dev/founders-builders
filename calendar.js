@@ -3,7 +3,9 @@
   "use strict";
 
   var API = (window.FB_CONFIG && window.FB_CONFIG.PROFILES_API || "").trim();
-  var hasBackend = /^https?:\/\//.test(API);
+  var DATA = window.FBData || null;
+  var hasDataBackend = !!(DATA && DATA.isActive && DATA.isActive());
+  var hasBackend = hasDataBackend || /^https?:\/\//.test(API);
   var TYPE = "event";
 
   /* ---------- helpers ---------- */
@@ -87,6 +89,7 @@
   /* ---------- JSONP fetch (bypasses CORS for reads) ---------- */
   function fetchEvents(cb) {
     if (!hasBackend) { cb(null, SAMPLE, true); return; }
+    if (hasDataBackend) { DATA.fetchType(TYPE, { sample: SAMPLE }, cb); return; }
     var cbName = "fbcb_" + Date.now();
     var timer = setTimeout(function () {
       cleanup();
@@ -108,6 +111,17 @@
       + "&callback=" + cbName + "&t=" + Date.now();
     script.onerror = function () { cleanup(); cb(new Error("Network error"), SAMPLE, true); };
     document.body.appendChild(script);
+  }
+
+  function postToBackend(type, data) {
+    if (hasDataBackend) return DATA.postRecord(type, data);
+    data.type = type;
+    return fetch(API, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(data)
+    });
   }
 
   /* =====================================================================
@@ -145,7 +159,7 @@
         return a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
       });
       if (meta) {
-        meta.textContent = (isDemo ? "Showing sample events — connect your sheet to go live. " : "")
+        meta.textContent = (isDemo ? "Showing sample events — connect a backend to go live. " : "")
           + all.length + (all.length === 1 ? " event" : " events");
       }
       render();
@@ -388,20 +402,14 @@
 
       if (!hasBackend) {
         setTimeout(function () {
-          say("Demo mode — your event looks great! Connect the Google Sheet backend to publish it for real.", "ok");
+          say("Demo mode — your event looks great! Connect the live backend to publish it for real.", "ok");
           btn.disabled = false;
           btn.textContent = "Post the event";
         }, 600);
         return;
       }
 
-      data.type = TYPE;
-      fetch(API, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(data)
-      }).then(function () {
+      postToBackend(TYPE, data).then(function () {
         onSuccess();
       }).catch(function () {
         say("Something went wrong posting your event. Please try again.", "err");

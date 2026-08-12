@@ -98,10 +98,11 @@ admin.html             # trust, report queue, admin action notes
 report-listing.html    # listing report intake
 platform.js            # shared data, identity, search, matchmaking, graph logic
 platform.css           # shared styles for connected platform pages
+supabase-adapter.js    # optional Supabase REST adapter behind DATA_BACKEND
 seed-content/          # seed/import policy and intake templates
 
 profiles.css          # shared hub styling (cards, modal, forms, toolbar)
-config.js             # paste your Apps Script Web App URL here (shared by all hubs)
+config.js             # backend switch plus Apps Script and Supabase public config
 apps-script/Code.gs   # Google Sheets backend — one Web App serves every hub
 apps-script/SCHEMA.md # Full schema reference: every entity's columns, types, enums
 ```
@@ -163,10 +164,14 @@ RLS, indexes, seeded launch chapters, event import run tables, and a migration b
 from the current Google Sheets/App Script backend. The live frontend remains pointed at
 Google Sheets through `DATA_BACKEND: "google-sheets"` until migrated data is verified.
 
+[`supabase-adapter.js`](supabase-adapter.js) is loaded on the hub and platform pages.
+When `DATA_BACKEND` is switched to `"supabase"`, those pages read/write through
+Supabase REST while keeping the same plain HTML/CSS/JS interface.
+
 See [`docs/SUPABASE_MIGRATION.md`](docs/SUPABASE_MIGRATION.md) for the table list,
 service-role migration command, security notes, and cutover process.
 
-**How it works:** each directory **reads** via JSONP (bypasses CORS, `?type=<hub>`), and
+**Sheets mode:** each directory **reads** via JSONP (bypasses CORS, `?type=<hub>`), and
 each form **writes** by POSTing `{ type: "<hub>", ... }` to the same endpoint. A hidden
 honeypot field on every form filters basic spam bots.
 
