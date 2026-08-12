@@ -288,6 +288,9 @@
     "raise", "investor", "event", "collab", "podcast", "resource"
   ];
 
+  var EVENT_CATEGORIES = ["Workshop", "Meetup", "AMA", "Demo Day", "Pitch Competition", "Office Hours", "Hack Night", "Panel", "Other"];
+  var EVENT_CITIES = ["Boise, ID", "Atlanta, GA", "Washington, DC", "Madison, AL", "Virtual", "Other"];
+
   var DEMO = {
     profile: [{
       id: "demo-profile-template",
@@ -400,14 +403,14 @@
       sourceName: "Demo external founder calendar",
       organizerEmail: "demo-source@example.invalid",
       platform: "Luma",
-      authMethod: "API key setup request",
+      authMethod: "Public organizer/event URL",
       chapter: "Washington, DC",
       sourceUrl: "https://example.invalid/calendar",
       importMode: "Curated review",
-      syncStatus: "Needs secure setup",
-      secretStatus: "Not collected - admin follow-up required",
+      syncStatus: "Pending review",
+      secretStatus: "No secret required",
       fitNotes: "Template record for event-source review flow testing.",
-      nextStep: "Admin follow-up for secure OAuth/API setup"
+      nextStep: "Manual import approved in demo action"
     }],
     collab: [{
       id: "demo-collab-template",
@@ -443,7 +446,21 @@
     report: [],
     account: [],
     savedItem: [],
-    adminAction: [],
+    adminAction: [{
+      id: "demo-event-source-review-action",
+      targetType: "eventSource",
+      targetId: "demo-event-source-template",
+      targetTitle: "Demo external founder calendar",
+      action: "Event source ready for manual import",
+      recommendedApprovalStatus: "Approved",
+      recommendedSyncStatus: "Pending review",
+      recommendedSecretStatus: "No secret required",
+      importPlan: "Manual import approved",
+      sourcePlatform: "Luma",
+      sourceUrl: "https://example.invalid/calendar",
+      organizerEmail: "demo-source@example.invalid",
+      notes: "Demo-only review action for testing the manual import queue."
+    }],
     chapter: [],
     graphEdge: [],
     conciergeRequest: [],
@@ -1076,6 +1093,422 @@
     if (submitEl) submitEl.disabled = false;
   }
 
+  function latestSourceAction(source, actions) {
+    var reviewActions = [
+      "Event source approved",
+      "Event source ready for manual import",
+      "Event source needs secure setup",
+      "Event source rejected",
+      "Event source paused",
+      "Needs follow-up"
+    ];
+    var matches = (actions || []).filter(function (action) {
+      return action.targetType === "eventSource"
+        && String(action.targetId || "") === String(source._id || "")
+        && reviewActions.indexOf(action.action) !== -1;
+    }).sort(function (a, b) {
+      return toText(b.timestamp).localeCompare(toText(a.timestamp));
+    });
+    return matches[0] || null;
+  }
+
+  function eventSourceImportState(source, actions) {
+    var approvalStatus = toText(source.approvalStatus).toLowerCase();
+    var syncStatus = toText(source.syncStatus).toLowerCase();
+    var latest = latestSourceAction(source, actions);
+    var action = latest && toText(latest.action).toLowerCase();
+    if (action && (action.indexOf("rejected") !== -1 || action.indexOf("paused") !== -1)) {
+      return { approved: false, basis: latest.action };
+    }
+    if (action === "event source approved" || action === "event source ready for manual import") {
+      return { approved: true, basis: latest.action };
+    }
+    if (approvalStatus === "approved" || syncStatus === "active") {
+      return { approved: true, basis: source.approvalStatus || source.syncStatus };
+    }
+    if (approvalStatus === "rejected" || approvalStatus === "paused" || syncStatus === "rejected" || syncStatus === "paused") {
+      return { approved: false, basis: source.approvalStatus || source.syncStatus };
+    }
+    return { approved: false, basis: "Pending review" };
+  }
+
+  function approvedEventSources(sources, actions) {
+    return (sources || []).filter(function (source) {
+      return eventSourceImportState(source, actions).approved;
+    }).sort(function (a, b) {
+      return toText(a._title).localeCompare(toText(b._title));
+    });
+  }
+
+  function populateEventImportSources(selectEl, sources, actions) {
+    if (!selectEl) return [];
+    var approved = approvedEventSources(sources, actions);
+    if (!approved.length) {
+      selectEl.innerHTML = '<option value="">No approved event sources yet</option>';
+      selectEl.disabled = true;
+      return approved;
+    }
+    selectEl.disabled = false;
+    selectEl.innerHTML = '<option value="">Select approved source...</option>' + approved.map(function (source) {
+      var state = eventSourceImportState(source, actions);
+      return '<option value="' + esc(source._key) + '">' + esc(source._title) + " · " + esc(source.platform || "Source") + " · " + esc(state.basis) + "</option>";
+    }).join("");
+    return approved;
+  }
+
+  function optionHTML(options, value, placeholder) {
+    var html = placeholder ? '<option value="">' + esc(placeholder) + "</option>" : "";
+    html += options.map(function (option) {
+      return '<option' + (option === value ? " selected" : "") + ">" + esc(option) + "</option>";
+    }).join("");
+    return html;
+  }
+
+  function normalizeEventCategory(value) {
+    value = toText(value).trim();
+    if (!value) return "";
+    var lower = value.toLowerCase();
+    for (var i = 0; i < EVENT_CATEGORIES.length; i++) {
+      if (EVENT_CATEGORIES[i].toLowerCase() === lower) return EVENT_CATEGORIES[i];
+    }
+    if (lower.indexOf("demo") !== -1) return "Demo Day";
+    if (lower.indexOf("pitch") !== -1) return "Pitch Competition";
+    if (lower.indexOf("office") !== -1) return "Office Hours";
+    if (lower.indexOf("hack") !== -1) return "Hack Night";
+    if (lower.indexOf("panel") !== -1) return "Panel";
+    if (lower.indexOf("workshop") !== -1) return "Workshop";
+    if (lower.indexOf("ama") !== -1) return "AMA";
+    if (lower.indexOf("meet") !== -1) return "Meetup";
+    return "Other";
+  }
+
+  function normalizeEventCity(value) {
+    value = toText(value).trim();
+    if (!value) return "";
+    var lower = value.toLowerCase();
+    for (var i = 0; i < EVENT_CITIES.length; i++) {
+      if (EVENT_CITIES[i].toLowerCase() === lower) return EVENT_CITIES[i];
+    }
+    if (lower.indexOf("boise") !== -1) return "Boise, ID";
+    if (lower.indexOf("atlanta") !== -1) return "Atlanta, GA";
+    if (lower.indexOf("washington") !== -1 || lower === "dc" || lower.indexOf("d.c.") !== -1) return "Washington, DC";
+    if (lower.indexOf("madison") !== -1) return "Madison, AL";
+    if (lower.indexOf("virtual") !== -1 || lower.indexOf("online") !== -1 || lower.indexOf("zoom") !== -1) return "Virtual";
+    return "Other";
+  }
+
+  function formatImportedTime(hour, minute, suffix) {
+    hour = Number(hour || 0);
+    minute = Number(minute || 0);
+    var meridiem = hour >= 12 ? "PM" : "AM";
+    var displayHour = hour % 12 || 12;
+    return displayHour + ":" + String(minute).padStart(2, "0") + " " + meridiem + (suffix || "");
+  }
+
+  function parseIcalDate(value) {
+    value = toText(value).trim();
+    var match = value.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?(Z)?)?/);
+    if (!match) return { date: normalizeDate(value), time: "" };
+    return {
+      date: match[1] + "-" + match[2] + "-" + match[3],
+      time: match[4] ? formatImportedTime(match[4], match[5], match[7] ? " UTC" : "") : ""
+    };
+  }
+
+  function normalizeDate(value) {
+    value = toText(value).trim();
+    if (!value) return "";
+    var iso = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return iso[1] + "-" + iso[2] + "-" + iso[3];
+    var compact = value.match(/^(\d{4})(\d{2})(\d{2})/);
+    if (compact) return compact[1] + "-" + compact[2] + "-" + compact[3];
+    var parsed = new Date(value);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.getFullYear() + "-" + String(parsed.getMonth() + 1).padStart(2, "0") + "-" + String(parsed.getDate()).padStart(2, "0");
+    }
+    return "";
+  }
+
+  function decodeIcalText(value) {
+    return toText(value)
+      .replace(/\\n/gi, "\n")
+      .replace(/\\,/g, ",")
+      .replace(/\\;/g, ";")
+      .replace(/\\\\/g, "\\")
+      .trim();
+  }
+
+  function parseIcalEvents(raw) {
+    var lines = toText(raw).split(/\r?\n/).reduce(function (all, line) {
+      if (/^[ \t]/.test(line) && all.length) all[all.length - 1] += line.slice(1);
+      else all.push(line);
+      return all;
+    }, []);
+    var events = [];
+    var current = null;
+    lines.forEach(function (line) {
+      var trimmed = line.trim();
+      if (trimmed === "BEGIN:VEVENT") {
+        current = {};
+        return;
+      }
+      if (trimmed === "END:VEVENT") {
+        if (current) events.push(current);
+        current = null;
+        return;
+      }
+      if (!current) return;
+      var colon = line.indexOf(":");
+      if (colon === -1) return;
+      var key = line.slice(0, colon).split(";")[0].toUpperCase();
+      var value = decodeIcalText(line.slice(colon + 1));
+      if (key === "SUMMARY") current.title = value;
+      else if (key === "DESCRIPTION") current.description = value;
+      else if (key === "LOCATION") current.location = value;
+      else if (key === "URL") current.rsvpLink = value;
+      else if (key === "UID") current.sourceEventId = value;
+      else if (key === "CATEGORIES") current.category = value.split(",")[0];
+      else if (key === "DTSTART") {
+        var parsed = parseIcalDate(value);
+        current.date = parsed.date;
+        current.time = parsed.time;
+      }
+    });
+    return events;
+  }
+
+  function parseJsonEvents(raw) {
+    try {
+      var parsed = JSON.parse(raw);
+      var list = Array.isArray(parsed) ? parsed : (parsed.events || parsed.records || parsed.items || [parsed]);
+      if (!Array.isArray(list)) return [];
+      return list.map(function (item) {
+        item = item || {};
+        var start = item.start || item.startsAt || item.startDate || item.date || "";
+        var parsedStart = parseIcalDate(start);
+        return {
+          title: item.title || item.name || item.summary,
+          host: item.host || item.organizer || item.organizerName,
+          category: item.category || item.type,
+          city: item.city,
+          date: normalizeDate(item.date || item.startDate || parsedStart.date),
+          time: item.time || item.startTime || parsedStart.time,
+          location: item.location || item.venue || item.address,
+          description: item.description || item.details,
+          rsvpLink: item.rsvpLink || item.url || item.link,
+          sourceUrl: item.sourceUrl || item.url || item.link,
+          sourceEventId: item.sourceEventId || item.uid || item.id
+        };
+      });
+    } catch (err) {
+      return [];
+    }
+  }
+
+  function parseCsvLine(line, delimiter) {
+    var out = [];
+    var cur = "";
+    var quote = false;
+    for (var i = 0; i < line.length; i++) {
+      var ch = line[i];
+      if (ch === '"' && line[i + 1] === '"') {
+        cur += '"';
+        i += 1;
+      } else if (ch === '"') {
+        quote = !quote;
+      } else if (ch === delimiter && !quote) {
+        out.push(cur.trim());
+        cur = "";
+      } else {
+        cur += ch;
+      }
+    }
+    out.push(cur.trim());
+    return out;
+  }
+
+  function fieldFromHeader(row, names) {
+    for (var i = 0; i < names.length; i++) {
+      if (row[names[i]] != null && row[names[i]] !== "") return row[names[i]];
+    }
+    return "";
+  }
+
+  function parseDelimitedEvents(raw) {
+    var lines = toText(raw).split(/\r?\n/).filter(function (line) { return line.trim(); });
+    if (lines.length < 2) return [];
+    var delimiter = lines[0].indexOf("\t") !== -1 ? "\t" : ",";
+    if (lines[0].indexOf(delimiter) === -1) return [];
+    var headers = parseCsvLine(lines[0], delimiter).map(function (header) {
+      return header.toLowerCase().replace(/[^a-z0-9]+/g, "");
+    });
+    if (!headers.some(function (header) { return ["title", "name", "summary", "event"].indexOf(header) !== -1; })) return [];
+    return lines.slice(1).map(function (line) {
+      var cells = parseCsvLine(line, delimiter);
+      var row = {};
+      headers.forEach(function (header, i) { row[header] = cells[i] || ""; });
+      return {
+        title: fieldFromHeader(row, ["title", "name", "summary", "event"]),
+        host: fieldFromHeader(row, ["host", "organizer", "organizername"]),
+        category: fieldFromHeader(row, ["category", "type"]),
+        city: fieldFromHeader(row, ["city", "chapter"]),
+        date: fieldFromHeader(row, ["date", "startdate", "starts"]),
+        time: fieldFromHeader(row, ["time", "starttime"]),
+        location: fieldFromHeader(row, ["location", "venue", "address"]),
+        description: fieldFromHeader(row, ["description", "details", "summary"]),
+        rsvpLink: fieldFromHeader(row, ["rsvplink", "url", "link"]),
+        sourceUrl: fieldFromHeader(row, ["sourceurl", "url", "link"]),
+        sourceEventId: fieldFromHeader(row, ["sourceeventid", "uid", "id"])
+      };
+    });
+  }
+
+  function parseStructuredEvents(raw) {
+    var blocks = toText(raw).split(/\n\s*\n+/).map(function (block) { return block.trim(); }).filter(Boolean);
+    if (!blocks.length && raw.trim()) blocks = [raw.trim()];
+    return blocks.map(function (block) {
+      var event = {};
+      block.split(/\r?\n/).forEach(function (line, i) {
+        var match = line.match(/^\s*([^:]+):\s*(.+)$/);
+        if (!match) {
+          if (i === 0 && !event.title) event.title = line.trim();
+          else if (/^https?:\/\//i.test(line.trim())) event.rsvpLink = line.trim();
+          return;
+        }
+        var key = match[1].toLowerCase().replace(/[^a-z0-9]+/g, "");
+        var value = match[2].trim();
+        if (["title", "event", "name", "summary"].indexOf(key) !== -1) event.title = value;
+        else if (["host", "organizer", "organizername"].indexOf(key) !== -1) event.host = value;
+        else if (key === "category" || key === "type") event.category = value;
+        else if (key === "city" || key === "chapter") event.city = value;
+        else if (key === "date" || key === "startdate") event.date = value;
+        else if (key === "time" || key === "starttime") event.time = value;
+        else if (key === "location" || key === "venue" || key === "address") event.location = value;
+        else if (key === "description" || key === "details") event.description = value;
+        else if (key === "rsvp" || key === "rsvplink" || key === "url" || key === "link") event.rsvpLink = value;
+        else if (key === "sourceurl") event.sourceUrl = value;
+        else if (key === "id" || key === "uid" || key === "sourceeventid") event.sourceEventId = value;
+      });
+      return event;
+    });
+  }
+
+  function normalizeImportedEvent(item, source, defaults, index) {
+    item = item || {};
+    defaults = defaults || {};
+    var parsedDate = parseIcalDate(item.date || item.start || "");
+    var sourceUrl = item.sourceUrl || source.sourceUrl || source.feedUrl || item.rsvpLink || "";
+    return {
+      _draftId: "draft_" + index + "_" + Date.now(),
+      _include: true,
+      title: toText(item.title).trim(),
+      host: toText(item.host || defaults.host || source.sourceName).trim(),
+      category: normalizeEventCategory(item.category || defaults.category || ""),
+      city: normalizeEventCity(item.city || defaults.city || ""),
+      date: normalizeDate(item.date || parsedDate.date),
+      time: toText(item.time || parsedDate.time).trim(),
+      location: toText(item.location).trim(),
+      description: toText(item.description).trim(),
+      rsvpLink: toText(item.rsvpLink || item.url || item.link || sourceUrl).trim(),
+      email: toText(defaults.email || source.organizerEmail).trim(),
+      sourcePlatform: toText(item.sourcePlatform || source.platform).trim(),
+      sourceName: toText(item.sourceName || source.sourceName).trim(),
+      sourceUrl: toText(sourceUrl).trim(),
+      sourceEventId: toText(item.sourceEventId || item.uid || item.id).trim(),
+      importedFromSourceId: source._id,
+      importStatus: "Imported"
+    };
+  }
+
+  function parseEventImportInput(raw, source, defaults) {
+    raw = toText(raw).trim();
+    if (!raw || !source) return [];
+    var parsed = [];
+    if (raw.indexOf("BEGIN:VEVENT") !== -1) parsed = parseIcalEvents(raw);
+    if (!parsed.length) parsed = parseJsonEvents(raw);
+    if (!parsed.length) parsed = parseDelimitedEvents(raw);
+    if (!parsed.length) parsed = parseStructuredEvents(raw);
+    return parsed.map(function (item, i) {
+      return normalizeImportedEvent(item, source, defaults, i);
+    }).filter(function (item) {
+      return item.title || item.date || item.rsvpLink;
+    });
+  }
+
+  function draftField(name, value, type) {
+    return '<input type="' + esc(type || "text") + '" data-import-field="' + esc(name) + '" value="' + esc(value || "") + '" />';
+  }
+
+  function renderEventImportPreview(el, drafts) {
+    if (!el) return;
+    if (!drafts.length) {
+      el.innerHTML = "";
+      return;
+    }
+    el.innerHTML =
+      '<div class="event-import-preview__head">' +
+        '<div><h3 class="platform-section__title">Preview parsed events</h3><p class="platform-section__desc">Edit fields before publishing. Only checked events will be written to the public calendar.</p></div>' +
+        '<button class="btn" type="button" data-event-import-publish>Publish selected</button>' +
+      "</div>" +
+      drafts.map(function (event, i) {
+        return '<article class="event-import-card" data-import-index="' + i + '">' +
+          '<label class="event-import-card__include"><input type="checkbox" data-import-include checked /> Include</label>' +
+          '<div class="event-import-card__grid">' +
+            '<label class="field"><span class="field__label">Title</span>' + draftField("title", event.title) + "</label>" +
+            '<label class="field"><span class="field__label">Host</span>' + draftField("host", event.host) + "</label>" +
+            '<label class="field"><span class="field__label">Date</span>' + draftField("date", event.date, "date") + "</label>" +
+            '<label class="field"><span class="field__label">Time</span>' + draftField("time", event.time) + "</label>" +
+            '<label class="field"><span class="field__label">City</span><select data-import-field="city">' + optionHTML(EVENT_CITIES, event.city, "Select...") + "</select></label>" +
+            '<label class="field"><span class="field__label">Category</span><select data-import-field="category">' + optionHTML(EVENT_CATEGORIES, event.category, "Select...") + "</select></label>" +
+            '<label class="field field--full"><span class="field__label">Location</span>' + draftField("location", event.location) + "</label>" +
+            '<label class="field field--full"><span class="field__label">RSVP link</span>' + draftField("rsvpLink", event.rsvpLink, "url") + "</label>" +
+            '<label class="field"><span class="field__label">Source platform</span>' + draftField("sourcePlatform", event.sourcePlatform) + "</label>" +
+            '<label class="field"><span class="field__label">Source name</span>' + draftField("sourceName", event.sourceName) + "</label>" +
+            '<label class="field field--full"><span class="field__label">Source URL</span>' + draftField("sourceUrl", event.sourceUrl, "url") + "</label>" +
+            '<label class="field"><span class="field__label">Source event ID</span>' + draftField("sourceEventId", event.sourceEventId) + "</label>" +
+            '<label class="field"><span class="field__label">Contact email</span>' + draftField("email", event.email, "email") + "</label>" +
+            '<label class="field field--full"><span class="field__label">Description</span><textarea data-import-field="description" rows="4">' + esc(event.description || "") + "</textarea></label>" +
+          "</div>" +
+        "</article>";
+      }).join("");
+  }
+
+  function collectEventImportPreview(el) {
+    if (!el) return [];
+    return Array.prototype.map.call(el.querySelectorAll("[data-import-index]"), function (card) {
+      var event = {};
+      Array.prototype.forEach.call(card.querySelectorAll("[data-import-field]"), function (field) {
+        event[field.getAttribute("data-import-field")] = field.value.trim();
+      });
+      event._include = !!(card.querySelector("[data-import-include]") && card.querySelector("[data-import-include]").checked);
+      event.importedFromSourceId = card.getAttribute("data-imported-from") || "";
+      event.importStatus = "Imported";
+      return event;
+    });
+  }
+
+  function prepareEventForPost(event, source) {
+    event = event || {};
+    return {
+      title: event.title,
+      host: event.host,
+      category: normalizeEventCategory(event.category),
+      city: normalizeEventCity(event.city),
+      date: normalizeDate(event.date),
+      time: event.time,
+      location: event.location,
+      description: event.description,
+      rsvpLink: event.rsvpLink,
+      email: event.email || source.organizerEmail,
+      sourcePlatform: event.sourcePlatform || source.platform,
+      sourceName: event.sourceName || source.sourceName,
+      sourceUrl: event.sourceUrl || source.sourceUrl || source.feedUrl,
+      sourceEventId: event.sourceEventId,
+      importedFromSourceId: source._id,
+      importStatus: "Imported"
+    };
+  }
+
   function cardHTML(record) {
     var meta = metaFor(record._type);
     var email = record[meta.email] || record.email;
@@ -1483,16 +1916,31 @@
     var sourceReviewSummary = document.getElementById("eventSourceReviewSummary");
     var sourceReviewStatus = document.getElementById("eventSourceReviewStatus");
     var sourceReviewSubmit = document.getElementById("eventSourceReviewSubmit");
+    var importForm = document.getElementById("eventImportForm");
+    var importSourceSelect = document.getElementById("eventImportSourceSelect");
+    var importDefaultCity = document.getElementById("eventImportDefaultCity");
+    var importDefaultCategory = document.getElementById("eventImportDefaultCategory");
+    var importEmail = document.getElementById("eventImportEmail");
+    var importHost = document.getElementById("eventImportHost");
+    var importRawData = document.getElementById("eventImportRawData");
+    var importPreview = document.getElementById("eventImportPreview");
+    var importStatus = document.getElementById("eventImportStatus");
+    var importClearBtn = document.getElementById("eventImportClearBtn");
     var reportEl = document.getElementById("reportQueue");
     var pendingEl = document.getElementById("pendingQueue");
     var actionForm = document.getElementById("adminActionForm");
     var eventSources = [];
+    var adminActions = [];
+    var importableSources = [];
     var selectedEventSource = null;
+    var importDrafts = [];
 
     setReviewFormEnabled(sourceReviewForm, false);
 
     fetchAll({ types: CONTENT_TYPES.concat(["eventSource", "report", "account", "savedItem", "adminAction", "conciergeRequest"]) }, function (data) {
       eventSources = data.byType.eventSource || [];
+      adminActions = data.byType.adminAction || [];
+      importableSources = populateEventImportSources(importSourceSelect, eventSources, adminActions);
       renderEventSourceQueue(sourceEl, eventSources, selectedEventSource && selectedEventSource._key);
       renderCards(reportEl, data.byType.report || [], "No reports have been submitted.");
       var pending = data.all.filter(function (record) {
@@ -1541,6 +1989,11 @@
         }
         postRecord("adminAction", formData).then(function () {
           if (sourceReviewStatus) sourceReviewStatus.textContent = "Source review recorded in Admin Actions.";
+          var localAction = {};
+          Object.keys(formData).forEach(function (key) { localAction[key] = formData[key]; });
+          localAction.timestamp = new Date().toISOString();
+          adminActions.unshift(normalizeRecord("adminAction", localAction));
+          importableSources = populateEventImportSources(importSourceSelect, eventSources, adminActions);
           if (sourceReviewSubmit) {
             sourceReviewSubmit.disabled = false;
             sourceReviewSubmit.textContent = "Record source review";
@@ -1551,6 +2004,116 @@
             sourceReviewSubmit.disabled = false;
             sourceReviewSubmit.textContent = "Record source review";
           }
+        });
+      });
+    }
+
+    function selectedImportSource() {
+      var key = importSourceSelect && importSourceSelect.value;
+      return importableSources.filter(function (source) {
+        return source._key === key;
+      })[0] || null;
+    }
+
+    function sayImport(message) {
+      if (importStatus) importStatus.textContent = message || "";
+    }
+
+    if (importSourceSelect) {
+      importSourceSelect.addEventListener("change", function () {
+        var source = selectedImportSource();
+        if (importEmail && source && !importEmail.value) importEmail.value = source.organizerEmail || "";
+        if (importHost && source && !importHost.value) importHost.value = source.sourceName || "";
+        sayImport(source ? "Source selected. Paste event data to preview imports." : "");
+      });
+    }
+
+    if (importForm) {
+      importForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var source = selectedImportSource();
+        if (!source) {
+          sayImport("Select an approved event source before importing.");
+          return;
+        }
+        var raw = importRawData && importRawData.value;
+        if (!raw || !raw.trim()) {
+          sayImport("Paste iCal, JSON, CSV, or structured event text before previewing.");
+          return;
+        }
+        var defaults = {
+          city: importDefaultCity && importDefaultCity.value,
+          category: importDefaultCategory && importDefaultCategory.value,
+          email: importEmail && importEmail.value,
+          host: importHost && importHost.value
+        };
+        importDrafts = parseEventImportInput(raw, source, defaults);
+        renderEventImportPreview(importPreview, importDrafts);
+        sayImport(importDrafts.length
+          ? importDrafts.length + " event" + (importDrafts.length === 1 ? "" : "s") + " parsed. Review before publishing."
+          : "No events could be parsed. Try iCal VEVENT data, JSON, CSV headers, or labeled event blocks.");
+      });
+    }
+
+    if (importClearBtn) {
+      importClearBtn.addEventListener("click", function () {
+        importDrafts = [];
+        if (importRawData) importRawData.value = "";
+        renderEventImportPreview(importPreview, importDrafts);
+        sayImport("");
+      });
+    }
+
+    if (importPreview) {
+      importPreview.addEventListener("click", function (e) {
+        var publishBtn = e.target.closest("[data-event-import-publish]");
+        if (!publishBtn) return;
+        var source = selectedImportSource();
+        if (!source) {
+          sayImport("Select an approved event source before publishing.");
+          return;
+        }
+        var selected = collectEventImportPreview(importPreview).filter(function (event) {
+          return event._include;
+        }).map(function (event) {
+          return prepareEventForPost(event, source);
+        });
+        if (!selected.length) {
+          sayImport("Select at least one event to publish.");
+          return;
+        }
+        var invalid = selected.filter(function (event) {
+          return !event.title || !event.date || !event.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(event.email);
+        });
+        if (invalid.length) {
+          sayImport("Each selected event needs a title, date, and valid contact email before publishing.");
+          return;
+        }
+        publishBtn.disabled = true;
+        publishBtn.textContent = "Publishing...";
+        selected.reduce(function (chain, event) {
+          return chain.then(function () { return postRecord("event", event); });
+        }, Promise.resolve()).then(function () {
+          return postRecord("adminAction", {
+            targetType: "eventSource",
+            targetId: source._id,
+            targetTitle: source._title,
+            action: "Imported events from source",
+            notes: "Published " + selected.length + " selected event(s) to the public Events tab.",
+            sourcePlatform: source.platform || "",
+            sourceUrl: source.sourceUrl || "",
+            feedUrl: source.feedUrl || "",
+            organizerEmail: source.organizerEmail || "",
+            importCount: String(selected.length)
+          });
+        }).then(function () {
+          sayImport("Published " + selected.length + " event" + (selected.length === 1 ? "" : "s") + " to the public calendar.");
+          publishBtn.disabled = false;
+          publishBtn.textContent = "Publish selected";
+        }).catch(function () {
+          sayImport("Could not publish the selected events. Try again.");
+          publishBtn.disabled = false;
+          publishBtn.textContent = "Publish selected";
         });
       });
     }

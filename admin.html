@@ -170,6 +170,73 @@
           </form>
         </section>
 
+        <section class="platform-section" id="eventImportSection">
+          <div class="platform-section__head">
+            <div>
+              <h2 class="platform-section__title">Manual event import</h2>
+              <p class="platform-section__desc">Paste iCal, JSON, CSV, or structured event text from an approved source, preview it, edit it, then publish selected events to the public calendar.</p>
+            </div>
+          </div>
+          <div class="notice">
+            <p>Only import public event details. Do not paste attendee lists, private guest data, API keys, OAuth tokens, or private calendar URLs.</p>
+          </div>
+          <form class="compact-form" id="eventImportForm">
+            <div class="field-grid">
+              <label class="field field--full">
+                <span class="field__label">Approved source</span>
+                <select id="eventImportSourceSelect" disabled>
+                  <option value="">Load approved sources...</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Fallback city</span>
+                <select id="eventImportDefaultCity">
+                  <option value="">Use pasted value</option>
+                  <option>Boise, ID</option>
+                  <option>Atlanta, GA</option>
+                  <option>Washington, DC</option>
+                  <option>Madison, AL</option>
+                  <option>Virtual</option>
+                  <option>Other</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Fallback category</span>
+                <select id="eventImportDefaultCategory">
+                  <option value="">Use pasted value</option>
+                  <option>Workshop</option>
+                  <option>Meetup</option>
+                  <option>AMA</option>
+                  <option>Demo Day</option>
+                  <option>Pitch Competition</option>
+                  <option>Office Hours</option>
+                  <option>Hack Night</option>
+                  <option>Panel</option>
+                  <option>Other</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Calendar contact email</span>
+                <input id="eventImportEmail" type="email" placeholder="Uses organizer email when available" />
+              </label>
+              <label class="field">
+                <span class="field__label">Default host</span>
+                <input id="eventImportHost" placeholder="Uses source name when blank" />
+              </label>
+              <label class="field field--full">
+                <span class="field__label">Paste event data</span>
+                <textarea id="eventImportRawData" rows="10" placeholder="Paste VEVENT/iCal text, a JSON array of events, CSV with headers, or blocks like:&#10;Title: Founder Coffee&#10;Date: 2026-09-12&#10;Time: 8:30 AM&#10;Location: Downtown&#10;RSVP: https://..."></textarea>
+              </label>
+            </div>
+            <div class="platform-card__actions">
+              <button class="btn" type="submit" id="eventImportParseBtn">Preview events</button>
+              <button class="btn btn--secondary" type="button" id="eventImportClearBtn">Clear preview</button>
+            </div>
+            <p class="form-status" id="eventImportStatus" role="status" aria-live="polite"></p>
+          </form>
+          <div class="event-import-preview" id="eventImportPreview"></div>
+        </section>
+
         <section class="platform-section">
           <div class="platform-section__head">
             <div>
@@ -225,6 +292,7 @@
                   <option>Event source needs secure setup</option>
                   <option>Event source rejected</option>
                   <option>Event source paused</option>
+                  <option>Imported events from source</option>
                 </select>
               </label>
               <label class="field field--full">

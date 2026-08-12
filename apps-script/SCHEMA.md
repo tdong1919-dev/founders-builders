@@ -334,13 +334,14 @@ Required: `action`
 |---|---|---|
 | id, timestamp | — | see conventions |
 | targetType, targetId, targetTitle | string | Reviewed record |
-| action | enum | `Reviewed` · `Verified` · `Needs follow-up` · `Marked duplicate` · `Hidden in Sheet` · `Rejected in Sheet` · `Event source approved` · `Event source rejected` · `Event source paused` · `Event source needs secure setup` · `Event source ready for manual import` |
+| action | enum | `Reviewed` · `Verified` · `Needs follow-up` · `Marked duplicate` · `Hidden in Sheet` · `Rejected in Sheet` · `Event source approved` · `Event source rejected` · `Event source paused` · `Event source needs secure setup` · `Event source ready for manual import` · `Imported events from source` |
 | notes, adminEmail | string | Append-only audit note |
 | recommendedApprovalStatus | enum | Optional event-source review recommendation: `Pending review` · `Approved` · `Rejected` · `Paused` |
 | recommendedSyncStatus | enum | Optional event-source review recommendation: `Requested` · `Needs secure setup` · `Pending review` · `Active` · `Paused` · `Rejected` · `Error` |
 | recommendedSecretStatus | enum | Optional event-source review recommendation: `Not collected - admin follow-up required` · `No secret required` · `Stored in Script Properties` · `Revoked` |
 | importPlan | enum | Optional event-source import plan: `No import yet` · `Manual import approved` · `Curated review only` · `Auto-sync when supported` · `Needs organizer follow-up` |
 | sourcePlatform, sourceUrl, feedUrl, organizerEmail | string | Optional event-source context copied into the audit note row |
+| importCount | string/number | Optional count for manual import audit notes |
 
 ### `chapter` — sheet `Chapters`
 

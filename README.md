@@ -138,7 +138,9 @@ saved).
 `Event Sources` tab for review; approved external events appear in the public `Events`
 tab with source attribution and RSVP links back to the original platform. Admins can
 review selected source requests in [`admin.html`](admin.html), which records append-only
-review actions and recommended status changes. The operating guide is in
+review actions and recommended status changes. Approved sources can then be used in the
+manual import queue to paste iCal/JSON/CSV/text events, preview/edit them, and publish
+selected rows to the public calendar. The operating guide is in
 [`docs/EVENT_SOURCE_AGGREGATION.md`](docs/EVENT_SOURCE_AGGREGATION.md).
 
 **Schema:** every entity's exact columns, types, required fields, and allowed values

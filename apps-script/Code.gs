@@ -260,7 +260,7 @@ var ENTITIES = {
     extraHeaders: [
       'recommendedApprovalStatus', 'recommendedSyncStatus',
       'recommendedSecretStatus', 'importPlan', 'sourcePlatform', 'sourceUrl',
-      'feedUrl', 'organizerEmail'
+      'feedUrl', 'organizerEmail', 'importCount'
     ],
     required: ['action'],
     public: false,
@@ -269,7 +269,8 @@ var ENTITIES = {
         'Reviewed', 'Verified', 'Needs follow-up', 'Marked duplicate',
         'Hidden in Sheet', 'Rejected in Sheet', 'Event source approved',
         'Event source rejected', 'Event source paused',
-        'Event source needs secure setup', 'Event source ready for manual import'
+        'Event source needs secure setup', 'Event source ready for manual import',
+        'Imported events from source'
       ],
       recommendedApprovalStatus: ['Pending review', 'Approved', 'Rejected', 'Paused'],
       recommendedSyncStatus: ['Requested', 'Needs secure setup', 'Pending review', 'Active', 'Paused', 'Rejected', 'Error'],

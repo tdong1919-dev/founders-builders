@@ -16,7 +16,9 @@ calendar with clear attribution and RSVP links back to the original platform.
 7. Admin records a source-review action with the recommended approval/sync/secret status.
 8. Admin updates the `Event Sources` row in Sheets and handles any secure setup outside
    the public form.
-9. Approved events are added to the public `Events` tab with source attribution fields.
+9. Admin uses the manual import queue to paste public event data, preview parsed events,
+   edit fields, and publish selected events.
+10. Approved events are added to the public `Events` tab with source attribution fields.
 
 ## Connection Methods
 
@@ -56,6 +58,25 @@ before building automated importers.
   `importedFromSourceId` populated so the calendar remains transparent.
 - RSVPs should point to the original event platform unless the event is natively hosted
   by F&B.
+
+## Manual Import Queue
+
+The manual import queue in `admin.html` is the first production-friendly importer. It is
+designed for approved sources before full OAuth/API automation exists.
+
+Accepted paste formats:
+
+- iCal/ICS text containing one or more `VEVENT` blocks.
+- JSON arrays or objects with event-like fields such as `title`, `date`, `time`,
+  `location`, `description`, `url`, and `id`.
+- CSV or TSV with headers such as `title`, `date`, `time`, `city`, `category`,
+  `location`, and `rsvpLink`.
+- Labeled text blocks such as `Title:`, `Date:`, `Time:`, `Location:`, and `RSVP:`.
+
+Before publishing, admins can edit each parsed event's title, date, time, city, category,
+location, RSVP link, source platform, source name, source URL, source event ID,
+description, and contact email. Only checked events are posted to the public `Events`
+tab. Publishing also writes an `Imported events from source` audit row in `Admin Actions`.
 
 ## Public Calendar Fields
 
