@@ -73,9 +73,7 @@ alter table public.fb_project_milestones enable row level security;
 -- A public search must only return teaser fields via the public view defined below.
 -- No direct projects SELECT is granted for ordinary users because private_brief is in the row.
 revoke all on public.fb_projects from anon, authenticated;
-grant insert (owner_id,title,teaser,private_brief,stage,skills_needed,collaboration_model,visibility,published_at) on public.fb_projects to authenticated;
-grant update (title,teaser,private_brief,stage,skills_needed,collaboration_model,visibility,published_at) on public.fb_projects to authenticated;
-grant delete on public.fb_projects to authenticated;
+-- No direct project writes: force creation/editing through identity-bound RPCs.
 -- Owner-only private project reads occur through a narrowly scoped RPC below.
 create policy fb_projects_insert_own on public.fb_projects for insert to authenticated
 with check (owner_id=(select auth.uid()) and (visibility='private' or published_at is not null));
@@ -109,7 +107,7 @@ revoke all on function public.fb_get_project(uuid) from public;
 grant execute on function public.fb_get_project(uuid) to authenticated;
 
 -- Request creation is allowed only for published projects, never your own.
-grant select, insert on public.fb_collaboration_requests to authenticated;
+grant select on public.fb_collaboration_requests to authenticated;
 create policy fb_requests_read on public.fb_collaboration_requests for select to authenticated
 using (applicant_id=(select auth.uid()) or exists(
  select 1 from public.fb_projects p where p.id=project_id and p.owner_id=(select auth.uid())
@@ -127,7 +125,7 @@ grant select on public.fb_project_members to authenticated;
 create policy fb_members_read on public.fb_project_members for select to authenticated
 using (public.fb_can_access_project(project_id,(select auth.uid())));
 
-grant select,insert,update,delete on public.fb_project_milestones to authenticated;
+grant select on public.fb_project_milestones to authenticated;
 create policy fb_milestones_read on public.fb_project_milestones for select to authenticated
 using (public.fb_can_access_project(project_id,(select auth.uid())));
 create policy fb_milestones_add on public.fb_project_milestones for insert to authenticated
@@ -174,3 +172,99 @@ begin
 end $$;
 revoke all on function public.fb_withdraw_request(uuid) from public;
 grant execute on function public.fb_withdraw_request(uuid) to authenticated;
+
+-- Write operations are routed through functions with explicit owner identity checks.
+-- No caller chooses their own owner_id or applicant_id.
+create or replace function public.fb_create_project(
+  p_title text,p_teaser text,p_private_brief text default '',
+  p_stage text default 'Idea',p_skills text[] default '{}',
+  p_model text default 'Open to discussion'
+) returns uuid language plpgsql security definer set search_path=''
+as $$
+declare new_id uuid;
+begin
+ if auth.uid() is null then raise exception 'Authentication required'; end if;
+ insert into public.fb_projects(owner_id,title,teaser,private_brief,stage,skills_needed,collaboration_model,visibility)
+ values(auth.uid(),p_title,p_teaser,coalesce(p_private_brief,''),p_stage,coalesce(p_skills,'{}'),p_model,'private')
+ returning id into new_id;
+ return new_id;
+end $$;
+revoke all on function public.fb_create_project(text,text,text,text,text[],text) from public;
+grant execute on function public.fb_create_project(text,text,text,text,text[],text) to authenticated;
+
+create or replace function public.fb_update_project(
+ p_project uuid,p_title text,p_teaser text,p_private_brief text,
+ p_stage text,p_skills text[],p_model text,p_publish boolean default false
+) returns boolean language plpgsql security definer set search_path=''
+as $$
+begin
+ if auth.uid() is null then raise exception 'Authentication required'; end if;
+ update public.fb_projects set
+ title=p_title,teaser=p_teaser,private_brief=coalesce(p_private_brief,''),
+ stage=p_stage,skills_needed=coalesce(p_skills,'{}'),collaboration_model=p_model,
+ visibility=case when p_publish then 'public' else 'private' end,
+ published_at=case when p_publish then coalesce(published_at,now()) else null end,
+ updated_at=now()
+ where id=p_project and owner_id=auth.uid();
+ return found;
+end $$;
+revoke all on function public.fb_update_project(uuid,text,text,text,text,text[],text,boolean) from public;
+grant execute on function public.fb_update_project(uuid,text,text,text,text,text[],text,boolean) to authenticated;
+
+create or replace function public.fb_my_projects()
+returns table(id uuid,title text,teaser text,stage text,visibility text,created_at timestamptz)
+language sql stable security definer set search_path=''
+as $$
+ select p.id,p.title,p.teaser,p.stage,p.visibility,p.created_at
+ from public.fb_projects p where p.owner_id=auth.uid() and auth.uid() is not null
+ order by p.created_at desc limit 100
+$$;
+revoke all on function public.fb_my_projects() from public;
+grant execute on function public.fb_my_projects() to authenticated;
+
+create or replace function public.fb_apply_to_project(p_project uuid,p_message text)
+returns uuid language plpgsql security definer set search_path=''
+as $$
+declare new_id uuid;
+begin
+ if auth.uid() is null then raise exception 'Authentication required'; end if;
+ if not exists(select 1 from public.fb_projects p where p.id=p_project and p.visibility='public'
+   and p.published_at is not null and p.owner_id<>auth.uid()) then
+  raise exception 'Project unavailable for applications';
+ end if;
+ insert into public.fb_collaboration_requests(project_id,applicant_id,message)
+ values(p_project,auth.uid(),p_message) returning id into new_id;
+ return new_id;
+end $$;
+revoke all on function public.fb_apply_to_project(uuid,text) from public;
+grant execute on function public.fb_apply_to_project(uuid,text) to authenticated;
+
+create or replace function public.fb_add_milestone(p_project uuid,p_title text,p_due timestamptz default null)
+returns uuid language plpgsql security definer set search_path=''
+as $$
+declare new_id uuid;
+begin
+ if auth.uid() is null or not public.fb_can_access_project(p_project,auth.uid()) then
+   raise exception 'Not authorized';
+ end if;
+ insert into public.fb_project_milestones(project_id,title,due_at)
+ values(p_project,p_title,p_due) returning id into new_id;
+ return new_id;
+end $$;
+revoke all on function public.fb_add_milestone(uuid,text,timestamptz) from public;
+grant execute on function public.fb_add_milestone(uuid,text,timestamptz) to authenticated;
+
+create or replace function public.fb_set_milestone_done(p_milestone uuid,p_done boolean)
+returns boolean language plpgsql security definer set search_path=''
+as $$
+begin
+ if auth.uid() is null then raise exception 'Authentication required'; end if;
+ update public.fb_project_milestones m set done=p_done
+ where m.id=p_milestone and public.fb_can_access_project(m.project_id,auth.uid());
+ return found;
+end $$;
+revoke all on function public.fb_set_milestone_done(uuid,boolean) from public;
+grant execute on function public.fb_set_milestone_done(uuid,boolean) to authenticated;
+
+-- Keep milestone assignment and deletion restricted until membership/ownership
+-- validation and audit logging are fully implemented.
