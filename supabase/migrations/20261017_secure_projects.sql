@@ -107,7 +107,8 @@ revoke all on function public.fb_get_project(uuid) from public;
 grant execute on function public.fb_get_project(uuid) to authenticated;
 
 -- Request creation is allowed only for published projects, never your own.
-grant select on public.fb_collaboration_requests to authenticated;
+-- Request reads use dedicated permission-scoped RPC; no unrestricted table SELECT.
+revoke all on public.fb_collaboration_requests from anon,authenticated;
 create policy fb_requests_read on public.fb_collaboration_requests for select to authenticated
 using (applicant_id=(select auth.uid()) or exists(
  select 1 from public.fb_projects p where p.id=project_id and p.owner_id=(select auth.uid())
@@ -121,11 +122,11 @@ with check (
 );
 -- No raw UPDATE grant: status changes only via explicit validated RPC functions.
 
-grant select on public.fb_project_members to authenticated;
+revoke all on public.fb_project_members from anon,authenticated;
 create policy fb_members_read on public.fb_project_members for select to authenticated
 using (public.fb_can_access_project(project_id,(select auth.uid())));
 
-grant select on public.fb_project_milestones to authenticated;
+revoke all on public.fb_project_milestones from anon,authenticated;
 create policy fb_milestones_read on public.fb_project_milestones for select to authenticated
 using (public.fb_can_access_project(project_id,(select auth.uid())));
 create policy fb_milestones_add on public.fb_project_milestones for insert to authenticated
@@ -268,3 +269,40 @@ grant execute on function public.fb_set_milestone_done(uuid,boolean) to authenti
 
 -- Keep milestone assignment and deletion restricted until membership/ownership
 -- validation and audit logging are fully implemented.
+
+create or replace function public.fb_project_requests(p_project uuid)
+returns table(id uuid,applicant_id uuid,message text,status text,created_at timestamptz)
+language sql stable security definer set search_path=''
+as $$
+ select r.id,r.applicant_id,r.message,r.status,r.created_at
+ from public.fb_collaboration_requests r
+ join public.fb_projects p on p.id=r.project_id
+ where p.id=p_project and p.owner_id=auth.uid() and auth.uid() is not null
+ order by r.created_at desc limit 100
+$$;
+revoke all on function public.fb_project_requests(uuid) from public;
+grant execute on function public.fb_project_requests(uuid) to authenticated;
+
+create or replace function public.fb_my_requests()
+returns table(id uuid,project_id uuid,status text,created_at timestamptz)
+language sql stable security definer set search_path=''
+as $$
+ select r.id,r.project_id,r.status,r.created_at from public.fb_collaboration_requests r
+ where r.applicant_id=auth.uid() and auth.uid() is not null
+ order by r.created_at desc limit 100
+$$;
+revoke all on function public.fb_my_requests() from public;
+grant execute on function public.fb_my_requests() to authenticated;
+
+create or replace function public.fb_project_milestones_for(p_project uuid)
+returns table(id uuid,title text,assignee_id uuid,done boolean,due_at timestamptz)
+language sql stable security definer set search_path=''
+as $$
+ select m.id,m.title,m.assignee_id,m.done,m.due_at
+ from public.fb_project_milestones m
+ where m.project_id=p_project and auth.uid() is not null
+   and public.fb_can_access_project(p_project,auth.uid())
+ order by m.created_at asc limit 250
+$$;
+revoke all on function public.fb_project_milestones_for(uuid) from public;
+grant execute on function public.fb_project_milestones_for(uuid) to authenticated;
