@@ -22,3 +22,7 @@ The existing Apps Script endpoint runs as the Sheet owner and accepts anonymous 
 
 ## Design limitations
 The SQL migration is a groundwork review artifact. Owner-facing write operations should go through explicit RPCs; the current column-level INSERT/UPDATE grants alone are not a finished API. Email notifications, reporting, account deletion workflows, and user-facing auth integration are not implemented. Never describe these as live.
+
+## Follow-up implementation
+
+See [SUPABASE_SETUP_STATUS.md](SUPABASE_SETUP_STATUS.md) for the PR #6 review corrections, disabled auth/workspace frontend, actual local verification, account restriction and hosted activation gates. Apply the hardening migration after this foundation. Local test results do not establish hosted readiness.

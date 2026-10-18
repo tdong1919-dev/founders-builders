@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer"><meta name="robots" content="noindex">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://*.supabase.co; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self'">
+<title>Private workspace | Founders &amp; Builders</title><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="workspace.css"></head>
+<body><header><a href="index.html">Founders &amp; Builders</a><nav><a href="projects.html">Public opportunities</a> · <a href="dashboard.html">Community dashboard</a></nav></header>
+<main><p class="kicker">BUILD TOGETHER</p><h1>Your project workspace</h1>
+<p>Keep your full idea private. Share a short public teaser only when you choose to publish.</p>
+<p id="status" role="status" aria-live="polite">Checking secure workspace…</p>
+<section id="signin" hidden><h2>Sign in with email</h2><p>Invite-only access. Use your approved account. Sessions last for this tab only; reloads require sign-in.</p>
+<form id="emailForm"><label>Email <input id="email" type="email" required autocomplete="email"></label><button>Send sign-in code</button></form>
+<form id="codeForm" hidden><label>Email code <input id="code" required inputmode="numeric" autocomplete="one-time-code" minlength="6" maxlength="10" pattern="[0-9]{6,10}"></label><button>Verify code</button></form></section>
+<section id="account" hidden><p id="identity"></p><button id="signout" type="button">Sign out</button>
+<h2>Create a private project</h2><form id="projectForm"><label>Title <input name="title" required minlength="3" maxlength="120"></label>
+<label>Public teaser <textarea name="teaser" required minlength="10" maxlength="300"></textarea></label>
+<p>The teaser becomes public only after you explicitly publish.</p><label>Private brief <textarea name="brief" maxlength="10000"></textarea></label><button>Create private project</button></form>
+<h2>My projects and collaborations</h2><div id="myProjects"></div><h2>My applications</h2><div id="myRequests"></div></section>
+<section id="detail" hidden><h2 id="detailTitle"></h2><p id="detailBrief" class="preserve"></p><div id="detailActions"></div><h3>Members</h3><div id="members"></div><h3>Milestones</h3><div id="milestones"></div>
+<form id="milestoneForm"><label>Milestone title <input id="milestoneTitle" required minlength="3" maxlength="180"></label><button>Add milestone</button></form><h3>Applications</h3><div id="applications"></div></section>
+<section id="discovery" hidden><h2>Published project teasers</h2><p>Applications do not grant private access. The owner must accept you first.</p><div id="publicProjects"></div></section>
+</main><script src="secure-config.js"></script><script src="secure-client.js"></script><script src="workspace.js"></script></body></html>

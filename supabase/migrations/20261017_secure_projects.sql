@@ -1,3 +1,5 @@
+-- Atomic initial migration: grants and RLS become visible together.
+begin;
 -- Founders & Builders: Phase 3 secure project foundation
 -- Run in a Supabase SQL editor only after configuring Supabase Auth.
 -- This migration does not modify the existing public Apps Script backend.
@@ -306,3 +308,5 @@ as $$
 $$;
 revoke all on function public.fb_project_milestones_for(uuid) from public;
 grant execute on function public.fb_project_milestones_for(uuid) to authenticated;
+
+commit;
