@@ -85,7 +85,15 @@
     }
     var members = await client.rpc('fb_project_members_for', { p_project: id });
     $('members').replaceChildren(node('p', 'Owner: ' + selected.owner_id));
-    members.forEach(function (m) { $('members').append(node('p', m.user_id + ' · ' + m.role)); });
+    members.forEach(function (m) {
+      var row = node('p', m.user_id + ' · ' + m.role);
+      if (selected.owner_id === client.user().id) row.append(button('Remove member and revoke private access', async function () {
+        if (!await client.rpc('fb_remove_project_member', { p_project: id, p_member: m.user_id }))
+          throw new Error('Member was already removed.');
+        await openProject(id); message('Member removed. Future private project and milestone requests are denied.');
+      }));
+      $('members').append(row);
+    });
     var milestones = await client.rpc('fb_project_milestones_for', { p_project: id });
     $('milestones').replaceChildren();
     milestones.forEach(function (m) { $('milestones').append(button((m.done ? '✓ ' : '○ ') + m.title, async function () {

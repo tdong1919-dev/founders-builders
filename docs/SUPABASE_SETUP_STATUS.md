@@ -35,13 +35,15 @@ Existing `config.js`, `platform.js`, Apps Script code, and public-hub data route
 
 ## Verification performed
 
-- Executed both migrations on disposable local PostgreSQL.
+Latest local run: **37 SQL assertions plus negative-operation blocks passed**, followed by rollback. All 9 client tests also passed.
+
+- Executed all three migrations on disposable local PostgreSQL, including owner-controlled membership revocation.
 - Executed `supabase/tests/security.sql` with owner, applicant/member, outsider, unverified identity and anonymous role contexts; all assertions passed. Tests roll back fixtures and temporary grants.
 - Repeated against Supabase-style table/function default grants; all assertions passed.
 - Checked private reads, teaser projection, owner-only writes/review, accepted/declined membership, milestones, forged membership, self/private applications, repeated acceptance, anonymous EXECUTE denial, and RLS independently of table ACLs.
 - `node --test tests/secure-client.test.cjs`: 9 passed. Covers disabled config, secret-key rejection, auth requirement, invite-only OTP, auth headers/signout, stale responses, safe errors, verified identity and expiration.
 - JavaScript syntax and `git diff --check` passed.
-- Local browser preview could not attach through the available browser connection. Visual layout and full UI journeys are **not verified**. Unit tests are not a substitute for hosted testing.
+- The Netlify PR preview was opened and its disabled workspace state verified: private forms are hidden and existing community links remain available. Enabled authenticated UI journeys are **not verified**. Unit tests are not a substitute for hosted testing.
 
 Local bootstrap is exclusively for disposable PostgreSQL: **never run `local-bootstrap.sql` in hosted Supabase**. It stubs `auth.users` and `auth.uid()` and does not test Supabase's real auth service, JWT verification or email delivery. Example local sequence:
 
@@ -50,6 +52,7 @@ psql "$LOCAL_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 \
   -f supabase/tests/local-bootstrap.sql \
   -f supabase/migrations/20261017_secure_projects.sql \
   -f supabase/migrations/20261018_secure_project_hardening.sql \
+  -f supabase/migrations/20261019_membership_revocation.sql \
   -f supabase/tests/security.sql
 node --test tests/secure-client.test.cjs
 ```
@@ -57,12 +60,20 @@ node --test tests/secure-client.test.cjs
 ## Remaining gates before activation
 
 1. Resolve the Supabase account restriction or provide an eligible, dedicated existing Free project. This work does not authorize payment.
-2. Create the project on Free, disable automatic table grants, enable RLS, and apply both reviewed migrations. Verify actual table ACLs, function ACLs, policies and advisors in hosted Supabase.
+2. Create the project on Free, disable automatic table grants, enable RLS, and apply all three reviewed migrations. Verify actual table ACLs, function ACLs, policies and advisors in hosted Supabase.
 3. Keep self-signup disabled; invite approved test accounts. Configure the Magic Link email template to show `{{ .Token }}` for email OTP. Test email delivery to each approved user; Supabase's built-in mail restrictions may require SMTP configuration. Do not buy mail services without approval.
 4. Add the real project URL and public `sb_publishable_` key to `secure-config.js`, leaving `enabled: false` until hosted tests pass. No service-role key belongs in static files, previews, logs or GitHub.
 5. Repeat the role matrix with actual authenticated JWTs through the Data API, including session expiry/signout and mobile/desktop UI. Test quotas and concurrent accept/withdraw/publish operations under load. Local tests do not establish these hosted results.
 6. Link repository through the Free-compatible integration if available without paid branching, or use reviewed migration files and manual SQL application. Do not enable automatic unreviewed production migrations or paid preview branches.
-7. Add tested membership revocation/account deletion and abuse handling before broad public access. Current membership removal requires a trusted administrator; the UI deliberately has no raw member-role editing.
+7. Verify owner-controlled membership removal with live sessions; add account deletion and abuse handling before broad public access. The UI deliberately has no raw member-role editing.
 8. Review/merge the PR only after these gates pass. Preview deployment may be generated automatically by the repository's existing Netlify integration. No production merge or deploy was performed here.
 
 Supabase references: [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [email OTP](https://supabase.com/docs/guides/auth/auth-email-passwordless), [verify OTP](https://supabase.com/docs/reference/javascript/auth-verifyotp).
+
+## Continuation: access revocation
+
+The Supabase creation form was rechecked and still displays the same outstanding-invoice block. The connected Supabase MCP endpoint resolves to the unrelated Front End Quiz project (`hgnkpyfxghglsxqprphy`); no database reads or changes were made there.
+
+`20261019_membership_revocation.sql` adds owner-only member removal, a private audit table, and synchronized milestone writes. Removing a member also closes the accepted application and denies subsequent private brief, member list, workspace list and milestone operations. This cannot retract data already received by that user. The rollback-only security suite now checks revocation, repeat removal, outsider denial, post-removal reads/writes and audit ACLs.
+
+The preview was verified to show the pending-setup message and no private submission forms. Hosted schema/auth tests, signup/email configuration, repository integration and activation remain blocked.
