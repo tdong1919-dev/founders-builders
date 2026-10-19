@@ -15,7 +15,14 @@
 <label>Public teaser <textarea name="teaser" required minlength="10" maxlength="300"></textarea></label>
 <p>The teaser becomes public only after you explicitly publish.</p><label>Private brief <textarea name="brief" maxlength="10000"></textarea></label><button>Create private project</button></form>
 <h2>My projects and collaborations</h2><div id="myProjects"></div><h2>My applications</h2><div id="myRequests"></div></section>
-<section id="detail" hidden><h2 id="detailTitle"></h2><p id="detailBrief" class="preserve"></p><div id="detailActions"></div><h3>Members</h3><div id="members"></div><h3>Milestones</h3><div id="milestones"></div>
+<section id="detail" hidden><h2 id="detailTitle"></h2><p id="detailBrief" class="preserve"></p><div id="detailActions"></div>
+<form id="editProjectForm" hidden><h3>Edit your project</h3>
+<label>Title <input id="editTitle" required minlength="3" maxlength="120"></label>
+<label>Public teaser <textarea id="editTeaser" required minlength="10" maxlength="300"></textarea></label>
+<label>Private brief <textarea id="editBrief" maxlength="10000"></textarea></label>
+<p id="editVisibility"></p>
+<label id="editPublishReview" hidden><input id="editPublishConfirm" type="checkbox"> I reviewed the title and teaser and approve publishing these changes.</label>
+<button>Save project changes</button></form><h3>Members</h3><div id="members"></div><h3>Milestones</h3><div id="milestones"></div>
 <form id="milestoneForm"><label>Milestone title <input id="milestoneTitle" required minlength="3" maxlength="180"></label><button>Add milestone</button></form><h3>Applications</h3><div id="applications"></div></section>
 <section id="discovery" hidden><h2>Published project teasers</h2><p>Applications do not grant private access. The owner must accept you first.</p><div id="publicProjects"></div></section>
 </main><script src="secure-config.js"></script><script src="secure-client.js"></script><script src="workspace.js"></script></body></html>

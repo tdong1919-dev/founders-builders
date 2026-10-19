@@ -35,13 +35,13 @@ Existing `config.js`, `platform.js`, Apps Script code, and public-hub data route
 
 ## Verification performed
 
-Latest local run: **37 SQL assertions plus negative-operation blocks passed**, followed by rollback. All 12 client tests also passed.
+Latest local run: **37 SQL assertions plus negative-operation blocks passed**, followed by rollback. All 17 JavaScript tests also passed (12 client tests and 5 workspace event-handler tests).
 
 - Executed all three migrations on disposable local PostgreSQL, including owner-controlled membership revocation.
 - Executed `supabase/tests/security.sql` with owner, applicant/member, outsider, unverified identity and anonymous role contexts; all assertions passed. Tests roll back fixtures and temporary grants.
 - Repeated against Supabase-style table/function default grants; all assertions passed.
 - Checked private reads, teaser projection, owner-only writes/review, accepted/declined membership, milestones, forged membership, self/private applications, repeated acceptance, anonymous EXECUTE denial, and RLS independently of table ACLs.
-- `node --test tests/secure-client.test.cjs`: 12 passed. Covers disabled config, secret-key rejection, auth requirement, invite-only OTP, auth headers/signout, stale responses, safe errors, verified identity and expiration.
+- `node --test tests/*.test.cjs`: 12 passed. Covers disabled config, secret-key rejection, auth requirement, invite-only OTP, auth headers/signout, stale responses, safe errors, verified identity and expiration.
 - JavaScript syntax and `git diff --check` passed.
 - The Netlify PR preview was opened and its disabled workspace state verified: private forms are hidden and existing community links remain available. Enabled authenticated UI journeys are **not verified**. Unit tests are not a substitute for hosted testing.
 
@@ -54,7 +54,7 @@ psql "$LOCAL_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 \
   -f supabase/migrations/20261018_secure_project_hardening.sql \
   -f supabase/migrations/20261019_membership_revocation.sql \
   -f supabase/tests/security.sql
-node --test tests/secure-client.test.cjs
+node --test tests/*.test.cjs
 ```
 
 ## Remaining gates before activation
@@ -83,3 +83,9 @@ The preview was verified to show the pending-setup message and no private submis
 Sign-out stays available during pending operations. It clears local authentication, cancels in-flight private requests and discards responses from earlier sessions. Requests time out after 20 seconds. Tests cover immediate cancellation, failed server logout still clearing local access, and a stalled request timing out without waiting in real time.
 
 The latest browser recheck reached an expired Supabase session. GitHub sign-in failed with `Failed to fetch (auth.supabase.io)`. Current invoice/project eligibility could not be reverified; the outstanding-invoice restriction remains the last observed project-creation result. No hosted project, credential or billing changes were made.
+
+## Continuation: owner project editing
+
+Owners can edit a project's title, teaser and private brief. Private saves preserve private visibility; editing published title/teaser content requires an explicit review checkbox. Existing stage, skills and collaboration model are preserved. Collaborators cannot access the editor or invoke its save handler successfully; database owner checks remain the authority.
+
+Five workspace tests execute real event handlers using a small DOM adapter: private edits, explicit review for public edits, collaborator denial, text-only rendering/private-form clearing on sign-out, and sign-out availability during pending work. These are local functional tests, not a replacement for enabled browser flows or real Supabase Auth testing. No new migration is required for this editor.

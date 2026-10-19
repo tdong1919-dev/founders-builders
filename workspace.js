@@ -8,6 +8,7 @@
   function button(label, action) { var el = node('button', label); el.type = 'button'; el.addEventListener('click', function () { run(action); }); return el; }
   function resetPrivate() {
     selected = null; $('detail').hidden = true; $('account').hidden = true;
+    $('editProjectForm').hidden = true; $('editProjectForm').reset();
     ['myProjects', 'myRequests', 'detailTitle', 'detailBrief', 'detailActions', 'members', 'milestones', 'applications', 'identity'].forEach(function (id) { $(id).replaceChildren(); });
     $('projectForm').reset(); $('milestoneForm').reset(); $('codeForm').reset();
   }
@@ -62,6 +63,7 @@
   async function openProject(id) {
     // Clear the previous brief before attempting another permission-scoped read.
     $('detail').hidden = true; $('detailBrief').textContent = ''; selected = null;
+    $('editProjectForm').hidden = true; $('editProjectForm').reset();
     var rows = await client.rpc('fb_get_project', { p_project: id });
     if (!rows.length) throw new Error('This project is unavailable to your account.');
     selected = rows[0];
@@ -69,6 +71,14 @@
     $('detailBrief').textContent = selected.private_brief;
     $('detailActions').replaceChildren();
     if (selected.owner_id === client.user().id) {
+      $('editProjectForm').hidden = false;
+      $('editTitle').value = selected.title; $('editTeaser').value = selected.teaser;
+      $('editBrief').value = selected.private_brief;
+      $('editPublishReview').hidden = selected.visibility !== 'public';
+      $('editPublishConfirm').checked = false;
+      $('editVisibility').textContent = selected.visibility === 'public'
+        ? 'Your title and teaser are public. Review them before saving. Your full brief stays private.'
+        : 'This project is private. Saving changes will keep it private.';
       var publish = document.createElement('input'); publish.type = 'checkbox';
       var label = node('label', 'I reviewed the title and teaser and want to publish them publicly.'); label.prepend(publish);
       if (selected.visibility !== 'public') $('detailActions').append(node('p', selected.teaser), label);
@@ -131,6 +141,18 @@
     var form = $('projectForm'); var id = await client.rpc('fb_create_project', {
       p_title: form.elements.title.value, p_teaser: form.elements.teaser.value, p_private_brief: form.elements.brief.value });
     form.reset(); await loadMine(); await openProject(id); message('Private project created. Nothing has been published.');
+  }); });
+  $('editProjectForm').addEventListener('submit', function (event) { event.preventDefault(); run(async function () {
+    var project = selected, user = client.user();
+    if (!project || !user || project.owner_id !== user.id) throw new Error('Only the project owner can edit this project.');
+    var published = project.visibility === 'public';
+    if (published && !$('editPublishConfirm').checked) throw new Error('Review and approve the public title and teaser before saving.');
+    var changed = await client.rpc('fb_update_project', { p_project: project.id,
+      p_title: $('editTitle').value, p_teaser: $('editTeaser').value, p_private_brief: $('editBrief').value,
+      p_stage: project.stage, p_skills: project.skills_needed, p_model: project.collaboration_model, p_publish: published });
+    if (!changed) throw new Error('Project update was not authorized.');
+    await loadMine(); await loadPublic(); await openProject(project.id);
+    message(published ? 'Project saved. Reviewed title and teaser are public; the full brief stays private.' : 'Private project changes saved.');
   }); });
   $('milestoneForm').addEventListener('submit', function (event) { event.preventDefault(); run(async function () {
     if (!selected) throw new Error('Open a project first.');
