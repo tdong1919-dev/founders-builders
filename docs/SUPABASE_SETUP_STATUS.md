@@ -35,7 +35,7 @@ Existing `config.js`, `platform.js`, Apps Script code, and public-hub data route
 
 ## Verification performed
 
-Latest local run: **37 SQL assertions plus negative-operation blocks passed**, followed by rollback. All 17 JavaScript tests also passed (12 client tests and 5 workspace event-handler tests).
+Latest local run: **37 SQL assertions plus negative-operation blocks passed**, followed by rollback. All 22 JavaScript tests also passed (12 client tests and 10 workspace event-handler tests).
 
 - Executed all three migrations on disposable local PostgreSQL, including owner-controlled membership revocation.
 - Executed `supabase/tests/security.sql` with owner, applicant/member, outsider, unverified identity and anonymous role contexts; all assertions passed. Tests roll back fixtures and temporary grants.
@@ -86,6 +86,14 @@ The latest browser recheck reached an expired Supabase session. GitHub sign-in f
 
 ## Continuation: owner project editing
 
-Owners can edit a project's title, teaser and private brief. Private saves preserve private visibility; editing published title/teaser content requires an explicit review checkbox. Existing stage, skills and collaboration model are preserved. Collaborators cannot access the editor or invoke its save handler successfully; database owner checks remain the authority.
+Owners can edit a project's title, teaser and private brief. Private saves preserve private visibility; editing published title/teaser content requires an explicit review checkbox. Stage, skills and collaboration model stay unchanged unless the owner edits them. Collaborators cannot access the editor or invoke its save handler successfully; database owner checks remain the authority.
 
 Five workspace tests execute real event handlers using a small DOM adapter: private edits, explicit review for public edits, collaborator denial, text-only rendering/private-form clearing on sign-out, and sign-out availability during pending work. These are local functional tests, not a replacement for enabled browser flows or real Supabase Auth testing. No new migration is required for this editor.
+
+## Continuation: project planning fields and milestone dates
+
+Creation and owner editing now include stage, skills needed and collaboration terms, using the existing RPC parameters and database enum constraints. Skills are trimmed and deduplicated case-insensitively, with at most 30 entries/1,500 characters. Public edits still require content review, and these fields are included in the project detail and public teaser card.
+
+Owners and accepted members can add milestones with an optional due date, recorded at end-of-day UTC. Calendar dates are validated before submission. Milestones show due dates and a completed/total count. Completion continues through the existing membership-scoped RPC; this does not grant collaborators project-editing access.
+
+All 22 local JavaScript tests passed. New checks cover creation metadata, owner edits, invalid enums/oversized skill lists, collaborator milestone progress and due dates, and rejection of nonexistent dates. No migration changes or hosted database access were required. Enabled browser and hosted authentication tests remain outstanding.

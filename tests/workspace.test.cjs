@@ -6,7 +6,7 @@ const html = fs.readFileSync(require.resolve('../workspace.html'), 'utf8');
 const source = fs.readFileSync(require.resolve('../workspace.js'), 'utf8');
 // Small DOM adapter executes the real event handlers without a browser or network.
 // Hosted browser/auth journeys remain a separate release gate.
-async function harness({ owner = true, published = false } = {}) {
+async function harness({ owner = true, published = false, milestones = [] } = {}) {
  const all = [], elements = {};
  class Element {
   constructor(tag, id = '') { this.tagName = tag; this.id = id; this.hidden = false; this.disabled = false; this.value = ''; this.checked = false; this.children = []; this.listeners = {}; this.textContent = ''; all.push(this); }
@@ -15,8 +15,8 @@ async function harness({ owner = true, published = false } = {}) {
   replaceChildren(...nodes) { this.children = nodes; this.textContent = ''; }
   addEventListener(type, handler) { this.listeners[type] = handler; }
   reset() {
-   const ids = this.id === 'editProjectForm' ? ['editTitle','editTeaser','editBrief','editPublishConfirm'] :
-    this.id === 'projectForm' ? ['newTitle','newTeaser','newBrief'] : this.id === 'codeForm' ? ['code'] : [];
+   const ids = this.id === 'editProjectForm' ? ['editTitle','editTeaser','editBrief','editPublishConfirm','editStage','editSkills','editModel'] :
+    this.id === 'projectForm' ? ['newTitle','newTeaser','newBrief','newStage','newSkills','newModel'] : this.id === 'codeForm' ? ['code'] : this.id === 'milestoneForm' ? ['milestoneTitle','milestoneDue'] : [];
    ids.forEach(id => { if (elements[id]) { elements[id].value = ''; elements[id].checked = false; } });
   }
   set innerHTML(_) { throw new Error('Untrusted HTML rendering is forbidden'); }
@@ -40,7 +40,10 @@ async function harness({ owner = true, published = false } = {}) {
    if (name === 'fb_discover_projects') return [];
    if (name === 'fb_get_project') return [{ ...project }];
    if (name === 'fb_my_projects') return [{ ...project }];
-   if (name === 'fb_update_project') { Object.assign(project, { title: params.p_title, teaser: params.p_teaser, private_brief: params.p_private_brief }); return true; }
+   if (name === 'fb_update_project') { Object.assign(project, { title: params.p_title, teaser: params.p_teaser, private_brief: params.p_private_brief, stage: params.p_stage, skills_needed: params.p_skills, collaboration_model: params.p_model }); return true; }
+   if (name === 'fb_project_milestones_for') return milestones;
+   if (name === 'fb_add_milestone') { milestones.push({ id: 'new-milestone', title: params.p_title, due_at: params.p_due, done: false }); return 'new-milestone'; }
+   if (name === 'fb_set_milestone_done') { milestones.find(m => m.id === params.p_milestone).done = params.p_done; return true; }
    if (name === 'fb_create_project') return project.id;
    return [];
   }
@@ -62,7 +65,7 @@ test('owner can edit a private project without publishing it', async () => {
  await h.fire('editProjectForm','submit');
  const update = h.calls.find(c => c.name === 'fb_update_project');
  assert.equal(update.params.p_publish, false); assert.equal(update.params.p_private_brief, 'Revised confidential brief');
- assert.equal(update.params.p_stage, 'Idea'); assert.deepEqual(update.params.p_skills, ['Design']);
+ assert.equal(update.params.p_stage, 'Idea'); assert.deepEqual(Array.from(update.params.p_skills), ['Design']);
  assert.equal(e.detailTitle.textContent, 'Revised private title');
 });
 test('published edits require explicit public-content review', async () => {
@@ -92,4 +95,49 @@ test('signout remains enabled while another action is waiting', async () => {
  assert.equal(h.elements.signout.disabled, false);
  await h.fire('signout','click'); assert.equal(h.elements.detail.hidden, true);
  assert.equal(h.elements.editBrief.value, ''); h.release(); await h.settle();
+});
+test('owner can update stage and terms while skills are trimmed and deduplicated', async () => {
+ const h = await harness();
+ h.elements.editStage.value = 'MVP'; h.elements.editModel.value = 'Paid contract';
+ h.elements.editSkills.value = '  Design, design, Engineering, , engineering ';
+ await h.fire('editProjectForm','submit');
+ const update = h.calls.find(c => c.name === 'fb_update_project').params;
+ assert.equal(update.p_stage, 'MVP'); assert.equal(update.p_model, 'Paid contract');
+ assert.deepEqual(Array.from(update.p_skills), ['Design','Engineering']);
+ assert.equal(update.p_publish, false); assert.match(h.elements.detailMetadata.textContent, /MVP.*Paid contract.*Design, Engineering/);
+});
+test('invalid project enums and excessive skills do not reach the API', async () => {
+ const h = await harness(); h.elements.editStage.value = 'Administrator';
+ await h.fire('editProjectForm','submit'); assert.match(h.elements.status.textContent, /valid project stage/);
+ h.elements.editStage.value = 'Idea'; h.elements.editModel.value = 'Guaranteed equity';
+ await h.fire('editProjectForm','submit'); assert.match(h.elements.status.textContent, /valid collaboration terms/);
+ h.elements.editModel.value = 'Open to discussion'; h.elements.editSkills.value = Array.from({length:31},(_,i) => 'Skill '+i).join(',');
+ await h.fire('editProjectForm','submit'); assert.match(h.elements.status.textContent, /up to 30 skills/);
+ assert.equal(h.calls.some(c => c.name === 'fb_update_project'), false);
+});
+test('creation submits the selected stage, skills and collaboration terms privately', async () => {
+ const h = await harness(); h.elements.newStage.value = 'Research'; h.elements.newSkills.value = 'Design, Research'; h.elements.newModel.value = 'Volunteer / community';
+ await h.fire('projectForm','submit');
+ const create = h.calls.filter(c => c.name === 'fb_create_project').at(-1).params;
+ assert.equal(create.p_stage, 'Research'); assert.equal(create.p_model, 'Volunteer / community');
+ assert.deepEqual(Array.from(create.p_skills), ['Design','Research']); assert.equal('p_publish' in create, false);
+});
+test('milestones include an optional UTC due date and update progress', async () => {
+ const h = await harness({ owner: false, milestones: [{id:'first',title:'Research users',done:true,due_at:null}] });
+ assert.equal(h.elements.milestoneProgress.textContent, '1 of 1 milestones completed');
+ h.elements.milestoneTitle.value = 'Build prototype'; h.elements.milestoneDue.value = '2027-01-15';
+ await h.fire('milestoneForm','submit');
+ const add = h.calls.find(c => c.name === 'fb_add_milestone').params;
+ assert.equal(add.p_due, '2027-01-15T23:59:59.000Z'); assert.equal(add.p_project, 'project');
+ assert.equal(h.elements.milestoneProgress.textContent, '1 of 2 milestones completed');
+ const row = h.elements.milestones.children[1]; assert.equal(row.children[1].textContent, 'Due 2027-01-15 (UTC)');
+ row.children[0].listeners.click(); await h.settle();
+ assert.equal(h.elements.milestoneProgress.textContent, '2 of 2 milestones completed');
+ assert.equal(h.calls.some(c => c.name === 'fb_update_project'), false);
+});
+test('invalid milestone dates are rejected before sending', async () => {
+ const h = await harness(); h.elements.milestoneDue.value = '2027-02-31';
+ await h.fire('milestoneForm','submit');
+ assert.match(h.elements.status.textContent, /valid due date/);
+ assert.equal(h.calls.some(c => c.name === 'fb_add_milestone'), false);
 });

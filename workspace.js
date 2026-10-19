@@ -6,10 +6,22 @@
   function message(text) { $('status').textContent = text; }
   function node(tag, text) { var el = document.createElement(tag); el.textContent = text; return el; }
   function button(label, action) { var el = node('button', label); el.type = 'button'; el.addEventListener('click', function () { run(action); }); return el; }
+  function projectOptions(prefix) {
+    var stage = $(prefix + 'Stage').value || 'Idea', model = $(prefix + 'Model').value || 'Open to discussion';
+    if (['Idea','Research','Prototype','MVP','Early revenue'].indexOf(stage) === -1) throw new Error('Choose a valid project stage.');
+    if (['Open to discussion','Co-founder / potential equity','Paid contract','Volunteer / community'].indexOf(model) === -1)
+      throw new Error('Choose valid collaboration terms.');
+    var seen = Object.create(null), skills = $(prefix + 'Skills').value.split(',').map(function (skill) { return skill.trim(); }).filter(function (skill) {
+      if (!skill || seen[skill.toLowerCase()]) return false;
+      seen[skill.toLowerCase()] = true; return true;
+    });
+    if (skills.length > 30 || skills.join(',').length > 1500) throw new Error('Use up to 30 skills and 1,500 characters.');
+    return { stage: stage, model: model, skills: skills };
+  }
   function resetPrivate() {
     selected = null; $('detail').hidden = true; $('account').hidden = true;
     $('editProjectForm').hidden = true; $('editProjectForm').reset();
-    ['myProjects', 'myRequests', 'detailTitle', 'detailBrief', 'detailActions', 'members', 'milestones', 'applications', 'identity'].forEach(function (id) { $(id).replaceChildren(); });
+    ['myProjects', 'myRequests', 'detailTitle', 'detailBrief', 'detailMetadata', 'milestoneProgress', 'detailActions', 'members', 'milestones', 'applications', 'identity'].forEach(function (id) { $(id).replaceChildren(); });
     $('projectForm').reset(); $('milestoneForm').reset(); $('codeForm').reset();
   }
   function syncAuth() {
@@ -47,6 +59,7 @@
     $('publicProjects').replaceChildren();
     projects.forEach(function (p) {
       var card = node('article', ''); card.append(node('h3', p.title), node('p', p.teaser));
+      card.append(node('p', [p.stage, p.collaboration_model, (p.skills_needed || []).join(', ')].filter(Boolean).join(' · ')));
       if (client.user()) {
         var form = document.createElement('form'), label = node('label', 'Why would you like to collaborate?'), input = document.createElement('textarea');
         input.required = true; input.minLength = 20; input.maxLength = 1200; label.append(input);
@@ -69,11 +82,15 @@
     selected = rows[0];
     $('detailTitle').textContent = selected.title;
     $('detailBrief').textContent = selected.private_brief;
+    $('detailMetadata').textContent = selected.stage + ' · ' + selected.collaboration_model +
+      ((selected.skills_needed || []).length ? ' · Skills: ' + selected.skills_needed.join(', ') : '');
     $('detailActions').replaceChildren();
     if (selected.owner_id === client.user().id) {
       $('editProjectForm').hidden = false;
       $('editTitle').value = selected.title; $('editTeaser').value = selected.teaser;
       $('editBrief').value = selected.private_brief;
+      $('editStage').value = selected.stage; $('editSkills').value = (selected.skills_needed || []).join(', ');
+      $('editModel').value = selected.collaboration_model;
       $('editPublishReview').hidden = selected.visibility !== 'public';
       $('editPublishConfirm').checked = false;
       $('editVisibility').textContent = selected.visibility === 'public'
@@ -106,10 +123,20 @@
     });
     var milestones = await client.rpc('fb_project_milestones_for', { p_project: id });
     $('milestones').replaceChildren();
-    milestones.forEach(function (m) { $('milestones').append(button((m.done ? '✓ ' : '○ ') + m.title, async function () {
-      if (!await client.rpc('fb_set_milestone_done', { p_milestone: m.id, p_done: !m.done })) throw new Error('Milestone update was not authorized.');
-      await openProject(id); message('Milestone updated.');
-    })); });
+    $('milestoneProgress').textContent = milestones.filter(function (m) { return m.done; }).length + ' of ' + milestones.length + ' milestones completed';
+    if (!milestones.length) $('milestones').append(node('p', 'No milestones yet. Add the first next step below.'));
+    milestones.forEach(function (m) {
+      var row = node('article', '');
+      row.append(button((m.done ? '✓ ' : '○ ') + m.title, async function () {
+        if (!await client.rpc('fb_set_milestone_done', { p_milestone: m.id, p_done: !m.done })) throw new Error('Milestone update was not authorized.');
+        await openProject(id); message('Milestone updated.');
+      }));
+      if (m.due_at) {
+        var due = new Date(m.due_at);
+        if (!isNaN(due.getTime())) row.append(node('p', 'Due ' + due.toISOString().slice(0, 10) + ' (UTC)'));
+      }
+      $('milestones').append(row);
+    });
     $('applications').replaceChildren();
     var requests = await client.rpc('fb_project_requests', { p_project: id });
     requests.forEach(function (r) {
@@ -138,25 +165,32 @@
     } catch (error) { syncAuth(); message(error.message); }
   });
   $('projectForm').addEventListener('submit', function (event) { event.preventDefault(); run(async function () {
-    var form = $('projectForm'); var id = await client.rpc('fb_create_project', {
-      p_title: form.elements.title.value, p_teaser: form.elements.teaser.value, p_private_brief: form.elements.brief.value });
+    var form = $('projectForm'), options = projectOptions('new'); var id = await client.rpc('fb_create_project', {
+      p_title: form.elements.title.value, p_teaser: form.elements.teaser.value, p_private_brief: form.elements.brief.value,
+      p_stage: options.stage, p_skills: options.skills, p_model: options.model });
     form.reset(); await loadMine(); await openProject(id); message('Private project created. Nothing has been published.');
   }); });
   $('editProjectForm').addEventListener('submit', function (event) { event.preventDefault(); run(async function () {
     var project = selected, user = client.user();
     if (!project || !user || project.owner_id !== user.id) throw new Error('Only the project owner can edit this project.');
-    var published = project.visibility === 'public';
+    var published = project.visibility === 'public', options = projectOptions('edit');
     if (published && !$('editPublishConfirm').checked) throw new Error('Review and approve the public title and teaser before saving.');
     var changed = await client.rpc('fb_update_project', { p_project: project.id,
       p_title: $('editTitle').value, p_teaser: $('editTeaser').value, p_private_brief: $('editBrief').value,
-      p_stage: project.stage, p_skills: project.skills_needed, p_model: project.collaboration_model, p_publish: published });
+      p_stage: options.stage, p_skills: options.skills, p_model: options.model, p_publish: published });
     if (!changed) throw new Error('Project update was not authorized.');
     await loadMine(); await loadPublic(); await openProject(project.id);
     message(published ? 'Project saved. Reviewed title and teaser are public; the full brief stays private.' : 'Private project changes saved.');
   }); });
   $('milestoneForm').addEventListener('submit', function (event) { event.preventDefault(); run(async function () {
     if (!selected) throw new Error('Open a project first.');
-    var id = selected.id; await client.rpc('fb_add_milestone', { p_project: id, p_title: $('milestoneTitle').value });
+    var id = selected.id, due = $('milestoneDue').value, dueAt = null;
+    if (due) {
+      dueAt = /^\d{4}-\d{2}-\d{2}$/.test(due) ? new Date(due + 'T23:59:59Z') : new Date(NaN);
+      if (isNaN(dueAt.getTime()) || dueAt.toISOString().slice(0, 10) !== due) throw new Error('Choose a valid due date.');
+      dueAt = dueAt.toISOString();
+    }
+    await client.rpc('fb_add_milestone', { p_project: id, p_title: $('milestoneTitle').value, p_due: dueAt });
     $('milestoneForm').reset(); await openProject(id); message('Milestone added.');
   }); });
   setInterval(function () {
