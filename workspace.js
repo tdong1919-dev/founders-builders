@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   var client = window.FBSecureClient.create(window.FB_SECURE_CONFIG || {});
-  var selected = null, emailForCode = '', busy = false, publicRecords = [], milestoneRecords = [];
+  var selected = null, emailForCode = '', busy = false, publicRecords = [], milestoneRecords = [], projectMembers = [];
   var $ = function (id) { return document.getElementById(id); };
   function message(text) { $('status').textContent = text; }
   function node(tag, text) { var el = document.createElement(tag); el.textContent = text; return el; }
@@ -19,7 +19,7 @@
     return { stage: stage, model: model, skills: skills };
   }
   function resetPrivate() {
-    selected = null; milestoneRecords = []; $('milestoneFilter').value = '';
+    selected = null; milestoneRecords = []; projectMembers = []; $('milestoneFilter').value = '';
     $('discoverySearch').value = ''; $('discoveryStage').value = ''; $('discoveryModel').value = '';
     $('publicProjects').replaceChildren(); $('discoveryResults').textContent = '';
     $('detail').hidden = true; $('account').hidden = true;
@@ -93,7 +93,7 @@
   }
   async function openProject(id) {
     // Clear the previous brief before attempting another permission-scoped read.
-    $('detail').hidden = true; $('detailBrief').textContent = ''; selected = null; milestoneRecords = [];
+    $('detail').hidden = true; $('detailBrief').textContent = ''; selected = null; milestoneRecords = []; projectMembers = [];
     $('milestones').replaceChildren(); $('milestoneProgress').textContent = ''; $('milestoneResultStatus').textContent = '';
     $('editProjectForm').hidden = true; $('editProjectForm').reset();
     var rows = await client.rpc('fb_get_project', { p_project: id });
@@ -130,6 +130,7 @@
       }));
     }
     var members = await client.rpc('fb_project_members_for', { p_project: id });
+    projectMembers = members;
     $('members').replaceChildren(node('p', 'Owner: ' + selected.owner_id));
     members.forEach(function (m) {
       var row = node('p', m.user_id + ' · ' + m.role);
@@ -160,6 +161,7 @@
     if (!selected) return;
     var id = selected.id, filter = $('milestoneFilter').value;
     var milestones = milestoneRecords.filter(function (m) {
+      if (filter === 'mine') return m.assignee_id === client.user().id;
       if (filter === 'done') return m.done;
       if (filter === 'open') return !m.done;
       if (filter === 'overdue') return !m.done && m.due_at && new Date(m.due_at).getTime() < Date.now();
@@ -178,6 +180,21 @@
       if (m.due_at) {
         var due = new Date(m.due_at);
         if (!isNaN(due.getTime())) row.append(node('p', 'Due ' + due.toISOString().slice(0, 10) + ' (UTC)'));
+      }
+      row.append(node('p', m.assignee_id ? 'Assigned to: ' + (m.assignee_id === client.user().id ? 'You' : m.assignee_id) : 'Unassigned'));
+      if (selected.owner_id === client.user().id) {
+        var form = document.createElement('form'), label = node('label', 'Assign milestone'), choice = document.createElement('select');
+        var unassigned = node('option', 'Unassigned'); unassigned.value = ''; choice.append(unassigned);
+        var owner = node('option', 'Project owner (you)'); owner.value = selected.owner_id; choice.append(owner);
+        projectMembers.forEach(function (member) { var option = node('option', member.user_id); option.value = member.user_id; choice.append(option); });
+        choice.value = m.assignee_id || ''; label.append(choice); form.append(label, node('button', 'Save assignment'));
+        form.addEventListener('submit', function (event) { event.preventDefault(); run(async function () {
+          if (!selected || selected.owner_id !== client.user().id) throw new Error('Only the project owner can assign milestones.');
+          if (!await client.rpc('fb_assign_milestone', { p_milestone: m.id, p_assignee: choice.value || null }))
+            throw new Error('Milestone assignment was not authorized.');
+          await openProject(id); message('Milestone assignment saved. Project access has not changed.');
+        }); });
+        row.append(form);
       }
       $('milestones').append(row);
     });

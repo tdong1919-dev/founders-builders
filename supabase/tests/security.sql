@@ -71,6 +71,28 @@ do $$begin
  begin perform private_brief from public.fb_projects; raise exception 'FAIL raw brief read';
  exception when insufficient_privilege then null; end;
 end$$;
+-- Assignment grants no access and can target only the owner or accepted members.
+select set_config('test.milestone',:'milestone_id',true);
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',true);
+select pg_temp.assert(public.fb_assign_milestone(:'milestone_id','00000000-0000-0000-0000-000000000001'),'owner can self-assign');
+select pg_temp.assert(public.fb_assign_milestone(:'milestone_id',null),'owner can unassign');
+select pg_temp.assert(public.fb_assign_milestone(:'milestone_id','00000000-0000-0000-0000-000000000002'),'owner can assign accepted member');
+select pg_temp.assert(public.fb_assign_milestone(:'milestone_id','00000000-0000-0000-0000-000000000002'),'repeated assignment is idempotent');
+select pg_temp.assert((select assignee_id='00000000-0000-0000-0000-000000000002'::uuid from public.fb_project_milestones_for(:'public_id') where id=:'milestone_id'),'assignment is saved');
+do $$begin
+ begin perform public.fb_assign_milestone(current_setting('test.milestone')::uuid,'00000000-0000-0000-0000-000000000003'); raise exception 'FAIL outsider assignee';
+ exception when raise_exception then if sqlerrm<>'Assignee must be the owner or an accepted member' then raise; end if; end;
+end$$;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',true);
+do $$begin
+ begin perform public.fb_assign_milestone(current_setting('test.milestone')::uuid,auth.uid()); raise exception 'FAIL member assignment';
+ exception when raise_exception then if sqlerrm<>'Milestone unavailable' then raise; end if; end;
+end$$;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000003',true);
+do $$begin
+ begin perform public.fb_assign_milestone(current_setting('test.milestone')::uuid,auth.uid()); raise exception 'FAIL outsider assignment';
+ exception when raise_exception then if sqlerrm<>'Milestone unavailable' then raise; end if; end;
+end$$;
 -- Only owners may revoke access, and revocation affects every private operation.
 select set_config('test.member','00000000-0000-0000-0000-000000000002',true);
 do $$begin
@@ -81,6 +103,7 @@ end$$;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',true);
 select pg_temp.assert(public.fb_remove_project_member(:'public_id','00000000-0000-0000-0000-000000000002'),'owner removes member');
 select pg_temp.assert(not public.fb_remove_project_member(:'public_id','00000000-0000-0000-0000-000000000002'),'repeated removal returns false');
+select pg_temp.assert((select assignee_id is null from public.fb_project_milestones_for(:'public_id') where id=:'milestone_id'),'revocation clears assigned work');
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',true);
 select pg_temp.assert((select count(*)=0 from public.fb_get_project(:'public_id')),'removed member cannot read brief');
 select pg_temp.assert((select count(*)=0 from public.fb_project_milestones_for(:'public_id')),'removed member cannot read milestones');
@@ -94,6 +117,9 @@ reset role;
 select pg_temp.assert((select count(*)=1 from fb_private.membership_audit),'revocation audit recorded exactly once');
 select pg_temp.assert(not has_table_privilege('authenticated','fb_private.membership_audit','SELECT'),'audit is private');
 select pg_temp.assert(not has_function_privilege('anon','public.fb_remove_project_member(uuid,uuid)','EXECUTE'),'anonymous cannot invoke removal');
+select pg_temp.assert((select count(*)=4 from fb_private.milestone_assignment_audit),'assignment changes and revocation audited once');
+select pg_temp.assert(not has_table_privilege('authenticated','fb_private.milestone_assignment_audit','SELECT'),'assignment audit is private');
+select pg_temp.assert(not has_function_privilege('anon','public.fb_assign_milestone(uuid,uuid)','EXECUTE'),'anonymous assignment denied');
 -- Check policies independently from grants, only inside this rolled-back transaction.
 grant select on public.fb_projects,public.fb_collaboration_requests,public.fb_project_members,public.fb_project_milestones to authenticated;
 set local role authenticated;

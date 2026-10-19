@@ -6,7 +6,7 @@ const html = fs.readFileSync(require.resolve('../workspace.html'), 'utf8');
 const source = fs.readFileSync(require.resolve('../workspace.js'), 'utf8');
 // Small DOM adapter executes the real event handlers without a browser or network.
 // Hosted browser/auth journeys remain a separate release gate.
-async function harness({ owner = true, published = false, milestones = [], publicProjects = [] } = {}) {
+async function harness({ owner = true, published = false, milestones = [], publicProjects = [], members = [] } = {}) {
  const all = [], elements = {};
  class Element {
   constructor(tag, id = '') { this.tagName = tag; this.id = id; this.hidden = false; this.disabled = false; this.value = ''; this.checked = false; this.children = []; this.listeners = {}; this.textContent = ''; all.push(this); }
@@ -42,6 +42,8 @@ async function harness({ owner = true, published = false, milestones = [], publi
    if (name === 'fb_my_projects') return [{ ...project }];
    if (name === 'fb_update_project') { Object.assign(project, { title: params.p_title, teaser: params.p_teaser, private_brief: params.p_private_brief, stage: params.p_stage, skills_needed: params.p_skills, collaboration_model: params.p_model }); return true; }
    if (name === 'fb_project_milestones_for') return milestones;
+   if (name === 'fb_project_members_for') return members;
+   if (name === 'fb_assign_milestone') { milestones.find(m => m.id === params.p_milestone).assignee_id = params.p_assignee; return true; }
    if (name === 'fb_add_milestone') { milestones.push({ id: 'new-milestone', title: params.p_title, due_at: params.p_due, done: false }); return 'new-milestone'; }
    if (name === 'fb_set_milestone_done') { milestones.find(m => m.id === params.p_milestone).done = params.p_done; return true; }
    if (name === 'fb_create_project') return project.id;
@@ -197,4 +199,33 @@ test('session loss clears public application drafts when a private filter is use
  h.expire(); await h.fire('milestoneFilter','change');
  assert.equal(h.elements.publicProjects.children.length,0); assert.equal(h.elements.milestones.children.length,0);
  assert.equal(h.elements.detailBrief.textContent,''); assert.equal(h.elements.account.hidden,true);
+});
+test('owners see only current project members as assignment choices', async () => {
+ const h=await harness({members:[{user_id:'member',role:'collaborator'}],milestones:[{id:'work',title:'Prepare prototype',done:false,assignee_id:null,due_at:null}]});
+ const form=h.elements.milestones.children[0].children.at(-1), choice=form.children[0].children[0];
+ assert.equal(form.tagName,'form'); assert.deepEqual(choice.children.map(o => o.value),['','owner','member']);
+ choice.value='member'; form.listeners.submit({preventDefault(){}}); await h.settle();
+ const call=h.calls.find(c=>c.name==='fb_assign_milestone'); assert.equal(call.params.p_milestone,'work'); assert.equal(call.params.p_assignee,'member');
+ assert.equal(h.calls.some(c=>c.name==='fb_update_project'||c.name==='fb_review_request'),false);
+});
+test('collaborators see their assignment without assignment controls', async () => {
+ const h=await harness({owner:false,milestones:[{id:'work',title:'My work',done:false,assignee_id:'member',due_at:null}]});
+ const row=h.elements.milestones.children[0];
+ assert.equal(row.children.some(c=>c.tagName==='form'),false);
+ assert.equal(row.children.some(c=>c.textContent==='Assigned to: You'),true);
+ row.children[0].listeners.click(); await h.settle();
+ assert.equal(h.calls.some(c=>c.name==='fb_set_milestone_done'),true);
+ assert.equal(h.calls.some(c=>c.name==='fb_assign_milestone'),false);
+});
+
+test('assigned-to-me view shows only the current member tasks', async () => {
+ const h=await harness({owner:false,milestones:[
+  {id:'mine',title:'My next step',done:false,assignee_id:'member',due_at:null},
+  {id:'owner-task',title:'Owner task',done:false,assignee_id:'owner',due_at:null},
+  {id:'unassigned',title:'Unassigned task',done:false,assignee_id:null,due_at:null}
+ ]});
+ h.elements.milestoneFilter.value='mine'; await h.fire('milestoneFilter','change');
+ assert.equal(h.elements.milestones.children.length,1);
+ assert.equal(h.elements.milestones.children[0].children[0].textContent,'○ My next step');
+ assert.equal(h.elements.milestoneProgress.textContent,'0 of 3 milestones completed');
 });

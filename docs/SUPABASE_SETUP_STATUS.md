@@ -35,9 +35,9 @@ Existing `config.js`, `platform.js`, Apps Script code, and public-hub data route
 
 ## Verification performed
 
-Latest local run: **37 SQL assertions plus negative-operation blocks passed**, followed by rollback. All 28 JavaScript tests also passed (12 client tests and 16 workspace event-handler tests).
+Latest local run: **46 SQL assertions plus negative-operation blocks passed**, followed by rollback. All 31 JavaScript tests also passed (12 client tests and 19 workspace event-handler tests).
 
-- Executed all three migrations on disposable local PostgreSQL, including owner-controlled membership revocation.
+- Executed all four migrations on disposable local PostgreSQL, including owner-controlled membership revocation.
 - Executed `supabase/tests/security.sql` with owner, applicant/member, outsider, unverified identity and anonymous role contexts; all assertions passed. Tests roll back fixtures and temporary grants.
 - Repeated against Supabase-style table/function default grants; all assertions passed.
 - Checked private reads, teaser projection, owner-only writes/review, accepted/declined membership, milestones, forged membership, self/private applications, repeated acceptance, anonymous EXECUTE denial, and RLS independently of table ACLs.
@@ -53,6 +53,7 @@ psql "$LOCAL_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 \
   -f supabase/migrations/20261017_secure_projects.sql \
   -f supabase/migrations/20261018_secure_project_hardening.sql \
   -f supabase/migrations/20261019_membership_revocation.sql \
+  -f supabase/migrations/20261020_milestone_assignments.sql \
   -f supabase/tests/security.sql
 node --test tests/*.test.cjs
 ```
@@ -60,7 +61,7 @@ node --test tests/*.test.cjs
 ## Remaining gates before activation
 
 1. Resolve the Supabase account restriction or provide an eligible, dedicated existing Free project. This work does not authorize payment.
-2. Create the project on Free, disable automatic table grants, enable RLS, and apply all three reviewed migrations. Verify actual table ACLs, function ACLs, policies and advisors in hosted Supabase.
+2. Create the project on Free, disable automatic table grants, enable RLS, and apply all four reviewed migrations. Verify actual table ACLs, function ACLs, policies and advisors in hosted Supabase.
 3. Keep self-signup disabled; invite approved test accounts. Configure the Magic Link email template to show `{{ .Token }}` for email OTP. Test email delivery to each approved user; Supabase's built-in mail restrictions may require SMTP configuration. Do not buy mail services without approval.
 4. Add the real project URL and public `sb_publishable_` key to `secure-config.js`, leaving `enabled: false` until hosted tests pass. No service-role key belongs in static files, previews, logs or GitHub.
 5. Repeat the role matrix with actual authenticated JWTs through the Data API, including session expiry/signout and mobile/desktop UI. Test quotas and concurrent accept/withdraw/publish operations under load. Local tests do not establish these hosted results.
@@ -105,3 +106,11 @@ Published discovery now combines keyword/skill search with stage and collaborati
 Private milestones have All, Open, Overdue and Completed views. Completed work is excluded from overdue results; undated work remains open but is not considered overdue. The overall progress count stays visible in every view. Sign-out/session loss clears private milestone caches and forms; filter events cannot restore private results.
 
 All 28 local JavaScript tests passed. No schema, table grants, external dependencies, hosted account changes or Sheets routes changed. Enabled browser and real-auth journeys remain outstanding.
+
+## Continuation: owner-controlled milestone assignment
+
+`20261020_milestone_assignments.sql` adds `fb_assign_milestone`, executable by authenticated users but authorized only for the project owner. Targets must be the owner or an existing accepted member. Assignment never inserts membership or grants access. Assignment/removal lock the project row, and removal clears assignments and records revocation in the same transaction. Changes are recorded in an API-inaccessible assignment audit table. Repeating the same assignment does not duplicate audit entries.
+
+Owners get an assignment selector; collaborators see their current assignment and can use Assigned to me. Membership still controls completion. Private member/assignment caches are cleared with the rest of the workspace on session loss.
+
+All four migrations ran on fresh disposable PostgreSQL with Supabase-style default grants. **46 SQL assertions plus negative-operation blocks passed** and fixtures were rolled back. All **31 JavaScript tests passed**. Hosted JWT/browser journeys and concurrent transaction/load testing remain release gates. No production schema or deployment was changed.
