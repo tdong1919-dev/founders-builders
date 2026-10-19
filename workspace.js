@@ -94,10 +94,10 @@
       $('editPublishReview').hidden = selected.visibility !== 'public';
       $('editPublishConfirm').checked = false;
       $('editVisibility').textContent = selected.visibility === 'public'
-        ? 'Your title and teaser are public. Review them before saving. Your full brief stays private.'
+        ? 'Your title, teaser, stage, skills and collaboration terms are public. Review them before saving. Your full brief stays private.'
         : 'This project is private. Saving changes will keep it private.';
       var publish = document.createElement('input'); publish.type = 'checkbox';
-      var label = node('label', 'I reviewed the title and teaser and want to publish them publicly.'); label.prepend(publish);
+      var label = node('label', 'I reviewed the title, teaser, stage, skills and collaboration terms and want to publish them publicly.'); label.prepend(publish);
       if (selected.visibility !== 'public') $('detailActions').append(node('p', selected.teaser), label);
       var project = selected;
       $('detailActions').append(button(selected.visibility === 'public' ? 'Make private' : 'Publish title and teaser', async function () {
@@ -174,7 +174,7 @@
     var project = selected, user = client.user();
     if (!project || !user || project.owner_id !== user.id) throw new Error('Only the project owner can edit this project.');
     var published = project.visibility === 'public', options = projectOptions('edit');
-    if (published && !$('editPublishConfirm').checked) throw new Error('Review and approve the public title and teaser before saving.');
+    if (published && !$('editPublishConfirm').checked) throw new Error('Review and approve the public project details before saving.');
     var changed = await client.rpc('fb_update_project', { p_project: project.id,
       p_title: $('editTitle').value, p_teaser: $('editTeaser').value, p_private_brief: $('editBrief').value,
       p_stage: options.stage, p_skills: options.skills, p_model: options.model, p_publish: published });
