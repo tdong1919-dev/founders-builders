@@ -35,7 +35,7 @@ Existing `config.js`, `platform.js`, Apps Script code, and public-hub data route
 
 ## Verification performed
 
-Latest local run: **37 SQL assertions plus negative-operation blocks passed**, followed by rollback. All 22 JavaScript tests also passed (12 client tests and 10 workspace event-handler tests).
+Latest local run: **37 SQL assertions plus negative-operation blocks passed**, followed by rollback. All 28 JavaScript tests also passed (12 client tests and 16 workspace event-handler tests).
 
 - Executed all three migrations on disposable local PostgreSQL, including owner-controlled membership revocation.
 - Executed `supabase/tests/security.sql` with owner, applicant/member, outsider, unverified identity and anonymous role contexts; all assertions passed. Tests roll back fixtures and temporary grants.
@@ -97,3 +97,11 @@ Creation and owner editing now include stage, skills needed and collaboration te
 Owners and accepted members can add milestones with an optional due date, recorded at end-of-day UTC. Calendar dates are validated before submission. Milestones show due dates and a completed/total count. Completion continues through the existing membership-scoped RPC; this does not grant collaborators project-editing access.
 
 All 22 local JavaScript tests passed. New checks cover creation metadata, owner edits, invalid enums/oversized skill lists, collaborator milestone progress and due dates, and rejection of nonexistent dates. No migration changes or hosted database access were required. Enabled browser and hosted authentication tests remain outstanding.
+
+## Continuation: discovery and milestone views
+
+Published discovery now combines keyword/skill search with stage and collaboration-term filters. Every search term must match the public record. Only the reviewed public columns are cached and searchable; unexpected private fields are discarded. Filters operate on the loaded RPC result and show a loaded-result count, with clear filters and useful empty states. Filtering performs no extra network requests.
+
+Private milestones have All, Open, Overdue and Completed views. Completed work is excluded from overdue results; undated work remains open but is not considered overdue. The overall progress count stays visible in every view. Sign-out/session loss clears private milestone caches and forms; filter events cannot restore private results.
+
+All 28 local JavaScript tests passed. No schema, table grants, external dependencies, hosted account changes or Sheets routes changed. Enabled browser and real-auth journeys remain outstanding.

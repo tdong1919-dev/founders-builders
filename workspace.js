@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   var client = window.FBSecureClient.create(window.FB_SECURE_CONFIG || {});
-  var selected = null, emailForCode = '', busy = false;
+  var selected = null, emailForCode = '', busy = false, publicRecords = [], milestoneRecords = [];
   var $ = function (id) { return document.getElementById(id); };
   function message(text) { $('status').textContent = text; }
   function node(tag, text) { var el = document.createElement(tag); el.textContent = text; return el; }
@@ -19,9 +19,12 @@
     return { stage: stage, model: model, skills: skills };
   }
   function resetPrivate() {
-    selected = null; $('detail').hidden = true; $('account').hidden = true;
+    selected = null; milestoneRecords = []; $('milestoneFilter').value = '';
+    $('discoverySearch').value = ''; $('discoveryStage').value = ''; $('discoveryModel').value = '';
+    $('publicProjects').replaceChildren(); $('discoveryResults').textContent = '';
+    $('detail').hidden = true; $('account').hidden = true;
     $('editProjectForm').hidden = true; $('editProjectForm').reset();
-    ['myProjects', 'myRequests', 'detailTitle', 'detailBrief', 'detailMetadata', 'milestoneProgress', 'detailActions', 'members', 'milestones', 'applications', 'identity'].forEach(function (id) { $(id).replaceChildren(); });
+    ['myProjects', 'myRequests', 'detailTitle', 'detailBrief', 'detailMetadata', 'milestoneProgress', 'milestoneResultStatus', 'detailActions', 'members', 'milestones', 'applications', 'identity'].forEach(function (id) { $(id).replaceChildren(); });
     $('projectForm').reset(); $('milestoneForm').reset(); $('codeForm').reset();
   }
   function syncAuth() {
@@ -56,6 +59,21 @@
   }
   async function loadPublic() {
     var projects = await client.rpc('fb_discover_projects', {}, false);
+    // Cache only columns permitted in public discovery, never confidential briefs.
+    publicRecords = projects.map(function (p) { return { id: p.id, title: p.title, teaser: p.teaser,
+      stage: p.stage, collaboration_model: p.collaboration_model, skills_needed: p.skills_needed || [] }; });
+    renderPublic();
+  }
+  function renderPublic() {
+    if (!client.enabled) return;
+    var query = $('discoverySearch').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    var stage = $('discoveryStage').value, model = $('discoveryModel').value;
+    var projects = publicRecords.filter(function (p) {
+      var text = [p.title, p.teaser, p.stage, p.collaboration_model, p.skills_needed.join(' ')].join(' ').toLowerCase();
+      return (!stage || p.stage === stage) && (!model || p.collaboration_model === model) &&
+        query.every(function (word) { return text.indexOf(word) !== -1; });
+    });
+    $('discoveryResults').textContent = 'Showing ' + projects.length + ' of ' + publicRecords.length + ' loaded published projects';
     $('publicProjects').replaceChildren();
     projects.forEach(function (p) {
       var card = node('article', ''); card.append(node('h3', p.title), node('p', p.teaser));
@@ -71,11 +89,12 @@
       }
       $('publicProjects').append(card);
     });
-    if (!projects.length) $('publicProjects').textContent = 'No published projects yet.';
+    if (!projects.length) $('publicProjects').textContent = publicRecords.length ? 'No projects match. Try a different skill, stage or collaboration term.' : 'No published projects yet.';
   }
   async function openProject(id) {
     // Clear the previous brief before attempting another permission-scoped read.
-    $('detail').hidden = true; $('detailBrief').textContent = ''; selected = null;
+    $('detail').hidden = true; $('detailBrief').textContent = ''; selected = null; milestoneRecords = [];
+    $('milestones').replaceChildren(); $('milestoneProgress').textContent = ''; $('milestoneResultStatus').textContent = '';
     $('editProjectForm').hidden = true; $('editProjectForm').reset();
     var rows = await client.rpc('fb_get_project', { p_project: id });
     if (!rows.length) throw new Error('This project is unavailable to your account.');
@@ -121,22 +140,8 @@
       }));
       $('members').append(row);
     });
-    var milestones = await client.rpc('fb_project_milestones_for', { p_project: id });
-    $('milestones').replaceChildren();
-    $('milestoneProgress').textContent = milestones.filter(function (m) { return m.done; }).length + ' of ' + milestones.length + ' milestones completed';
-    if (!milestones.length) $('milestones').append(node('p', 'No milestones yet. Add the first next step below.'));
-    milestones.forEach(function (m) {
-      var row = node('article', '');
-      row.append(button((m.done ? '✓ ' : '○ ') + m.title, async function () {
-        if (!await client.rpc('fb_set_milestone_done', { p_milestone: m.id, p_done: !m.done })) throw new Error('Milestone update was not authorized.');
-        await openProject(id); message('Milestone updated.');
-      }));
-      if (m.due_at) {
-        var due = new Date(m.due_at);
-        if (!isNaN(due.getTime())) row.append(node('p', 'Due ' + due.toISOString().slice(0, 10) + ' (UTC)'));
-      }
-      $('milestones').append(row);
-    });
+    milestoneRecords = await client.rpc('fb_project_milestones_for', { p_project: id });
+    renderMilestones();
     $('applications').replaceChildren();
     var requests = await client.rpc('fb_project_requests', { p_project: id });
     requests.forEach(function (r) {
@@ -150,6 +155,40 @@
     });
     $('detail').hidden = false;
   }
+  function renderMilestones() {
+    if (!client.user()) { syncAuth(); return; }
+    if (!selected) return;
+    var id = selected.id, filter = $('milestoneFilter').value;
+    var milestones = milestoneRecords.filter(function (m) {
+      if (filter === 'done') return m.done;
+      if (filter === 'open') return !m.done;
+      if (filter === 'overdue') return !m.done && m.due_at && new Date(m.due_at).getTime() < Date.now();
+      return true;
+    });
+    $('milestones').replaceChildren();
+    $('milestoneProgress').textContent = milestoneRecords.filter(function (m) { return m.done; }).length + ' of ' + milestoneRecords.length + ' milestones completed';
+    $('milestoneResultStatus').textContent = milestones.length + ' milestone' + (milestones.length === 1 ? '' : 's') + ' in this view';
+    if (!milestones.length) $('milestones').append(node('p', milestoneRecords.length ? 'No milestones match this view.' : 'No milestones yet. Add the first next step below.'));
+    milestones.forEach(function (m) {
+      var row = node('article', '');
+      row.append(button((m.done ? '✓ ' : '○ ') + m.title, async function () {
+        if (!await client.rpc('fb_set_milestone_done', { p_milestone: m.id, p_done: !m.done })) throw new Error('Milestone update was not authorized.');
+        await openProject(id); message('Milestone updated.');
+      }));
+      if (m.due_at) {
+        var due = new Date(m.due_at);
+        if (!isNaN(due.getTime())) row.append(node('p', 'Due ' + due.toISOString().slice(0, 10) + ' (UTC)'));
+      }
+      $('milestones').append(row);
+    });
+  }
+  $('discoverySearch').addEventListener('input', renderPublic);
+  $('discoveryStage').addEventListener('change', renderPublic);
+  $('discoveryModel').addEventListener('change', renderPublic);
+  $('clearDiscovery').addEventListener('click', function () {
+    $('discoverySearch').value = ''; $('discoveryStage').value = ''; $('discoveryModel').value = ''; renderPublic();
+  });
+  $('milestoneFilter').addEventListener('change', renderMilestones);
   $('emailForm').addEventListener('submit', function (event) { event.preventDefault(); run(async function () {
     emailForCode = $('email').value.trim(); await client.sendCode(emailForCode);
     $('codeForm').hidden = false; message('If this email has approved access, a sign-in code has been sent.');

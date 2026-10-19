@@ -6,7 +6,7 @@ const html = fs.readFileSync(require.resolve('../workspace.html'), 'utf8');
 const source = fs.readFileSync(require.resolve('../workspace.js'), 'utf8');
 // Small DOM adapter executes the real event handlers without a browser or network.
 // Hosted browser/auth journeys remain a separate release gate.
-async function harness({ owner = true, published = false, milestones = [] } = {}) {
+async function harness({ owner = true, published = false, milestones = [], publicProjects = [] } = {}) {
  const all = [], elements = {};
  class Element {
   constructor(tag, id = '') { this.tagName = tag; this.id = id; this.hidden = false; this.disabled = false; this.value = ''; this.checked = false; this.children = []; this.listeners = {}; this.textContent = ''; all.push(this); }
@@ -37,7 +37,7 @@ async function harness({ owner = true, published = false, milestones = [] } = {}
   rpc: async (name, params) => {
    calls.push({ name, params });
    if (name === 'fb_my_projects' && holdMine) return new Promise(resolve => release = resolve);
-   if (name === 'fb_discover_projects') return [];
+   if (name === 'fb_discover_projects') return publicProjects;
    if (name === 'fb_get_project') return [{ ...project }];
    if (name === 'fb_my_projects') return [{ ...project }];
    if (name === 'fb_update_project') { Object.assign(project, { title: params.p_title, teaser: params.p_teaser, private_brief: params.p_private_brief, stage: params.p_stage, skills_needed: params.p_skills, collaboration_model: params.p_model }); return true; }
@@ -55,7 +55,7 @@ async function harness({ owner = true, published = false, milestones = [] } = {}
  await settle();
  // Create/open exercises the existing owner/member scoped detail rendering path.
  await fire('projectForm','submit');
- return { elements, calls, project, fire, settle, client,
+ return { elements, calls, project, fire, settle, client, expire: () => { user = null; },
   hold: () => { holdMine = true; }, release: () => { holdMine = false; release([]); } };
 }
 test('owner can edit a private project without publishing it', async () => {
@@ -140,4 +140,61 @@ test('invalid milestone dates are rejected before sending', async () => {
  await h.fire('milestoneForm','submit');
  assert.match(h.elements.status.textContent, /valid due date/);
  assert.equal(h.calls.some(c => c.name === 'fb_add_milestone'), false);
+});
+const discoveryFixtures = [
+ { id:'alpha',title:'Climate prototype',teaser:'Build useful climate tools',stage:'Prototype',skills_needed:['Design','Engineering'],collaboration_model:'Paid contract',private_brief:'DO NOT INDEX SECRET' },
+ { id:'beta',title:'Health research',teaser:'Explore care workflows',stage:'Research',skills_needed:['Research','Design'],collaboration_model:'Volunteer / community' },
+ { id:'gamma',title:'Climate launch',teaser:'Launch a local product',stage:'MVP',skills_needed:['Marketing'],collaboration_model:'Paid contract' }
+];
+test('public discovery combines words, skills, stage and collaboration terms without new requests', async () => {
+ const h = await harness({publicProjects:discoveryFixtures}), before = h.calls.length;
+ h.elements.discoverySearch.value = 'CLIMATE engineering'; await h.fire('discoverySearch','input');
+ h.elements.discoveryStage.value = 'Prototype'; await h.fire('discoveryStage','change');
+ h.elements.discoveryModel.value = 'Paid contract'; await h.fire('discoveryModel','change');
+ assert.equal(h.elements.publicProjects.children.length,1);
+ assert.equal(h.elements.publicProjects.children[0].children[0].textContent,'Climate prototype');
+ assert.match(h.elements.discoveryResults.textContent,/Showing 1 of 3/); assert.equal(h.calls.length,before);
+});
+test('discovery never searches private fields even if an unexpected field is returned', async () => {
+ const h = await harness({publicProjects:discoveryFixtures});
+ h.elements.discoverySearch.value = 'DO NOT INDEX SECRET'; await h.fire('discoverySearch','input');
+ assert.equal(h.elements.publicProjects.children.length,0); assert.match(h.elements.publicProjects.textContent,/No projects match/);
+});
+test('clearing discovery filters restores loaded public records', async () => {
+ const h = await harness({publicProjects:discoveryFixtures});
+ h.elements.discoverySearch.value = 'nonexistent'; h.elements.discoveryStage.value='Idea'; await h.fire('discoverySearch','input');
+ await h.fire('clearDiscovery','click');
+ assert.equal(h.elements.discoverySearch.value,''); assert.equal(h.elements.discoveryStage.value,'');
+ assert.equal(h.elements.publicProjects.children.length,3); assert.match(h.elements.discoveryResults.textContent,/Showing 3 of 3/);
+});
+test('milestone views distinguish overdue work, completed work and undated work', async () => {
+ const h = await harness({milestones:[
+  {id:'past',title:'Open overdue',done:false,due_at:'2000-01-01T23:59:59Z'},
+  {id:'future',title:'Future work',done:false,due_at:'2099-01-01T23:59:59Z'},
+  {id:'complete',title:'Finished overdue',done:true,due_at:'2000-01-01T23:59:59Z'},
+  {id:'undated',title:'No deadline',done:false,due_at:null}
+ ]});
+ h.elements.milestoneFilter.value='overdue'; await h.fire('milestoneFilter','change');
+ assert.equal(h.elements.milestones.children.length,1); assert.equal(h.elements.milestones.children[0].children[0].textContent,'○ Open overdue');
+ assert.equal(h.elements.milestoneProgress.textContent,'1 of 4 milestones completed');
+ h.elements.milestoneFilter.value='done'; await h.fire('milestoneFilter','change'); assert.equal(h.elements.milestones.children.length,1);
+ h.elements.milestoneFilter.value='open'; await h.fire('milestoneFilter','change'); assert.equal(h.elements.milestones.children.length,3);
+});
+test('signout clears private milestone caches and public application drafts', async () => {
+ const h = await harness({publicProjects:discoveryFixtures,milestones:[{id:'private',title:'Confidential launch',done:false,due_at:null}]});
+ h.elements.discoverySearch.value='draft keyword';
+ await h.fire('signout','click'); h.elements.milestoneFilter.value='open'; await h.fire('milestoneFilter','change');
+ assert.equal(h.elements.milestones.children.length,0); assert.equal(h.elements.milestoneProgress.textContent,'');
+ assert.equal(h.elements.discoverySearch.value,'');
+ await h.fire('clearDiscovery','click');
+ assert.equal(h.elements.publicProjects.children.length,3);
+ assert.equal(h.elements.publicProjects.children.some(card => card.children.some(child => child.tagName==='form')),false);
+});
+
+test('session loss clears public application drafts when a private filter is used', async () => {
+ const h = await harness({publicProjects:discoveryFixtures,milestones:[{id:'private',title:'Confidential',done:false,due_at:null}]});
+ assert.equal(h.elements.publicProjects.children.length,3);
+ h.expire(); await h.fire('milestoneFilter','change');
+ assert.equal(h.elements.publicProjects.children.length,0); assert.equal(h.elements.milestones.children.length,0);
+ assert.equal(h.elements.detailBrief.textContent,''); assert.equal(h.elements.account.hidden,true);
 });
