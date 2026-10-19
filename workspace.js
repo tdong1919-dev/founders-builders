@@ -21,7 +21,7 @@
   async function run(action) {
     if (busy) return;
     busy = true;
-    document.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+    document.querySelectorAll('button').forEach(function (b) { if (b.id !== 'signout') b.disabled = true; });
     try { await action(); } catch (error) { syncAuth(); message(error.message); }
     finally { busy = false; document.querySelectorAll('button').forEach(function (b) { b.disabled = false; }); }
   }
@@ -121,10 +121,12 @@
     await client.verifyCode(emailForCode, $('code').value.trim()); $('codeForm').reset();
     syncAuth(); await loadMine(); await loadPublic(); message('Signed in. Your project briefs are private.');
   }); });
-  $('signout').addEventListener('click', function () { run(async function () {
+  $('signout').addEventListener('click', async function () {
+    try {
     var signingOut = client.signOut(); resetPrivate(); syncAuth(); $('publicProjects').replaceChildren();
     await signingOut; await loadPublic(); message('Signed out. Private data cleared from this page.');
-  }); });
+    } catch (error) { syncAuth(); message(error.message); }
+  });
   $('projectForm').addEventListener('submit', function (event) { event.preventDefault(); run(async function () {
     var form = $('projectForm'); var id = await client.rpc('fb_create_project', {
       p_title: form.elements.title.value, p_teaser: form.elements.teaser.value, p_private_brief: form.elements.brief.value });

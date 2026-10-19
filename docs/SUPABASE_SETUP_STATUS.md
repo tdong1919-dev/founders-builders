@@ -35,13 +35,13 @@ Existing `config.js`, `platform.js`, Apps Script code, and public-hub data route
 
 ## Verification performed
 
-Latest local run: **37 SQL assertions plus negative-operation blocks passed**, followed by rollback. All 9 client tests also passed.
+Latest local run: **37 SQL assertions plus negative-operation blocks passed**, followed by rollback. All 12 client tests also passed.
 
 - Executed all three migrations on disposable local PostgreSQL, including owner-controlled membership revocation.
 - Executed `supabase/tests/security.sql` with owner, applicant/member, outsider, unverified identity and anonymous role contexts; all assertions passed. Tests roll back fixtures and temporary grants.
 - Repeated against Supabase-style table/function default grants; all assertions passed.
 - Checked private reads, teaser projection, owner-only writes/review, accepted/declined membership, milestones, forged membership, self/private applications, repeated acceptance, anonymous EXECUTE denial, and RLS independently of table ACLs.
-- `node --test tests/secure-client.test.cjs`: 9 passed. Covers disabled config, secret-key rejection, auth requirement, invite-only OTP, auth headers/signout, stale responses, safe errors, verified identity and expiration.
+- `node --test tests/secure-client.test.cjs`: 12 passed. Covers disabled config, secret-key rejection, auth requirement, invite-only OTP, auth headers/signout, stale responses, safe errors, verified identity and expiration.
 - JavaScript syntax and `git diff --check` passed.
 - The Netlify PR preview was opened and its disabled workspace state verified: private forms are hidden and existing community links remain available. Enabled authenticated UI journeys are **not verified**. Unit tests are not a substitute for hosted testing.
 
@@ -77,3 +77,9 @@ The Supabase creation form was rechecked and still displays the same outstanding
 `20261019_membership_revocation.sql` adds owner-only member removal, a private audit table, and synchronized milestone writes. Removing a member also closes the accepted application and denies subsequent private brief, member list, workspace list and milestone operations. This cannot retract data already received by that user. The rollback-only security suite now checks revocation, repeat removal, outsider denial, post-removal reads/writes and audit ACLs.
 
 The preview was verified to show the pending-setup message and no private submission forms. Hosted schema/auth tests, signup/email configuration, repository integration and activation remain blocked.
+
+## Continuation: sign-out responsiveness
+
+Sign-out stays available during pending operations. It clears local authentication, cancels in-flight private requests and discards responses from earlier sessions. Requests time out after 20 seconds. Tests cover immediate cancellation, failed server logout still clearing local access, and a stalled request timing out without waiting in real time.
+
+The latest browser recheck reached an expired Supabase session. GitHub sign-in failed with `Failed to fetch (auth.supabase.io)`. Current invoice/project eligibility could not be reverified; the outstanding-invoice restriction remains the last observed project-creation result. No hosted project, credential or billing changes were made.

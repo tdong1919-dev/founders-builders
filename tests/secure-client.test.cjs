@@ -53,3 +53,32 @@ test('expired session cannot read private data', async () => {
  const c = FBSecureClient.create(config, async () => ok({ access_token: 'test', expires_in: -1, user }));
  await c.verifyCode(user.email, '123456'); await assert.rejects(c.rpc('fb_get_project'), /sign in/); assert.equal(c.user(), null);
 });
+test('signout aborts an ongoing private request immediately', async () => {
+ let signal;
+ const c = FBSecureClient.create(config, async (url, options) => {
+  if (url.endsWith('/verify')) return session();
+  if (!url.includes('/rpc/')) return ok({});
+  signal = options.signal;
+  return new Promise((resolve, reject) => signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError'))));
+ });
+ await c.verifyCode(user.email, '123456');
+ const pending = c.rpc('fb_get_project');
+ const rejected = assert.rejects(pending, /Session changed/);
+ await c.signOut(); assert.equal(signal.aborted, true); assert.equal(c.user(), null); await rejected;
+});
+test('failed server signout still clears local access', async () => {
+ const c = FBSecureClient.create(config, async url => url.endsWith('/verify') ? session() : { ok: false });
+ await c.verifyCode(user.email, '123456');
+ await assert.rejects(c.signOut(), /revocation could not be confirmed/);
+ assert.equal(c.user(), null); await assert.rejects(c.rpc('fb_get_project'), /sign in/);
+});
+test('stalled private requests time out and abort without exposing content', async t => {
+ t.mock.timers.enable({ apis: ['setTimeout'] });
+ const c = FBSecureClient.create(config, async (url, options) => {
+  if (url.endsWith('/verify')) return session();
+  return new Promise((resolve, reject) => options.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError'))));
+ });
+ await c.verifyCode(user.email, '123456');
+ const request = c.rpc('fb_get_project'); const rejected = assert.rejects(request, /Request timed out/);
+ t.mock.timers.tick(20000); await rejected;
+});

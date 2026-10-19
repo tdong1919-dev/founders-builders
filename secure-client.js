@@ -2,14 +2,14 @@
 (function (root) {
   'use strict';
   function createClient(config, transport) {
-    var base, session = null, generation = 0;
+    var base, session = null, generation = 0, pending = new Set();
     try { base = new URL(config.url); } catch (_) { /* disabled */ }
     var enabled = config.enabled === true && base && base.protocol === 'https:' &&
       /^[a-z0-9]+\.supabase\.co$/.test(base.hostname) && base.pathname === '/' &&
       !base.username && !base.password && !base.search && !base.hash &&
       /^sb_publishable_[A-Za-z0-9_-]+$/.test(config.publishableKey || '');
     var send = transport || root.fetch.bind(root);
-    function clear() { session = null; generation++; }
+    function clear() { session = null; generation++; pending.forEach(function (controller) { controller.abort(); }); }
     function current() {
       if (session && session.expires_at * 1000 <= Date.now()) clear();
       return session;
@@ -20,20 +20,32 @@
       if (authenticated && !active) throw new Error('Please sign in again.');
       var headers = { apikey: config.publishableKey, 'Content-Type': 'application/json' };
       if (active) headers.Authorization = 'Bearer ' + active.access_token;
-      var response = await send(base.origin + path, {
-        method: 'POST', headers: headers, body: JSON.stringify(body),
-        cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer'
-      });
-      var data = await response.json().catch(function () { return null; });
-      if (version !== generation) throw new Error('Session changed. Please retry.');
-      if (!response.ok) {
-        if (response.status === 401) clear();
-        // Do not expose raw server responses, which may contain submitted private content.
-        throw new Error(response.status === 429 ? 'Too many requests. Please try later.' :
-          'Request could not be completed. Check your sign-in and permissions.');
+      var controller = new AbortController(), timedOut = false;
+      pending.add(controller);
+      var timeout = setTimeout(function () { timedOut = true; controller.abort(); }, 20000);
+      try {
+        var response = await send(base.origin + path, {
+          method: 'POST', headers: headers, body: JSON.stringify(body), signal: controller.signal,
+          cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer'
+        });
+        var data = await response.json().catch(function () { return null; });
+        if (timedOut) throw new Error('Request timed out. Please try again.');
+        if (version !== generation) throw new Error('Session changed. Please retry.');
+        if (!response.ok) {
+          if (response.status === 401) clear();
+          throw new Error(response.status === 429 ? 'Too many requests. Please try later.' :
+            'Request could not be completed. Check your sign-in and permissions.');
+        }
+        if (authenticated && !current()) throw new Error('Please sign in again.');
+        return data;
+      } catch (error) {
+        if (version !== generation) throw new Error('Session changed. Please retry.');
+        if (timedOut) throw new Error('Request timed out. Please try again.');
+        if (error.name === 'AbortError') throw new Error('Request cancelled.');
+        throw error;
+      } finally {
+        clearTimeout(timeout); pending.delete(controller);
       }
-      if (authenticated && !current()) throw new Error('Please sign in again.');
-      return data;
     }
     return Object.freeze({
       enabled: !!enabled,
