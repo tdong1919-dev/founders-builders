@@ -52,3 +52,16 @@ test('founder next-action guidance follows local stage without inferring accepta
  let focused=false;s.fields.observed.focus=()=>focused=true;s.get('reviewNextAction').listeners.click();assert.equal(s.get('reviewFeedback').open,true);assert.equal(focused,true);assert.equal(s.fields.phase.value,'working');assert.equal(s.fields.reviewed.checked,false);assert.equal(s.fields.creditAgreed.checked,false);assert.equal(s.writes.length,0);assert.equal(s.get('interestReviewOutput').textContent,'');
  s.get('goReviewAgreement').listeners.click();assert.equal(s.get('reviewAgreement').open,true);assert.equal(s.fields.phase.value,'working');
 });
+test('saved review filters find names, tasks and projects while separating closed local stages',()=>{
+ const records=[{id:'1',interest:{...interest,interestName:'Alex',project:'Atlas'},review:{phase:'working'}},{id:'2',interest:{...interest,interestName:'Sam',title:'Draft a page'},review:{phase:'closed'}}];
+ assert.deepEqual(kit.filterReviews(records,'ATLAS','all').map(r=>r.id),['1']);assert.equal(kit.filterReviews(records,'sam','open').length,0);assert.equal(kit.filterReviews(records,' draft ','closed')[0].id,'2');assert.equal(kit.filterReviews(records,'alex','feedback').length,0);assert.equal(kit.phaseLabel('agreement'),'Terms drafted');
+});
+test('filtering saved reviews preserves unsaved form work, confirmations and storage',()=>{
+ const saved=JSON.stringify([{id:'one',interest,review:{phase:'working'}},{id:'two',interest:{...interest,interestName:'Another contributor'},review:{phase:'closed'}}]);const s=controller({saved});
+ s.get('savedInterestReviews').children[0].listeners.click();s.fields.response.value='My unsaved reply';s.fields.confirmed.checked=true;s.form.listeners.input({target:s.fields.confirmed});
+ s.get('reviewStageFilter').value='closed';s.get('reviewStageFilter').listeners.change();assert.equal(s.get('savedInterestReviews').children.length,1);assert.match(s.get('reviewFilterNotice').textContent,/notes stay open/);assert.equal(s.fields.response.value,'My unsaved reply');assert.equal(s.fields.confirmed.checked,true);assert.equal(s.writes.length,0);
+ s.get('reviewSearch').value='<img>';s.get('reviewSearch').listeners.input();assert.match(s.get('savedInterestReviews').children[0].textContent,/No saved reviews match/);s.get('clearReviewFilters').listeners.click();assert.equal(s.get('savedInterestReviews').children.length,2);assert.equal(s.get('reviewFilterNotice').textContent,'');assert.equal(s.fields.response.value,'My unsaved reply');assert.equal(s.writes.length,0);
+});
+test('an unopened review desk gives a starting point and filters never hide the open workspace',()=>{
+ const s=controller();assert.equal(s.get('reviewEmptyState').hidden,false);s.get('interestPacketInput').value=JSON.stringify(kit.interestPacket(interest,true));s.get('loadInterestPacket').listeners.click();assert.equal(s.get('reviewEmptyState').hidden,true);assert.equal(s.get('reviewWorkspace').hidden,false);s.get('reviewSearch').value='No match';s.get('reviewSearch').listeners.input();assert.equal(s.get('reviewEmptyState').hidden,true);assert.equal(s.get('reviewWorkspace').hidden,false);
+});

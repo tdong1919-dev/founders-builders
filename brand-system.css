@@ -122,3 +122,5 @@ body{font-family:var(--font);color:var(--text)}
 .contribution-next h4{font-size:20px;line-height:1.35;margin:8px 0 12px}
 .contribution-next p{font-size:14px;line-height:1.7;overflow-wrap:anywhere}
 .contribution-next .btn{margin:12px 0}
+
+.packet-input input[type=search]{font:inherit;width:100%;min-width:0;padding:14px;border:1px solid var(--border-2);border-radius:var(--radius-input);background:var(--white);color:var(--text)}

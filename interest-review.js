@@ -8,10 +8,18 @@
   ['Reply','Agreement','Feedback'].forEach(label=>get('goReview'+label).addEventListener('click',()=>go('review'+label)));
   get('reviewNextAction').addEventListener('click',()=>go(kit.nextAction(read()).target));
   function canReplace(){return !dirty||window.confirm('Replace unsaved review notes? Saved local reviews stay on this device.');}
-  function render(){const box=get('savedInterestReviews');box.replaceChildren();get('removeInterestReview').hidden=!selected;get('undoInterestReview').hidden=!removed;
+  function render(){get('reviewEmptyState').hidden=!!current;const box=get('savedInterestReviews');box.replaceChildren();get('removeInterestReview').hidden=!selected;get('undoInterestReview').hidden=!removed;
+    const query=get('reviewSearch').value,phase=get('reviewStageFilter').value,shown=kit.filterReviews(records,query,phase);
+    get('reviewCount').textContent=shown.length+' of '+records.length+' saved '+(records.length===1?'review':'reviews')+' · local stages only';
+    get('clearReviewFilters').hidden=!query.trim()&&(!phase||phase==='all');
+    get('reviewFilterNotice').textContent=selected&&!shown.some(r=>r.id===selected)?'Your open review is outside these filters. Its notes stay open and unchanged.':'';
     if(!records.length){const p=document.createElement('p');p.textContent='No interests saved for review on this device.';box.append(p);}
-    records.forEach(r=>{const b=document.createElement('button');b.type='button';b.className='contribution-saved';b.textContent=r.interest.interestName+' · '+r.interest.title+' · '+r.review.phase+' (local notes)';b.setAttribute('aria-pressed',String(r.id===selected));b.addEventListener('click',()=>{if(!canReplace())return;selected=r.id;open(r.interest,r.review);dirty=false;render();note('Opened local review notes. Nothing has been sent.');});box.append(b);});
+    else if(!shown.length){const p=document.createElement('p');p.textContent='No saved reviews match. Try another name, task, project or stage, or clear the filters.';box.append(p);}
+    shown.forEach(r=>{const b=document.createElement('button');b.type='button';b.className='contribution-saved';b.textContent=r.interest.interestName+' · '+r.interest.title+' · '+r.interest.project+' · '+kit.phaseLabel(r.review.phase)+' (local notes)';b.setAttribute('aria-pressed',String(r.id===selected));b.addEventListener('click',()=>{if(!canReplace())return;selected=r.id;open(r.interest,r.review);dirty=false;render();note('Opened local review notes. Nothing has been sent.');});box.append(b);});
   }
+  get('reviewSearch').addEventListener('input',render);get('reviewStageFilter').addEventListener('change',render);
+  get('clearReviewFilters').addEventListener('click',()=>{get('reviewSearch').value='';get('reviewStageFilter').value='all';render();});
+
   function open(interest,review){current=interest;form.reset();Object.entries(kit.normalize(review||{})).forEach(([k,v])=>{const f=form.elements.namedItem(k);if(f){if(f.type==='checkbox')f.checked=v;else f.value=v;}});if(!form.elements.namedItem('deliverable').value)form.elements.namedItem('deliverable').value=interest.deliverable;
     get('interestReviewContext').textContent='Contributor-supplied interest · identity and details unverified\n\nTask: '+interest.title+'\nProject: '+interest.project+'\nChosen name: '+interest.interestName+'\nWhat they offer: '+interest.interestNote+'\nAvailability: '+interest.availability+'\nQuestions: '+(interest.questions||'None included')+'\n\nOriginal task snapshot (unverified):\n'+(interest.scope||'Not included; ask for the original brief.');get('interestReviewOutput').textContent='';get('reviewWorkspace').hidden=false;get('reviewIdentity').textContent=interest.interestName+' · '+interest.title+' · '+interest.project+' (unverified)';get('reviewReply').open=true;get('reviewAgreement').open=false;get('reviewFeedback').open=false;guide();
   }
