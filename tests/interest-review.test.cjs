@@ -46,3 +46,9 @@ test('scope reuse requires matching task and project and leaves ownership for ex
  const context={...interest,scope:'Unverified public snapshot\n\n'+offers.brief(task)};const draft=kit.scopeTemplate(context);assert.equal(draft.minutes,'60');assert.equal(draft.ownership,undefined);assert.equal(draft.confirmed,undefined);
  assert.throws(()=>kit.scopeTemplate({...context,project:'Another project'}));assert.throws(()=>kit.scopeTemplate({...context,title:'Another task'}));
 });
+test('founder next-action guidance follows local stage without inferring acceptance or reviewed work',()=>{
+ for(const [phase,target] of [['reviewing','reviewReply'],['clarification','reviewAgreement'],['agreement','reviewAgreement'],['working','reviewFeedback'],['feedback','reviewFeedback'],['closed','reviewReply']])assert.equal(kit.nextAction({phase}).target,target);
+ const s=controller();s.get('interestPacketInput').value=JSON.stringify(kit.interestPacket(interest,true));s.get('loadInterestPacket').listeners.click();s.fields.phase.value='working';s.form.listeners.input({target:s.fields.phase});assert.match(s.get('reviewNextTitle').textContent,/work is ready/);
+ let focused=false;s.fields.observed.focus=()=>focused=true;s.get('reviewNextAction').listeners.click();assert.equal(s.get('reviewFeedback').open,true);assert.equal(focused,true);assert.equal(s.fields.phase.value,'working');assert.equal(s.fields.reviewed.checked,false);assert.equal(s.fields.creditAgreed.checked,false);assert.equal(s.writes.length,0);assert.equal(s.get('interestReviewOutput').textContent,'');
+ s.get('goReviewAgreement').listeners.click();assert.equal(s.get('reviewAgreement').open,true);assert.equal(s.fields.phase.value,'working');
+});

@@ -74,3 +74,9 @@ test('changed backups revoke review and failed restores leave records intact',()
 test('editing completed work clears permission before refreshing next-step guidance',()=>{
  const s=setup();s.fields.title.value='Task';s.fields.deliverable.value='Notes';s.fields.status.value='completed';s.fields.result.value='Actual result';s.fields.creditAgreement.value='Allowed summary';s.fields.permission.checked=true;s.get('contributionForm').listeners.input({target:s.fields.result});assert.equal(s.fields.permission.checked,false);assert.equal(s.get('contributionNextTitle').textContent,'Check what you may share');
 });
+test('a newly discovered task guides interest preparation before reviewing proposed terms',()=>{
+ const r={title:'Task',project:'Project',deliverable:'Notes',status:'interest'};
+ assert.equal(kit.nextAction(r).target,'contributionName');assert.equal(kit.nextAction({...r,interestName:'Contributor'}).target,'interestAvailability');
+ assert.equal(kit.nextAction({...r,interestName:'Contributor',interestNote:'I can help',availability:'Friday'}).target,'founderReturnInput');
+ assert.equal(kit.nextAction({...r,agreementSnapshot:'Received proposal'}).target,'founderReturnInput');
+});

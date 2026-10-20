@@ -46,3 +46,12 @@ test('public review navigation requires consent and successfully stored handoff 
 test('editing a founder draft removes stale generated text and sharing permissions',()=>{
  const s=controller();s.fields.publicReady.checked=true;s.fields.reviewed.checked=true;s.fields.creditAgreed.checked=true;s.get('taskOfferOutput').textContent='Old note';s.get('taskOfferForm').listeners.input({target:s.fields.title});assert.equal(s.fields.publicReady.checked,false);assert.equal(s.fields.reviewed.checked,false);assert.equal(s.fields.creditAgreed.checked,false);assert.equal(s.get('taskOfferOutput').textContent,'');
 });
+test('brief readiness includes every required scope field and incomplete details open for repair',()=>{
+ assert.deepEqual(kit.missingFields(ready),[]);assert.deepEqual(kit.missingFields({...ready,outcome:'',minutes:600}),['minutes','outcome']);
+ const s=controller();s.fields.outcome.value='';const details={tagName:'DETAILS',open:false,parentElement:null};s.fields.outcome.parentElement=details;let focused=false;s.fields.outcome.focus=()=>focused=true;
+ s.get('previewTask').listeners.click();assert.equal(details.open,true);assert.equal(focused,true);assert.equal(s.get('taskOfferOutput').textContent,'');assert.equal(s.writes.length,0);assert.equal(s.fields.outcome.value,'');
+ s.get('taskOfferForm').listeners.input({target:s.fields.outcome});assert.match(s.get('taskBriefReadiness').textContent,/1 required detail remains/);
+});
+test('feedback validation does not redirect the founder into unrelated unfinished offer fields',()=>{
+ const s=controller();s.fields.project.value='';let focused=false;s.fields.project.focus=()=>focused=true;s.get('previewFeedback').listeners.click();assert.equal(focused,false);assert.match(s.get('taskOfferStatus').textContent,/work you reviewed/);
+});
