@@ -1,0 +1,48 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const vm=require('node:vm');const kit=require('../interest-review-kit.js');
+const interest={title:'Review a screen',project:'A fictional project',deliverable:'Three notes',scope:'An unverified scope snapshot',interestName:'Chosen student name',interestNote:'I can test and want to learn',availability:'One hour next week',questions:'What should I test?'};
+const terms={deliverable:'Three notes',acceptance:'Clear reproduction steps',exclusions:'No production changes',minutes:'60',compensation:'Paid',terms:'Agree a fixed fee before starting',support:'A check-in',reviewer:'Project owner',feedbackTiming:'Within three days',creditTerms:'Credit by chosen name with permission',ownership:'Agree ownership and portfolio license directly'};
+test('student review packet requires sharing permission and excludes private notebook history and results',()=>{
+ assert.throws(()=>kit.interestPacket(interest,false));const raw=JSON.stringify(kit.interestPacket({...interest,result:'PRIVATE RESULT',feedback:'PRIVATE FEEDBACK',evidence:'https://example.com/private',permission:true,confirmed:true},true));assert.doesNotMatch(raw,/PRIVATE|example.com|confirmed|permission/);assert.deepEqual(kit.parseInterest(raw),interest);
+});
+test('missing, oversized, malformed, wrong-version and wrongly typed interest notes fail closed',()=>{
+ for(const raw of ['bad JSON','{}','x'.repeat(22001),JSON.stringify({format:'other',interest}),JSON.stringify({format:'fb-student-interest-v1',interest:{...interest,interestName:{bad:true}}})])assert.throws(()=>kit.parseInterest(raw));
+ assert.throws(()=>kit.interestPacket({...interest,availability:''},true));
+});
+test('task agreements distinguish proposals from founder-reported direct confirmation',()=>{
+ assert.match(kit.agreement(interest,terms),/awaiting direct confirmation/);assert.match(kit.agreement(interest,{...terms,confirmed:true}),/founder-recorded, not verified/);
+ assert.throws(()=>kit.agreement(interest,{...terms,ownership:''}));assert.throws(()=>kit.agreement(interest,{...terms,minutes:'600'}));assert.throws(()=>kit.agreement(interest,{...terms,compensation:'Discuss before starting',confirmed:true}));
+});
+test('feedback credit requires actual reviewed work and agreed sharing without granting a credential',()=>{
+ const r={observed:'Three test notes',strengths:'Clear steps',nextStep:'Include expected behavior',creditName:'Chosen name',portfolioUse:'May show anonymized notes',reviewed:true,creditAgreed:true};
+ for(const patch of [{observed:''},{reviewed:false},{creditAgreed:false},{portfolioUse:''}])assert.throws(()=>kit.feedback(interest,{...r,...patch}));
+ assert.match(kit.feedback(interest,r),/not independently verified/);assert.match(kit.feedback(interest,r),/anonymized notes/);
+});
+test('replies require a specific response and do not automatically confirm a place',()=>{
+ assert.throws(()=>kit.response(interest,{}));assert.match(kit.response(interest,{response:'Could you test this sample on Tuesday?'}),/not confirmed/);
+});
+function controller({fail=false,saved='[]'}={}){
+ class E{constructor(){this.listeners={};this.children=[];this.value='';this.checked=false;this.textContent='';}addEventListener(k,fn){this.listeners[k]=fn;}append(...xs){this.children.push(...xs);}replaceChildren(){this.children=[];}setAttribute(){}focus(){}}
+ const nodes={},fields={},writes=[],get=id=>nodes[id]||(nodes[id]=new E());const defaults=kit.normalize({});Object.keys(defaults).forEach(k=>{fields[k]=new E();fields[k].name=k;fields[k].value=typeof defaults[k]==='string'?defaults[k]:'';if(typeof defaults[k]==='boolean')fields[k].type='checkbox';});const form=get('interestReviewForm');form.elements={namedItem:k=>fields[k]};form.reset=()=>Object.values(fields).forEach(f=>{f.value='';f.checked=false;});
+ class FormData{forEach(fn){Object.entries(fields).forEach(([k,f])=>fn(f.value,k));}}
+ vm.runInNewContext(fs.readFileSync(require.resolve('../interest-review.js'),'utf8'),{window:{FBInterestReviewKit:kit,confirm:()=>false},document:{getElementById:get,createElement:()=>new E()},localStorage:{getItem:()=>saved,setItem:(k,v)=>{if(fail)throw Error('Full');writes.push(v);}},FormData,navigator:{},Date,Math});return {get,fields,writes,form};
+}
+test('opening an interest renders hostile strings literally and never saves automatically',()=>{
+ const s=controller();s.get('interestPacketInput').value=JSON.stringify(kit.interestPacket({...interest,interestName:'<img src=x onerror=alert(1)>'},true));s.get('loadInterestPacket').listeners.click();assert.equal(s.writes.length,0);assert.match(s.get('interestReviewContext').textContent,/<img src=x/);assert.equal(s.get('interestReviewContext').children.length,0);assert.equal(s.fields.deliverable.value,interest.deliverable);
+});
+test('saving is explicit and storage failures preserve review notes without claiming success',()=>{
+ const s=controller({fail:true});s.get('interestPacketInput').value=JSON.stringify(kit.interestPacket(interest,true));s.get('loadInterestPacket').listeners.click();s.fields.response.value='My unsaved response';s.form.listeners.submit({preventDefault(){}});assert.match(s.get('interestReviewStatus').textContent,/Unable to save/);assert.equal(s.fields.response.value,'My unsaved response');
+});
+test('editing review notes revokes stale confirmations and clears generated output',()=>{
+ const s=controller();s.fields.confirmed.checked=s.fields.reviewed.checked=s.fields.creditAgreed.checked=true;s.get('interestReviewOutput').textContent='Old note';s.form.listeners.input({target:s.fields.deliverable});assert.equal(s.fields.confirmed.checked,false);assert.equal(s.fields.reviewed.checked,false);assert.equal(s.fields.creditAgreed.checked,false);assert.equal(s.get('interestReviewOutput').textContent,'');
+});
+test('local review removal supports undo and never sends a student notification',()=>{
+ const s=controller();s.get('interestPacketInput').value=JSON.stringify(kit.interestPacket(interest,true));s.get('loadInterestPacket').listeners.click();s.form.listeners.submit({preventDefault(){}});assert.equal(JSON.parse(s.writes.at(-1)).length,1);assert.match(s.get('interestReviewStatus').textContent,/No student has been notified/);s.get('removeInterestReview').listeners.click();assert.equal(JSON.parse(s.writes.at(-1)).length,0);s.get('undoInterestReview').listeners.click();assert.equal(JSON.parse(s.writes.at(-1)).length,1);
+});
+test('review desk blocks outbound connections and form navigation',()=>{
+ const page=fs.readFileSync(require.resolve('../review-interest.html'),'utf8');assert.match(page,/connect-src 'none'/);assert.match(page,/form-action 'none'/);
+});
+test('scope reuse requires matching task and project and leaves ownership for explicit agreement',()=>{
+ const offers=require('../task-offer-kit.js');const task={title:interest.title,project:interest.project,outcome:'Clarify a screen',deliverable:interest.deliverable,acceptance:'Reviewed observations',outside:'No code changes',skill:'Testing',experience:'Basic web use',minutes:60,compensation:'Paid',terms:'Agree fixed fee',support:'A check-in',reviewer:'Owner',feedbackTiming:'Within three days',creditPolicy:'Agree credit and portfolio use'};
+ const context={...interest,scope:'Unverified public snapshot\n\n'+offers.brief(task)};const draft=kit.scopeTemplate(context);assert.equal(draft.minutes,'60');assert.equal(draft.ownership,undefined);assert.equal(draft.confirmed,undefined);
+ assert.throws(()=>kit.scopeTemplate({...context,project:'Another project'}));assert.throws(()=>kit.scopeTemplate({...context,title:'Another task'}));
+});

@@ -9,9 +9,9 @@
     {id:'code',skill:'Code',title:'Reproduce and document one bug',minutes:90,deliverable:'Clear reproduction steps, expected behavior, and an optional small fix.',firstStep:'Ask for a public issue or a safe test environment and a reviewer.'},
     {id:'community',skill:'Community',title:'Help prepare a workshop',minutes:90,deliverable:'A draft agenda or participant checklist for the organizer to review.',firstStep:'Ask the organizer what one piece of preparation would be useful.'}
   ];
-  const fields=['title','project','skill','deliverable','collaborator','nextStep','result','evidence','credit','scope','feedback','creditAgreement'];
+  const fields=['title','project','skill','deliverable','collaborator','nextStep','result','evidence','credit','scope','feedback','creditAgreement','interestName','interestNote','availability','questions'];
   function normalize(input){
-    const r={};fields.forEach(k=>r[k]=String(input[k]||'').trim().slice(0,k==='scope'?12000:['result','feedback'].includes(k)?2500:800));
+    const r={};fields.forEach(k=>r[k]=String(input[k]||'').trim().slice(0,k==='scope'?12000:['result','feedback','interestNote'].includes(k)?2500:800));
     r.status=['planning','interest','agreed','in_progress','awaiting_feedback','completed'].includes(input.status)?input.status:'planning';r.permission=input.permission===true;
     return r;
   }
