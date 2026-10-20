@@ -85,3 +85,23 @@ body{font-family:var(--font);color:var(--text)}
 .calendar-grid{grid-template-columns:repeat(7,minmax(0,1fr))}
 .calendar-day{min-width:0;overflow:hidden}
 .calendar-day__event{min-width:0;max-width:100%}
+.contribution-filters,.contribution-actions{display:flex;flex-wrap:wrap;gap:16px;margin:26px 0}
+.contribution-filters label,.contribution-fields label{display:grid;gap:8px;font-size:14px;font-weight:500}
+.contribution-filters select,.contribution-fields input,.contribution-fields textarea,.contribution-fields select{font:inherit;padding:12px;border:1px solid var(--border-2);border-radius:var(--radius-input);background:var(--white);color:var(--text);width:100%;min-width:0}
+.contribution-tasks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.contribution-task,.contribution-panel{background:var(--white);padding:28px;border:1px solid var(--border);border-radius:var(--radius-card);min-width:0}
+.contribution-task h3,.contribution-panel h3{font-size:22px;line-height:1.3;margin:12px 0 18px;font-weight:600;letter-spacing:-.02em}
+.contribution-task p,.contribution-panel>p,.contribution-hint{color:var(--text-secondary);font-size:14px;line-height:1.7}
+.contribution-task .btn{margin-top:18px}.contribution-layout{display:grid;grid-template-columns:minmax(220px,.7fr) minmax(0,1.6fr);gap:24px;margin-top:36px;align-items:start}
+.contribution-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.contribution-full{grid-column:1/-1}
+.contribution-saved{display:block;width:100%;text-align:left;font:inherit;font-size:14px;background:var(--bg);color:var(--text);border:1px solid var(--border);padding:14px;border-radius:var(--radius-input);margin-bottom:12px;cursor:pointer;overflow-wrap:anywhere}
+.contribution-saved[aria-pressed=true]{border-color:var(--brand);background:var(--brand-soft)}
+.contribution-panel #newContribution{margin-top:18px}.contribution-reflection{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:22px 0;margin:24px 0}.contribution-reflection summary{font-weight:600;color:var(--brand);cursor:pointer}.contribution-reflection[open] summary{margin-bottom:22px}
+.contribution-permission{display:flex;align-items:flex-start;gap:10px;font-size:14px;margin:24px 0}.contribution-permission input{margin-top:5px;flex:none}
+.contribution-output{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;font-size:14px;background:var(--bg);padding:20px;border:1px solid var(--border);border-radius:var(--radius-input)}.contribution-output:empty{display:none}
+#first-contribution,#contribution-notebook{scroll-margin-top:85px}
+@media(max-width:800px){.contribution-layout{grid-template-columns:1fr}.contribution-tasks{grid-template-columns:1fr}}
+@media(max-width:540px){.contribution-fields{grid-template-columns:1fr}.contribution-task,.contribution-panel{padding:22px}.contribution-filters{flex-direction:column}.contribution-actions{flex-direction:column;align-items:flex-start}}
+.learning-guide [hidden]{display:none!important}
+.contribution-reflection>.btn{margin:8px 8px 8px 0}
+.contribution-panel>#removeContribution,.contribution-panel>#undoContribution{margin-top:12px}
