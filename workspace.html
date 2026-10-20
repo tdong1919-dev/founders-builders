@@ -2,9 +2,9 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://*.supabase.co; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self'">
-<title>Private workspace | Founders &amp; Builders</title><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="workspace.css"></head>
-<body><header><a href="index.html">Founders &amp; Builders</a><nav><a href="projects.html">Public opportunities</a> · <a href="dashboard.html">Community dashboard</a></nav></header>
-<main><p class="kicker">BUILD TOGETHER</p><h1>Your project workspace</h1>
+<title>Build together workspace | Founders &amp; Builders</title><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="workspace.css"><link rel="stylesheet" href="brand-system.css"></head>
+<body class="workspace-page"><header class="nav scrolled" id="nav"><div class="nav__inner"><a href="index.html" class="brand"><svg class="icon brand__mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg><span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span></a><nav class="nav__links" id="primaryLinks" aria-label="Primary"><a href="projects.html">Build together</a><a href="profiles.html">People</a><a href="community.html">Community</a><a href="workspace.html" aria-current="page">Workspace</a></nav><a href="create-profile.html" class="btn btn--sm">Join the community</a><button class="nav__toggle" id="navToggle" type="button" aria-label="Toggle navigation" aria-controls="primaryLinks" aria-expanded="false"><span></span><span></span><span></span></button></div></header>
+<main><p class="kicker">BUILD TOGETHER</p><h1>Build something together.</h1>
 <p>Keep your full idea private. Share a short public teaser only when you choose to publish.</p>
 <p><a href="workspace-preview.html">Try the fictional-data preview</a></p><p id="status" role="status" aria-live="polite">Checking secure workspace…</p>
 <section id="signin" hidden><h2>Sign in with email</h2><p>Invite-only access. Use your approved account. Sessions last for this tab only; reloads require sign-in.</p>
@@ -34,4 +34,4 @@
 <label>Stage <select id="discoveryStage"><option value="">All stages</option><option>Idea</option><option>Research</option><option>Prototype</option><option>MVP</option><option>Early revenue</option></select></label>
 <label>Collaboration terms <select id="discoveryModel"><option value="">All terms</option><option>Open to discussion</option><option>Co-founder / potential equity</option><option>Paid contract</option><option>Volunteer / community</option></select></label><button id="clearDiscovery" type="button">Clear filters</button></div>
 <p id="discoveryResults" role="status" aria-live="polite"></p><div id="publicProjects"></div></section>
-</main><script src="secure-config.js"></script><script src="secure-client.js"></script><script src="workspace.js"></script></body></html>
+</main><script src="secure-config.js"></script><script src="secure-client.js"></script><script src="workspace.js"></script><script src="navigation.js"></script></body></html>

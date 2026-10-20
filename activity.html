@@ -5,34 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Opportunities Feed — Founders &amp; Builders</title>
   <meta name="description" content="An action-oriented Founders & Builders activity feed for help requests, jobs, events, collaborations, funding signals, resources, and new members." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="profiles.css" />
   <link rel="stylesheet" href="platform.css" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%80%3C/text%3E%3C/svg%3E" />
-</head>
+<link rel="stylesheet" href="brand-system.css"></head>
 <body data-platform-page="activity">
-  <header class="nav scrolled" id="nav">
-    <div class="nav__inner">
-      <a href="index.html" class="brand">
-        <svg class="icon brand__mark" viewBox="0 0 24 24"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg>
-        <span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span>
-      </a>
-      <nav class="nav__links" aria-label="Primary">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="search.html">Search</a>
-        <a href="activity.html" aria-current="page">Activity</a>
-        <a href="help.html">Help</a>
-        <a href="jobs.html">Jobs</a>
-      </nav>
-      <a href="add-help.html" class="btn btn--sm">Post an ask</a>
-      <button class="nav__toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
-  </header>
+  <header class="nav scrolled" id="nav"><div class="nav__inner"><a href="index.html" class="brand"><svg class="icon brand__mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg><span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span></a><nav class="nav__links" id="primaryLinks" aria-label="Primary"><a href="projects.html">Build together</a><a href="profiles.html">People</a><a href="community.html" aria-current="page">Community</a><a href="workspace.html">Workspace</a></nav><a href="create-profile.html" class="btn btn--sm">Join the community</a><button class="nav__toggle" id="navToggle" type="button" aria-label="Toggle navigation" aria-controls="primaryLinks" aria-expanded="false"><span></span><span></span><span></span></button></div></header>
 
   <main>
     <section class="platform-hero">
@@ -73,5 +52,5 @@
   <script src="config.js"></script>
   <script src="script.js"></script>
   <script src="platform.js"></script>
-</body>
+<script src="navigation.js"></script></body>
 </html>

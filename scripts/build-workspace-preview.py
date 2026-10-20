@@ -3,7 +3,7 @@ from pathlib import Path
 root = Path(__file__).resolve().parent.parent
 source = (root / 'workspace.html').read_text()
 banner = '''<aside class="preview-notice" aria-label="Fictional preview"><strong>Interactive preview — fictional data only</strong><p>Use sample content. Nothing is saved or submitted. Reloading or switching roles resets this preview. This does not test real authentication or database security.</p><nav aria-label="Preview roles"><a href="workspace-preview.html?role=owner">Try owner</a> · <a href="workspace-preview.html?role=member">Try collaborator</a> · <a href="workspace-preview.html?role=applicant">Try applicant</a> · <a href="workspace-preview.html?role=visitor">Try visitor</a></nav></aside>'''
-source = source.replace('Private workspace |', 'Fictional workspace preview |')
+source = source.replace('Build together workspace |', 'Fictional workspace preview |')
 source = source.replace("connect-src 'self' https://*.supabase.co", "connect-src 'none'")
 source = source.replace('<main>', '<main>' + banner)
 source = source.replace('<script src="secure-config.js"></script><script src="secure-client.js"></script>', '<script src="workspace-preview-client.js"></script>')

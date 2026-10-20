@@ -6,42 +6,6 @@
   var yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  // Nav shadow on scroll
-  var nav = document.getElementById("nav");
-  function onScroll() {
-    if (!nav) return;
-    nav.classList.toggle("scrolled", window.scrollY > 8);
-  }
-  window.addEventListener("scroll", onScroll, { passive: true });
-  onScroll();
-
-  // Mobile nav toggle
-  var toggle = document.getElementById("navToggle");
-  var links = document.querySelector(".nav__links");
-  if (links && !links.querySelector('a[href="dashboard.html"]')) {
-    [
-      ["dashboard.html", "Dashboard"],
-      ["search.html", "Search"]
-    ].reverse().forEach(function (item) {
-      var a = document.createElement("a");
-      a.href = item[0];
-      a.textContent = item[1];
-      links.insertBefore(a, links.firstChild);
-    });
-  }
-  if (toggle && links) {
-    toggle.addEventListener("click", function () {
-      var open = links.classList.toggle("open");
-      toggle.setAttribute("aria-expanded", String(open));
-    });
-    links.querySelectorAll("a").forEach(function (a) {
-      a.addEventListener("click", function () {
-        links.classList.remove("open");
-        toggle.setAttribute("aria-expanded", "false");
-      });
-    });
-  }
-
   // Lightweight persistent identity for the static site. This is not password
   // authentication; it lets members keep a device-level identity and attach
   // ownership metadata to public submissions until a full auth provider exists.
@@ -184,7 +148,7 @@
         localStorage.setItem("fb_waitlist", JSON.stringify(list));
       } catch (err) { /* ignore storage errors */ }
       msg.style.color = "";
-      msg.textContent = "You're on the list! We'll be in touch — thanks for building with us.";
+      msg.textContent = "Saved on this device only. Email updates are not connected yet.";
       form.reset();
     });
   }

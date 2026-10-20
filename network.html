@@ -5,42 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Network Intelligence — Founders &amp; Builders</title>
   <meta name="description" content="The Founders & Builders network intelligence layer links people, companies, skills, needs, opportunities, capital, events, resources, and relationships." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="profiles.css" />
   <link rel="stylesheet" href="platform.css" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%80%3C/text%3E%3C/svg%3E" />
-</head>
+<link rel="stylesheet" href="brand-system.css"></head>
 <body data-platform-page="network">
-  <header class="nav scrolled" id="nav">
-    <div class="nav__inner">
-      <a href="index.html" class="brand">
-        <svg class="icon brand__mark" viewBox="0 0 24 24"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg>
-        <span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span>
-      </a>
-      <nav class="nav__links" aria-label="Primary">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="search.html">Search</a>
-        <a href="network.html" aria-current="page">Network</a>
-        <a href="concierge.html">Ask F&amp;B</a>
-        <a href="admin.html">Admin</a>
-      </nav>
-      <a href="search.html" class="btn btn--sm">Search graph</a>
-      <button class="nav__toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
-  </header>
+  <header class="nav scrolled" id="nav"><div class="nav__inner"><a href="index.html" class="brand"><svg class="icon brand__mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg><span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span></a><nav class="nav__links" id="primaryLinks" aria-label="Primary"><a href="projects.html">Build together</a><a href="profiles.html">People</a><a href="community.html" aria-current="page">Community</a><a href="workspace.html">Workspace</a></nav><a href="create-profile.html" class="btn btn--sm">Join the community</a><button class="nav__toggle" id="navToggle" type="button" aria-label="Toggle navigation" aria-controls="primaryLinks" aria-expanded="false"><span></span><span></span><span></span></button></div></header>
 
   <main>
     <section class="platform-hero">
       <div class="container">
         <a class="back-link" href="dashboard.html">Back to dashboard</a>
-        <span class="kicker">Network intelligence</span>
-        <h1 class="platform-hero__title">From directories to a relationship graph.</h1>
-        <p class="platform-hero__sub">The current static site can already infer useful edges from sheet fields: Person to Company, Skills to Needs, Needs to Opportunities, Capital to Raises, Events to Chapters, and Resources to bottlenecks.</p>
+        <span class="kicker">Community connections</span>
+        <h1 class="platform-hero__title">Explore the people and possibilities around your work.</h1>
+        <p class="platform-hero__sub">Explore public people, skills, needs, opportunities, and resources together. Use these connections to start a useful conversation or find a next step.</p>
       </div>
     </section>
 
@@ -48,8 +27,8 @@
       <section class="platform-section">
         <div class="platform-section__head">
           <div>
-            <h2 class="platform-section__title">Graph snapshot</h2>
-            <p class="platform-section__desc">Generated locally from current hub records. It is a foundation for future richer graph storage.</p>
+            <h2 class="platform-section__title">A view of the community</h2>
+            <p class="platform-section__desc">This view uses the community records currently available.</p>
           </div>
           <a class="mini-btn" href="apps-script/SCHEMA.md">Schema</a>
         </div>
@@ -60,8 +39,8 @@
         <div class="graph-wrap">
           <div class="graph-canvas" id="networkCanvas" aria-label="Network graph visualization"></div>
           <div>
-            <h2 class="platform-section__title">Derived relationships</h2>
-            <p class="platform-section__desc">These edges are explainable: every relationship is based on visible fields, not hidden inference.</p>
+            <h2 class="platform-section__title">Why these connections appear</h2>
+            <p class="platform-section__desc">Connections use shared details such as skills, needs, and interests. Look at the context before reaching out.</p>
             <div class="edge-list" id="networkEdges"></div>
           </div>
         </div>
@@ -79,5 +58,5 @@
   <script src="config.js"></script>
   <script src="script.js"></script>
   <script src="platform.js"></script>
-</body>
+<script src="navigation.js"></script></body>
 </html>

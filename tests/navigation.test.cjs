@@ -1,0 +1,29 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const vm=require('node:vm');const path=require('node:path');
+function setup(){
+ const handlers={},events={},classes=new Set();let focused=false;
+ const links={classList:{remove:k=>classes.delete(k),contains:k=>classes.has(k),toggle:k=>{if(classes.has(k)){classes.delete(k);return false;}classes.add(k);return true;}},querySelectorAll:()=>[link]};
+ const link={addEventListener:(name,fn)=>handlers['link-'+name]=fn};
+ const attrs={},toggle={setAttribute:(k,v)=>attrs[k]=v,addEventListener:(name,fn)=>handlers['toggle-'+name]=fn,focus:()=>focused=true};
+ const nav={classList:{toggle(){}},contains:target=>target==='inside'};
+ const document={getElementById:id=>({nav,primaryLinks:links,navToggle:toggle}[id]||null),addEventListener:(name,fn)=>handlers[name]=fn};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../navigation.js'),'utf8'),{document,window:{scrollY:0,addEventListener:(name,fn)=>events[name]=fn}});
+ return {handlers,attrs,classes,focused:()=>focused};
+}
+test('shared mobile menu updates aria and returns focus when Escape closes it',()=>{
+ const s=setup();s.handlers['toggle-click']();assert.equal(s.attrs['aria-expanded'],'true');
+ s.handlers.keydown({key:'Escape'});assert.equal(s.attrs['aria-expanded'],'false');assert.equal(s.classes.has('open'),false);assert.equal(s.focused(),true);
+});
+test('navigation closes after following a link or clicking outside',()=>{
+ const s=setup();s.handlers['toggle-click']();s.handlers['link-click']();assert.equal(s.attrs['aria-expanded'],'false');
+ s.handlers['toggle-click']();s.handlers.click({target:'outside'});assert.equal(s.classes.has('open'),false);
+});
+test('every branded page keeps the same four primary destinations',()=>{
+ const root=path.resolve(__dirname,'..');let count=0;
+ for(const name of fs.readdirSync(root).filter(n=>n.endsWith('.html'))){
+  const html=fs.readFileSync(path.join(root,name),'utf8');if(!html.includes('brand-system.css'))continue;count++;
+  const nav=html.match(/<nav class="nav__links"[^>]*>([\s\S]*?)<\/nav>/);assert.ok(nav, name);
+  assert.deepEqual([...nav[1].matchAll(/href="([^"]+)"/g)].map(m=>m[1]),['projects.html','profiles.html','community.html','workspace.html'],name);
+  assert.ok(html.includes('navigation.js'),name);assert.ok(html.includes('aria-controls="primaryLinks"'),name);
+ }
+ assert.ok(count>=40);
+});
