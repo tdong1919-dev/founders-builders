@@ -4,7 +4,7 @@ function setup({fail=false,saved='[]',incoming=null}={}){
  const get=id=>elements[id]||(elements[id]=new E());const form=get('contributionForm');form.reportValidity=()=>true;
  const fields={};['title','project','skill','deliverable','collaborator','nextStep','result','evidence','credit','scope','feedback','creditAgreement','interestName','interestNote','availability','questions','agreementSnapshot','feedbackSnapshot','agreementQuestions','status','permission'].forEach(k=>fields[k]=new E());fields.permission=get('contributionPermission');fields.permission.type='checkbox';form.elements={namedItem:k=>fields[k]};form.reset=()=>Object.values(fields).forEach(f=>{f.value='';f.checked=false;});get('starterTime').value='60';
  class FormData{forEach(fn){Object.entries(fields).forEach(([k,e])=>fn(e.value,k));}}
- vm.runInNewContext(fs.readFileSync(require.resolve('../contribution-notebook.js'),'utf8'),{URLSearchParams,window:{FBContributionKit:kit,FBFounderReturnKit:require('../founder-return-kit.js'),FBTaskJourneyKit:require('../task-journey-kit.js'),location:{search:incoming?'?founder-task=1':''},confirm:()=>false},document:{getElementById:get,createElement:()=>new E()},sessionStorage:{getItem:()=>incoming,removeItem(){}},localStorage:{getItem:()=>saved,setItem:(k,v)=>{if(fail)throw Error('full');writes.push(v);}},FormData,navigator:{},Date,Math});
+ vm.runInNewContext(fs.readFileSync(require.resolve('../contribution-notebook.js'),'utf8'),{URLSearchParams,window:{FBContributionBackupKit:require('../contribution-backup-kit.js'),FBContributionKit:kit,FBFounderReturnKit:require('../founder-return-kit.js'),FBTaskJourneyKit:require('../task-journey-kit.js'),location:{search:incoming?'?founder-task=1':''},confirm:()=>false},document:{getElementById:get,createElement:()=>new E()},sessionStorage:{getItem:()=>incoming,removeItem(){}},localStorage:{getItem:()=>saved,setItem:(k,v)=>{if(fail)throw Error('full');writes.push(v);}},FormData,navigator:{},Date,Math});
  return {get,fields,writes,submit:()=>form.listeners.submit({preventDefault(){}})};
 }
 test('saving is explicit and storage failure never claims to have saved a record',()=>{
@@ -56,4 +56,21 @@ test('completion guidance prioritizes results and explicit sharing over portfoli
  assert.equal(kit.nextAction({...base,result:'Found confusing labels',creditAgreement:'Public notes allowed',permission:false}).target,'portfolioTerms');
  assert.equal(kit.nextAction({...base,result:'Found confusing labels',creditAgreement:'Public notes allowed',permission:true}).target,'previewContribution');
  assert.equal(kit.nextAction({...base,status:'planning',agreementSnapshot:'Received proposal'}).target,'founderReturnInput');
+});
+test('backup restore is reviewed and explicit, preserves open edits and skips duplicate restores',()=>{
+ const backup=require('../contribution-backup-kit.js'),s=setup();s.fields.title.value='My unsaved task';s.fields.deliverable.value='My current plan';
+ s.get('notebookBackupInput').value=backup.pack([{title:'Restored <img src=x>',deliverable:'Notes',status:'completed',result:'Actual work',permission:true}]);
+ s.get('restoreNotebookBackup').listeners.click();assert.equal(s.writes.length,0);
+ s.get('reviewNotebookBackup').listeners.click();assert.equal(s.writes.length,0);assert.match(s.get('notebookBackupPreview').children[0].textContent,/<img src=x>/);assert.equal(s.get('notebookBackupPreview').children[0].children.length,0);
+ s.get('restoreNotebookBackup').listeners.click();assert.equal(s.writes.length,0);
+ s.get('notebookBackupAck').checked=true;s.get('restoreNotebookBackup').listeners.click();assert.equal(s.writes.length,1);const restored=JSON.parse(s.writes[0]);assert.equal(restored[0].permission,false);assert.equal(s.fields.title.value,'My unsaved task');
+ s.get('reviewNotebookBackup').listeners.click();s.get('notebookBackupAck').checked=true;s.get('restoreNotebookBackup').listeners.click();assert.equal(s.writes.length,1);assert.match(s.get('notebookBackupStatus').textContent,/already exist/);
+});
+test('changed backups revoke review and failed restores leave records intact',()=>{
+ const backup=require('../contribution-backup-kit.js'),s=setup({fail:true,saved:JSON.stringify([{id:'keep',title:'Existing',deliverable:'Notes',status:'planning'}])});
+ s.get('notebookBackupInput').value=backup.pack([{title:'Incoming',deliverable:'More notes',status:'planning'}]);s.get('reviewNotebookBackup').listeners.click();s.get('notebookBackupAck').checked=true;s.get('notebookBackupInput').listeners.input();s.get('restoreNotebookBackup').listeners.click();assert.equal(s.get('notebookBackupAck').checked,false);assert.equal(s.writes.length,0);
+ s.get('reviewNotebookBackup').listeners.click();s.get('notebookBackupAck').checked=true;s.get('restoreNotebookBackup').listeners.click();assert.match(s.get('notebookBackupStatus').textContent,/Unable to restore/);assert.equal(s.get('savedContributions').children.length,1);assert.match(s.get('savedContributions').children[0].textContent,/Existing/);
+});
+test('editing completed work clears permission before refreshing next-step guidance',()=>{
+ const s=setup();s.fields.title.value='Task';s.fields.deliverable.value='Notes';s.fields.status.value='completed';s.fields.result.value='Actual result';s.fields.creditAgreement.value='Allowed summary';s.fields.permission.checked=true;s.get('contributionForm').listeners.input({target:s.fields.result});assert.equal(s.fields.permission.checked,false);assert.equal(s.get('contributionNextTitle').textContent,'Check what you may share');
 });

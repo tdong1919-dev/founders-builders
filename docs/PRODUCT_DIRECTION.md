@@ -114,3 +114,16 @@ The contribution notebook now offers one contextual next action above its fields
 The action only opens the relevant section and focuses the field or existing button. It does not advance progress, generate/copy a message, save a record, grant sharing permission, or validate a received agreement. Existing portfolio validation remains authoritative. Clearing a received source refreshes the guidance.
 
 All 97 JavaScript tests pass. New checks cover stage guidance, result and sharing prerequisites, and opening/focusing a collapsed section without saving or changing progress. A fictional unsaved browser walkthrough checked interest, feedback, result and credit actions; reloading cleared the fixture. Screenshots at 390 and 1280 pixels showed readable guidance without horizontal document overflow. All HTML pages passed duplicate-ID/local-target checks; changed scripts and diff whitespace checks passed. Sheets/Apps Script, authentication and database code are unchanged. Supabase remains deferred; no production deployment or paid service was added.
+
+
+## Portable contribution notebook · 20 October 2026
+
+The notebook sidebar now has a collapsed backup/restore tool. Preparing a backup exposes only explicitly saved records as copyable text; unsaved form edits are excluded. The tool explains that the copy includes personal plans, notes and received sources and should be kept privately, separately from a public portfolio. No upload, sync, download service or network connection is added.
+
+Restore accepts a bounded, versioned record whitelist, validates progress, evidence and received source identity/type, and previews task titles/stages as literal text. A separate acknowledgment is required. Restore appends new records with fresh local IDs, skips identical normalized copies, refuses additions beyond the 20-record limit, and preserves existing records and the open form. Sharing permission is always cleared on imported records. Progress and received sources remain self-reported/unverified. A failed storage write leaves in-memory records and the open form unchanged. Editing the pasted backup invalidates review; restore revalidates current capacity and contents. Generated copies cannot exceed the restore size limit.
+
+A related next-step refresh fix clears sharing permission before computing guidance after an edit, so a completed record immediately returns to the credit/sharing step.
+
+All 105 JavaScript tests pass. New coverage includes backup round trips, source preservation/mismatch rejection, IDs/permissions exclusion, malformed/oversized inputs, deduplication, capacity, literal hostile text, explicit review, stale review, storage failures and open-form preservation. A fictional browser backup was reviewed, restored with acknowledgment, exported and checked for fresh sharing permission; duplicate review skipped it and unsaved work remained intact. The fictional saved record was removed, and reload left an empty notebook. Mobile (390 pixels) and desktop (1280 pixels) screenshots showed readable controls with no horizontal document overflow. All HTML pages passed duplicate-ID/local-target checks; script syntax and diff whitespace checks passed.
+
+Sheets/Apps Script, authentication and database code remain unchanged. Supabase remains deferred; no paid service, production merge or deployment was added.
