@@ -105,3 +105,12 @@ No messages, agreements, feedback, credit or portfolios were sent, signed or pub
 Use **contributor**, **builder**, or **anyone growing skills and experience** in the product. The experience-building path is not tied to enrollment, age, or career stage. Home, People, profile creation, founder task offers, interest review, return notes, status messages, confirmation drafts and chapter focus copy now follow that direction. Educational status is neither required nor used to gate these flows.
 
 Existing internal element identifiers and the `fb-student-interest-v1` packet marker remain compatible with earlier saved/shared notes; they are implementation details, not audience restrictions. No task, agreement, feedback, permission or authentication logic changed in this wording pass. All 95 existing tests pass.
+
+
+## Guided next contribution step · 20 October 2026
+
+The contribution notebook now offers one contextual next action above its fields. Guidance follows local progress and missing essentials: shape a task, prepare interest, review founder terms, plan delivery/check-ins, request feedback, record an actual result, review credit/sharing, then prepare the portfolio preview. It welcomes anyone growing skills and experience.
+
+The action only opens the relevant section and focuses the field or existing button. It does not advance progress, generate/copy a message, save a record, grant sharing permission, or validate a received agreement. Existing portfolio validation remains authoritative. Clearing a received source refreshes the guidance.
+
+All 97 JavaScript tests pass. New checks cover stage guidance, result and sharing prerequisites, and opening/focusing a collapsed section without saving or changing progress. A fictional unsaved browser walkthrough checked interest, feedback, result and credit actions; reloading cleared the fixture. Screenshots at 390 and 1280 pixels showed readable guidance without horizontal document overflow. All HTML pages passed duplicate-ID/local-target checks; changed scripts and diff whitespace checks passed. Sheets/Apps Script, authentication and database code are unchanged. Supabase remains deferred; no production deployment or paid service was added.

@@ -39,3 +39,21 @@ test('received proposal preview and application require matching identity and ex
 test('wrong-recipient returns cannot stage changes and editing invalidates student review and application acknowledgment',()=>{
  const s=setup();s.fields.title.value='Review a task';s.fields.project.value='Fictional project';s.fields.interestName.value='Another student';s.get('founderReturnInput').value=JSON.stringify(founderPacket());s.get('previewFounderReturn').listeners.click();assert.equal(s.get('founderReturnPreview').textContent,'');s.get('founderReturnAck').checked=true;s.get('studentTermsReviewed').checked=true;s.get('contributionForm').listeners.input({target:s.fields.title});assert.equal(s.get('founderReturnAck').checked,false);assert.equal(s.get('studentTermsReviewed').checked,false);
 });
+test('next-step guidance follows local progress without saving or advancing it',()=>{
+ const s=setup();assert.equal(s.get('contributionNextTitle').textContent,'Choose one useful contribution');
+ s.fields.title.value='Review a flow';s.fields.deliverable.value='Three observations';s.fields.status.value='awaiting_feedback';
+ s.get('contributionForm').listeners.input({target:s.fields.status});
+ assert.equal(s.get('contributionNextTitle').textContent,'Make feedback easy to give');
+ const details={tagName:'DETAILS',open:false,parentElement:null};s.get('draftFeedbackRequest').parentElement=details;
+ let focused=false;s.get('draftFeedbackRequest').focus=()=>focused=true;
+ s.get('contributionNextAction').listeners.click();assert.equal(details.open,true);assert.equal(focused,true);
+ assert.equal(s.fields.status.value,'awaiting_feedback');assert.equal(s.writes.length,0);assert.equal(s.get('contributionOutput').textContent,'');
+});
+test('completion guidance prioritizes results and explicit sharing over portfolio output',()=>{
+ const base={title:'A task',deliverable:'Notes',status:'completed'};
+ assert.equal(kit.nextAction(base).target,'contributionResult');
+ assert.equal(kit.nextAction({...base,result:'Found confusing labels',permission:true}).target,'portfolioTerms');
+ assert.equal(kit.nextAction({...base,result:'Found confusing labels',creditAgreement:'Public notes allowed',permission:false}).target,'portfolioTerms');
+ assert.equal(kit.nextAction({...base,result:'Found confusing labels',creditAgreement:'Public notes allowed',permission:true}).target,'previewContribution');
+ assert.equal(kit.nextAction({...base,status:'planning',agreementSnapshot:'Received proposal'}).target,'founderReturnInput');
+});

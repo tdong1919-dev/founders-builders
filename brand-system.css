@@ -117,3 +117,8 @@ body{font-family:var(--font);color:var(--text)}
 #interestReviewStatus{padding:20px 0}#reviewWorkspace{min-width:0}
 .contribution-panel .btn{white-space:normal;max-width:100%}
 #bring-interest{scroll-margin-top:85px}
+
+.contribution-next{padding:22px;background:var(--brand-soft);border:1px solid var(--border);border-radius:var(--radius-input);margin:0 0 24px}
+.contribution-next h4{font-size:20px;line-height:1.35;margin:8px 0 12px}
+.contribution-next p{font-size:14px;line-height:1.7;overflow-wrap:anywhere}
+.contribution-next .btn{margin:12px 0}
