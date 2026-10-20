@@ -163,3 +163,10 @@ Restore validates a bounded, versioned whitelist, including field lengths/types,
 All 120 JavaScript tests pass. New coverage checks round trips, note/stage preservation, cleared confirmation/sharing flags and fresh feedback gates, unknown-field/ID omission, malformed or oversized input, reload parser compatibility, duplicate/changed-version handling, capacity and export size limits, literal rendering, review gates, stale preview, failed writes and exclusion of unsaved edits/filtered subsets. A fictional browser walkthrough verified restore acknowledgment, unchanged unsaved reply, cleared exported/reopened checkboxes, duplicate skip, persistence, blocked feedback before fresh checks, and cleanup. The fictional saved review was removed; reload showed zero saved reviews. Phone (390 pixels) and desktop (1280 pixels) controls fit without horizontal overflow. HTML ID/local-target, script syntax and diff whitespace checks pass.
 
 Sheets/Apps Script, authentication and database behavior are unchanged. Supabase remains deferred; no paid service or production deployment was added.
+
+
+## Public task discovery recovery · 20 October 2026
+
+A read-only check established that the configured Apps Script endpoint rejects `type=collab` as unknown, while the repository defines that entity. Discovery now explains the missing task connection, offers manual retry with retained filters, and suppresses duplicate/late callbacks and invalid response data without promoting demos or claiming an empty successful feed. All 123 tests pass; the live browser retry returned to the honest not-connected state.
+
+The live backend remains unchanged. The repository read handler also needs an access-control review before a broad deployment: it does not enforce its entities’ private/public flag. This is a release blocker, not evidence of exposure in the currently configured older deployment. See [public task feed status](PUBLIC_TASK_FEED_STATUS.md) for the exact diagnostic, public-only release boundary and next verification steps. Supabase remains deferred; no paid service or production deployment was added.

@@ -1,7 +1,8 @@
 (function(){
   'use strict';
   const get=id=>document.getElementById(id),search=get('projectSearch'),filter=get('projectCategory'),status=get('projectStatus'),cards=get('projectCards'),journey=window.FBTaskJourneyKit; if(!cards||!window.FBPlatform)return;
-  let records=[];
+  let records=[],loading=false,requestId=0;
+  const retry=get('retryProjects'),controls=[search,filter,get('projectScope'),get('projectTime')];
   if(new URLSearchParams(window.location.search).get('scope')==='small')get('projectScope').value='small';
   function el(tag,text,cls){const e=document.createElement(tag);if(text)e.textContent=text;if(cls)e.className=cls;return e;}
   function link(text,href){const a=el('a',text);a.href=href;return a;}
@@ -16,9 +17,24 @@
     });
   }
   search.addEventListener('input',render);[filter,get('projectScope'),get('projectTime')].forEach(e=>e.addEventListener('change',render));
-  window.FBPlatform.fetchType('collab',(err,list,isDemo)=>{
-    if(err||isDemo){status.textContent='Live collaboration data is unavailable. Demo listings are not presented as real founder tasks.';cards.replaceChildren();const box=el('div','You can still plan a starter contribution or ask a founder for a scoped task. ','pj-empty');box.append(link('Explore starter ideas →','learn-by-building.html#first-contribution'),link(' Prepare a founder task →','offer-task.html'));cards.append(box);[search,filter,get('projectScope'),get('projectTime')].forEach(e=>e.disabled=true);return;}
-    const blocked=['demo','hidden','rejected','spam','blocked','archived','deleted','draft','private','pending','pending_review','pending review','unapproved','closed'];
-    records=(list||[]).filter(p=>p.title&&p.isPublic!==false&&!['private','draft'].includes(String(p.visibility||'').trim().toLowerCase())&&![p.moderationStatus,p.status].some(s=>blocked.includes(String(s||'').trim().toLowerCase()))&&!String(p._id||'').startsWith('demo')).map(p=>({...p,task:journey.parseListing(p)}));render();
-  });
+  function unavailable(err){
+    const unsupported=/unknown type:\s*collab\b/i.test(String(err&&err.message||''));
+    status.textContent=(unsupported?'Task discovery is not connected to the community feed yet.':'Live collaboration data is unavailable.')+' Demo listings are not presented as real founder tasks.';
+    records=[];cards.replaceChildren();const box=el('div','You can still plan a starter contribution or ask a founder for a scoped task. ','pj-empty');box.append(link('Explore starter ideas →','learn-by-building.html#first-contribution'),link(' Prepare a founder task →','offer-task.html'));cards.append(box);
+    controls.forEach(e=>e.disabled=true);retry.textContent='Try task listings again';
+  }
+  function load(){
+    if(loading)return;loading=true;const id=++requestId;let settled=false;
+    retry.disabled=true;retry.textContent='Checking task listings…';controls.forEach(e=>e.disabled=true);cards.replaceChildren();status.textContent='Checking live task listings…';
+    function finish(err,list,isDemo){
+      if(settled||id!==requestId)return;settled=true;loading=false;retry.disabled=false;
+      if(err||isDemo||!Array.isArray(list)){unavailable(err);return;}
+      const blocked=['demo','hidden','rejected','spam','blocked','archived','deleted','draft','private','pending','pending_review','pending review','unapproved','closed'];
+      try{records=list.filter(p=>p&&typeof p==='object'&&p.title&&p.isPublic!==false&&!['private','draft'].includes(String(p.visibility||'').trim().toLowerCase())&&![p.moderationStatus,p.status].some(s=>blocked.includes(String(s||'').trim().toLowerCase()))&&!String(p._id||'').startsWith('demo')).map(p=>({...p,task:journey.parseListing(p)}));}
+      catch(e){unavailable(e);return;}
+      controls.forEach(e=>e.disabled=false);retry.textContent='Refresh task listings';render();
+    }
+    try{window.FBPlatform.fetchType('collab',finish);}catch(e){finish(e);}
+  }
+  retry.addEventListener('click',load);load();
 })();
