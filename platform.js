@@ -38,7 +38,7 @@
       short: "Madison",
       status: "Launch chapter",
       aliases: ["madison"],
-      focus: "Early builders, students, local companies, and practical community support."
+      focus: "People growing their skills, local companies, and practical community support."
     }
   ];
 

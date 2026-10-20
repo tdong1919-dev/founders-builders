@@ -28,7 +28,7 @@ The local functional/security suites and shared navigation checks pass. All 41 H
 
 ## Learning through contribution
 
-Students, job seekers, career changers, and people practicing new skills belong in the existing contributor path. The product does not need a third primary path or a separate student network. `learn-by-building.html` connects a small task, feedback, a supported account of the work, and continued relationships. The guide now includes a device-only contribution notebook, with explicit saving and manual portfolio-summary copying. It does not issue credentials or verify work histories; completed work remains self-reported. Starter tasks are examples to propose, not live opportunities. Reuse existing optional profile fields and backend contracts; do not require a company or startup stage from a learner.
+Anyone growing their skills, experience, or ideas belongs in the contributor path, whether they are starting out, changing direction, returning to work, or already experienced. The product does not need a separate audience-specific path or network. `learn-by-building.html` connects a small task, feedback, a supported account of the work, and continued relationships. The guide now includes a device-only contribution notebook, with explicit saving and manual portfolio-summary copying. It does not issue credentials or verify work histories; completed work remains self-reported. Starter tasks are examples to propose, not live opportunities. Reuse existing optional profile fields and backend contracts; do not require a company or startup stage from a learner.
 
 ## Supporting-page review · 20 October 2026
 
@@ -98,3 +98,10 @@ Received feedback is kept as a separate source snapshot with the record. It pres
 All 95 JavaScript tests pass. New checks cover minimized return exports, malformed/oversized/wrongly typed returns, task/project/recipient mismatches, acknowledgment gates, scope changes to completed work, compensation and confirmation gates, preservation of personal notes, separate portfolio permission, and received-source validation in portfolio output. The browser walkthrough used fictional founder agreement/feedback notes through recipient mismatch, explicit review, confirmation/question drafting, feedback addition, completion/portfolio gates, save/reload and removal. The fictional saved contribution was removed afterward. Desktop (1280 × 900) and mobile (390 × 844) review showed no document overflow, and browser warnings/errors were empty during the focused review. Changed runtime scripts use content-based version markers to avoid mixing cached old code with new markup. All 43 HTML pages passed structural checks.
 
 No messages, agreements, feedback, credit or portfolios were sent, signed or published. Existing Sheets/Apps Script behavior and private auth/database code are unchanged in this addition. This remains a device-only/manual exchange until Supabase and shared authentication are configured and verified. No paid service or production deployment was added.
+
+
+## Audience and wording · 20 October 2026
+
+Use **contributor**, **builder**, or **anyone growing skills and experience** in the product. The experience-building path is not tied to enrollment, age, or career stage. Home, People, profile creation, founder task offers, interest review, return notes, status messages, confirmation drafts and chapter focus copy now follow that direction. Educational status is neither required nor used to gate these flows.
+
+Existing internal element identifiers and the `fb-student-interest-v1` packet marker remain compatible with earlier saved/shared notes; they are implementation details, not audience restrictions. No task, agreement, feedback, permission or authentication logic changed in this wording pass. All 95 existing tests pass.
