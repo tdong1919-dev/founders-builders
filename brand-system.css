@@ -105,3 +105,4 @@ body{font-family:var(--font);color:var(--text)}
 .learning-guide [hidden]{display:none!important}
 .contribution-reflection>.btn{margin:8px 8px 8px 0}
 .contribution-panel>#removeContribution,.contribution-panel>#undoContribution{margin-top:12px}
+.founder-task-form{margin-top:32px;max-width:920px}
