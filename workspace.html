@@ -11,13 +11,15 @@
 <form id="emailForm"><label>Email <input id="email" type="email" required autocomplete="email"></label><button>Send sign-in code</button></form>
 <form id="codeForm" hidden><label>Email code <input id="code" required inputmode="numeric" autocomplete="one-time-code" minlength="6" maxlength="10" pattern="[0-9]{6,10}"></label><button>Verify code</button></form></section>
 <section id="account" hidden><p id="identity"></p><button id="signout" type="button">Sign out</button><button id="refreshWorkspace" type="button">Refresh workspace</button>
-<h2>Create a private project</h2><form id="projectForm"><label>Title <input name="title" required minlength="3" maxlength="120"></label>
+<h2>My projects and collaborations</h2><div id="myProjects"></div>
+<details class="workspace-compose"><summary>Create a private project</summary><form id="projectForm"><label>Title <input name="title" required minlength="3" maxlength="120"></label>
 <label>Public teaser <textarea name="teaser" required minlength="10" maxlength="300"></textarea></label>
 <p>The teaser becomes public only after you explicitly publish.</p><label>Private brief <textarea name="brief" maxlength="10000"></textarea></label><label>Project stage <select id="newStage"><option>Idea</option><option>Research</option><option>Prototype</option><option>MVP</option><option>Early revenue</option></select></label>
 <label>Skills needed <input id="newSkills" maxlength="1500" placeholder="Design, engineering, marketing"></label><p>Separate skills with commas. Up to 30 skills.</p>
 <label>Collaboration terms <select id="newModel"><option>Open to discussion</option><option>Co-founder / potential equity</option><option>Paid contract</option><option>Volunteer / community</option></select></label>
 <button>Create private project</button></form>
-<h2>My projects and collaborations</h2><div id="myProjects"></div><h2>My applications</h2><p id="requestSummary" role="status" aria-live="polite"></p><label>Application status <select id="requestFilter"><option value="">All statuses</option><option value="pending">Pending</option><option value="accepted">Accepted</option><option value="declined">Declined</option><option value="withdrawn">Withdrawn</option></select></label><div id="myRequests"></div></section>
+</details>
+<h2>My applications</h2><p id="requestSummary" role="status" aria-live="polite"></p><label>Application status <select id="requestFilter"><option value="">All statuses</option><option value="pending">Pending</option><option value="accepted">Accepted</option><option value="declined">Declined</option><option value="withdrawn">Withdrawn</option></select></label><div id="myRequests"></div></section>
 <section id="detail" hidden><h2 id="detailTitle"></h2><p id="detailBrief" class="preserve"></p><p id="detailMetadata"></p><div id="detailActions"></div>
 <form id="editProjectForm" hidden><h3>Edit your project</h3>
 <label>Title <input id="editTitle" required minlength="3" maxlength="120"></label>
