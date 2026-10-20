@@ -35,7 +35,7 @@ Existing `config.js`, `platform.js`, Apps Script code, and public-hub data route
 
 ## Verification performed
 
-Latest local run: **46 SQL assertions plus negative-operation blocks passed**, followed by rollback. All 31 JavaScript tests also passed (12 client tests and 19 workspace event-handler tests).
+Latest local run: **46 SQL assertions plus negative-operation blocks passed**, followed by rollback. All 41 JavaScript tests also passed (12 client, 24 workspace event-handler, and 5 fictional-preview tests).
 
 - Executed all four migrations on disposable local PostgreSQL, including owner-controlled membership revocation.
 - Executed `supabase/tests/security.sql` with owner, applicant/member, outsider, unverified identity and anonymous role contexts; all assertions passed. Tests roll back fixtures and temporary grants.
@@ -114,3 +114,15 @@ All 28 local JavaScript tests passed. No schema, table grants, external dependen
 Owners get an assignment selector; collaborators see their current assignment and can use Assigned to me. Membership still controls completion. Private member/assignment caches are cleared with the rest of the workspace on session loss.
 
 All four migrations ran on fresh disposable PostgreSQL with Supabase-style default grants. **46 SQL assertions plus negative-operation blocks passed** and fixtures were rolled back. All **31 JavaScript tests passed**. Hosted JWT/browser journeys and concurrent transaction/load testing remain release gates. No production schema or deployment was changed.
+
+## Continuation: application tracking and interactive preview
+
+Supabase setup is **deferred at the user’s request**. No account, billing, project, migration or auth configuration was attempted during this continuation.
+
+Applications now show a project name only when it is already available through public discovery or the user's permitted workspace list. Otherwise the title is `Private or unavailable project`; the application record cannot disclose a newly private title. Members can filter statuses, withdraw pending applications and open accepted workspaces where membership is still active. Existing requests replace duplicate apply forms. Owners get a pending-first review queue with counts and status filters; collaborators do not fetch that queue. Refresh reloads permitted workspace data. Session loss clears all application caches.
+
+`workspace-preview.html` is a separate, clearly labeled fictional-data playground. Owner, collaborator, applicant and visitor links reset it into a new in-memory session. It supports synthetic project creation/editing/publishing, applications, review, milestones, assignment and removal. Nothing is persisted, emailed or submitted; the page's CSP blocks network connections. It has no tokens or real authentication. Use fictional content only. This preview does **not** establish hosted Supabase security.
+
+The real `workspace.html` still loads the disabled real client. The preview alone loads `workspace-preview-client.js`; query parameters cannot switch real authentication to preview mode. Its HTML is generated from the real markup with `python3 scripts/build-workspace-preview.py`; regenerate whenever workspace markup changes.
+
+All 41 local JavaScript tests passed, including application status/withdrawal/review, owner-queue isolation, cache clearing, preview resets, and separation of the preview and real auth entry points. Database migrations are unchanged; the prior 46 SQL assertions still describe the last local database run. Browser verification of the new fictional preview is recorded separately from these unit tests.

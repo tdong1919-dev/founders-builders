@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   var client = window.FBSecureClient.create(window.FB_SECURE_CONFIG || {});
-  var selected = null, emailForCode = '', busy = false, publicRecords = [], milestoneRecords = [], projectMembers = [];
+  var selected = null, emailForCode = '', busy = false, publicRecords = [], milestoneRecords = [], projectMembers = [], ownProjects = [], requestRecords = [], reviewRecords = [];
   var $ = function (id) { return document.getElementById(id); };
   function message(text) { $('status').textContent = text; }
   function node(tag, text) { var el = document.createElement(tag); el.textContent = text; return el; }
@@ -19,12 +19,13 @@
     return { stage: stage, model: model, skills: skills };
   }
   function resetPrivate() {
-    selected = null; milestoneRecords = []; projectMembers = []; $('milestoneFilter').value = '';
+    selected = null; milestoneRecords = []; projectMembers = []; ownProjects = []; requestRecords = []; reviewRecords = [];
+    $('requestFilter').value = ''; $('reviewFilter').value = 'pending'; $('reviewSection').hidden = true; $('milestoneFilter').value = '';
     $('discoverySearch').value = ''; $('discoveryStage').value = ''; $('discoveryModel').value = '';
     $('publicProjects').replaceChildren(); $('discoveryResults').textContent = '';
     $('detail').hidden = true; $('account').hidden = true;
     $('editProjectForm').hidden = true; $('editProjectForm').reset();
-    ['myProjects', 'myRequests', 'detailTitle', 'detailBrief', 'detailMetadata', 'milestoneProgress', 'milestoneResultStatus', 'detailActions', 'members', 'milestones', 'applications', 'identity'].forEach(function (id) { $(id).replaceChildren(); });
+    ['myProjects', 'myRequests', 'requestSummary', 'reviewSummary', 'detailTitle', 'detailBrief', 'detailMetadata', 'milestoneProgress', 'milestoneResultStatus', 'detailActions', 'members', 'milestones', 'applications', 'identity'].forEach(function (id) { $(id).replaceChildren(); });
     $('projectForm').reset(); $('milestoneForm').reset(); $('codeForm').reset();
   }
   function syncAuth() {
@@ -42,17 +43,34 @@
     finally { busy = false; document.querySelectorAll('button').forEach(function (b) { b.disabled = false; }); }
   }
   async function loadMine() {
-    var projects = await client.rpc('fb_my_projects');
+    var projects = await client.rpc('fb_my_projects'); ownProjects = projects;
     $('myProjects').replaceChildren();
     projects.forEach(function (p) { $('myProjects').append(button(p.title + ' · ' + p.visibility, function () { return openProject(p.id); })); });
     if (!projects.length) $('myProjects').textContent = 'No private projects or accepted collaborations yet.';
-    var requests = await client.rpc('fb_my_requests');
+    requestRecords = await client.rpc('fb_my_requests'); renderMyRequests();
+  }
+  function projectName(id) {
+    var project = ownProjects.concat(publicRecords).find(function (p) { return p.id === id; });
+    return project ? project.title : 'Private or unavailable project';
+  }
+  function renderMyRequests() {
+    if (!client.user()) { syncAuth(); return; }
+    var filter = $('requestFilter').value;
+    $('requestSummary').textContent = requestRecords.filter(function (r) { return r.status === 'pending'; }).length + ' pending · ' +
+      requestRecords.filter(function (r) { return r.status === 'accepted'; }).length + ' accepted · ' + requestRecords.length + ' total applications';
     $('myRequests').replaceChildren();
+    var requests = requestRecords.filter(function (r) { return !filter || r.status === filter; });
+    if (!requests.length) $('myRequests').append(node('p', requestRecords.length ? 'No applications match this status.' : 'No applications yet. Explore published projects below.'));
     requests.forEach(function (r) {
-      var item = node('article', 'Project ' + r.project_id + ' · ' + r.status);
-      if (r.status === 'pending') item.append(button('Withdraw', async function () {
+      var item = node('article', ''); item.append(node('h3', projectName(r.project_id)), node('p', 'Status: ' + r.status));
+      var explanation = { pending: 'The owner has not made a decision. Private project details remain protected.', accepted: 'Your application was accepted. Open the workspace if membership is still active.',
+        declined: 'This application is closed. It does not grant private project access.', withdrawn: 'You withdrew this application. It does not grant private project access.' };
+      item.append(node('p', explanation[r.status] || 'Refresh for the latest application status.'));
+      if (r.status === 'accepted' && ownProjects.some(function (p) { return p.id === r.project_id; }))
+        item.append(button('Open project workspace', function () { return openProject(r.project_id); }));
+      if (r.status === 'pending') item.append(button('Withdraw application', async function () {
         if (!await client.rpc('fb_withdraw_request', { p_request: r.id })) throw new Error('Application is no longer pending.');
-        await loadMine(); message('Application withdrawn.');
+        await loadMine(); renderPublic(); message('Application withdrawn.');
       }));
       $('myRequests').append(item);
     });
@@ -62,7 +80,7 @@
     // Cache only columns permitted in public discovery, never confidential briefs.
     publicRecords = projects.map(function (p) { return { id: p.id, title: p.title, teaser: p.teaser,
       stage: p.stage, collaboration_model: p.collaboration_model, skills_needed: p.skills_needed || [] }; });
-    renderPublic();
+    renderPublic(); if (client.user()) renderMyRequests();
   }
   function renderPublic() {
     if (!client.enabled) return;
@@ -78,13 +96,17 @@
     projects.forEach(function (p) {
       var card = node('article', ''); card.append(node('h3', p.title), node('p', p.teaser));
       card.append(node('p', [p.stage, p.collaboration_model, (p.skills_needed || []).join(', ')].filter(Boolean).join(' · ')));
-      if (client.user()) {
+      var mine = ownProjects.some(function (owned) { return owned.id === p.id; });
+      var application = requestRecords.find(function (r) { return r.project_id === p.id; });
+      if (client.user() && mine) card.append(button('Open project workspace', function () { return openProject(p.id); }));
+      else if (client.user() && application) card.append(node('p', 'Application: ' + application.status + '. See My applications for details.'));
+      else if (client.user()) {
         var form = document.createElement('form'), label = node('label', 'Why would you like to collaborate?'), input = document.createElement('textarea');
         input.required = true; input.minLength = 20; input.maxLength = 1200; label.append(input);
         var submit = node('button', 'Apply to collaborate'); form.append(label, submit);
         form.addEventListener('submit', function (event) { event.preventDefault(); run(async function () {
           await client.rpc('fb_apply_to_project', { p_project: p.id, p_message: input.value });
-          input.value = ''; await loadMine(); message('Application sent. Private access requires owner acceptance.');
+          input.value = ''; await loadMine(); renderPublic(); message('Application sent. Private access requires owner acceptance.');
         }); }); card.append(form);
       }
       $('publicProjects').append(card);
@@ -93,7 +115,8 @@
   }
   async function openProject(id) {
     // Clear the previous brief before attempting another permission-scoped read.
-    $('detail').hidden = true; $('detailBrief').textContent = ''; selected = null; milestoneRecords = []; projectMembers = [];
+    $('detail').hidden = true; $('detailBrief').textContent = ''; selected = null; milestoneRecords = []; projectMembers = []; reviewRecords = [];
+    $('reviewSection').hidden = true; $('applications').replaceChildren(); $('reviewSummary').textContent = '';
     $('milestones').replaceChildren(); $('milestoneProgress').textContent = ''; $('milestoneResultStatus').textContent = '';
     $('editProjectForm').hidden = true; $('editProjectForm').reset();
     var rows = await client.rpc('fb_get_project', { p_project: id });
@@ -143,8 +166,21 @@
     });
     milestoneRecords = await client.rpc('fb_project_milestones_for', { p_project: id });
     renderMilestones();
+    if (selected.owner_id === client.user().id) {
+      reviewRecords = await client.rpc('fb_project_requests', { p_project: id });
+      $('reviewSection').hidden = false; renderReviews();
+    }
+    $('detail').hidden = false;
+  }
+  function renderReviews() {
+    var user = client.user();
+    if (!user) { syncAuth(); return; }
+    if (!selected || selected.owner_id !== user.id) { $('reviewSection').hidden = true; return; }
+    var id = selected.id, filter = $('reviewFilter').value;
+    $('reviewSummary').textContent = reviewRecords.filter(function (r) { return r.status === 'pending'; }).length + ' pending · ' + reviewRecords.length + ' total applications';
     $('applications').replaceChildren();
-    var requests = await client.rpc('fb_project_requests', { p_project: id });
+    var requests = reviewRecords.filter(function (r) { return !filter || r.status === filter; });
+    if (!requests.length) $('applications').append(node('p', 'No applications in this view.'));
     requests.forEach(function (r) {
       var card = node('article', r.applicant_id + ' · ' + r.status); card.append(node('p', r.message));
       if (r.status === 'pending') [true, false].forEach(function (accept) {
@@ -154,7 +190,6 @@
         }));
       }); $('applications').append(card);
     });
-    $('detail').hidden = false;
   }
   function renderMilestones() {
     if (!client.user()) { syncAuth(); return; }
@@ -199,6 +234,12 @@
       $('milestones').append(row);
     });
   }
+  $('requestFilter').addEventListener('change', renderMyRequests);
+  $('reviewFilter').value = 'pending';
+  $('reviewFilter').addEventListener('change', renderReviews);
+  $('refreshWorkspace').addEventListener('click', function () { run(async function () {
+    var id = selected && selected.id; await loadMine(); await loadPublic(); if (id) await openProject(id); message('Workspace refreshed.');
+  }); });
   $('discoverySearch').addEventListener('input', renderPublic);
   $('discoveryStage').addEventListener('change', renderPublic);
   $('discoveryModel').addEventListener('change', renderPublic);
@@ -255,6 +296,6 @@
     }
   }, 1000);
   syncAuth();
-  if (client.enabled) { $('discovery').hidden = false; run(async function () { await loadPublic(); message('Sign in to access your private projects.'); }); }
+  if (client.enabled) { $('discovery').hidden = false; run(async function () { if (client.user()) await loadMine(); await loadPublic(); message(client.user() ? 'Your workspace is ready.' : 'Sign in to access your private projects.'); }); }
   else message('Secure workspace setup is pending. Private submissions are disabled. Existing community hubs remain available.');
 })();

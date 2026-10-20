@@ -5,3 +5,5 @@ input[type=checkbox]{display:inline-block;width:auto;margin:0 8px 0 0;vertical-a
 #detailMetadata,#milestoneProgress{color:#475569;font-weight:600}
 
 .workspace-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;align-items:end}.workspace-filters label{margin:0}.workspace-filters button{min-height:46px;margin:0}#discoveryResults,#milestoneResultStatus{color:#475569}
+
+.preview-notice{padding:20px;border:2px solid #b86d00;background:#fff5dc;border-radius:12px;margin-bottom:28px}.preview-notice p{margin:10px 0}

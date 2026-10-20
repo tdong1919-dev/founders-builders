@@ -6,7 +6,7 @@ const html = fs.readFileSync(require.resolve('../workspace.html'), 'utf8');
 const source = fs.readFileSync(require.resolve('../workspace.js'), 'utf8');
 // Small DOM adapter executes the real event handlers without a browser or network.
 // Hosted browser/auth journeys remain a separate release gate.
-async function harness({ owner = true, published = false, milestones = [], publicProjects = [], members = [] } = {}) {
+async function harness({ owner = true, published = false, milestones = [], publicProjects = [], members = [], myRequests = [], reviewRequests = [] } = {}) {
  const all = [], elements = {};
  class Element {
   constructor(tag, id = '') { this.tagName = tag; this.id = id; this.hidden = false; this.disabled = false; this.value = ''; this.checked = false; this.children = []; this.listeners = {}; this.textContent = ''; all.push(this); }
@@ -43,6 +43,10 @@ async function harness({ owner = true, published = false, milestones = [], publi
    if (name === 'fb_update_project') { Object.assign(project, { title: params.p_title, teaser: params.p_teaser, private_brief: params.p_private_brief, stage: params.p_stage, skills_needed: params.p_skills, collaboration_model: params.p_model }); return true; }
    if (name === 'fb_project_milestones_for') return milestones;
    if (name === 'fb_project_members_for') return members;
+   if (name === 'fb_my_requests') return myRequests;
+   if (name === 'fb_project_requests') return reviewRequests;
+   if (name === 'fb_withdraw_request') { const r=myRequests.find(r=>r.id===params.p_request&&r.status==='pending'); if(r)r.status='withdrawn';return !!r; }
+   if (name === 'fb_review_request') { const r=reviewRequests.find(r=>r.id===params.p_request); r.status=params.p_accept?'accepted':'declined';return r.status; }
    if (name === 'fb_assign_milestone') { milestones.find(m => m.id === params.p_milestone).assignee_id = params.p_assignee; return true; }
    if (name === 'fb_add_milestone') { milestones.push({ id: 'new-milestone', title: params.p_title, due_at: params.p_due, done: false }); return 'new-milestone'; }
    if (name === 'fb_set_milestone_done') { milestones.find(m => m.id === params.p_milestone).done = params.p_done; return true; }
@@ -228,4 +232,47 @@ test('assigned-to-me view shows only the current member tasks', async () => {
  assert.equal(h.elements.milestones.children.length,1);
  assert.equal(h.elements.milestones.children[0].children[0].textContent,'○ My next step');
  assert.equal(h.elements.milestoneProgress.textContent,'0 of 3 milestones completed');
+});
+test('application cards use permitted project names and explain statuses', async () => {
+ const h=await harness({publicProjects:discoveryFixtures,myRequests:[
+  {id:'pending',project_id:'alpha',status:'pending'},
+  {id:'closed',project_id:'hidden',status:'declined',private_title:'NEVER DISPLAY'},
+  {id:'accepted',project_id:'project',status:'accepted'}
+ ]});
+ assert.equal(h.elements.myRequests.children[0].children[0].textContent,'Climate prototype');
+ assert.equal(h.elements.myRequests.children[1].children[0].textContent,'Private or unavailable project');
+ assert.match(h.elements.requestSummary.textContent,/1 pending · 1 accepted · 3 total/);
+ h.elements.requestFilter.value='accepted'; await h.fire('requestFilter','change');
+ const card=h.elements.myRequests.children[0]; assert.equal(card.children[0].textContent,'Original title');
+ assert.equal(card.children.at(-1).textContent,'Open project workspace');
+});
+test('pending applications can be withdrawn and do not show duplicate apply forms', async () => {
+ const h=await harness({publicProjects:discoveryFixtures,myRequests:[{id:'pending',project_id:'alpha',status:'pending'}]});
+ const publicCard=h.elements.publicProjects.children[0]; assert.equal(publicCard.children.some(c=>c.tagName==='form'),false);
+ h.elements.myRequests.children[0].children.at(-1).listeners.click(); await h.settle();
+ assert.equal(h.calls.some(c=>c.name==='fb_withdraw_request'),true);
+ assert.match(h.elements.requestSummary.textContent,/0 pending/);
+ h.elements.requestFilter.value='withdrawn'; await h.fire('requestFilter','change');
+ assert.equal(h.elements.myRequests.children[0].children[1].textContent,'Status: withdrawn');
+});
+test('owners can review pending applications and filter completed decisions', async () => {
+ const h=await harness({reviewRequests:[{id:'review',applicant_id:'applicant',message:'I can help with research.',status:'pending'},{id:'old',applicant_id:'other',message:'Already closed.',status:'declined'}]});
+ assert.equal(h.elements.reviewSection.hidden,false); assert.equal(h.elements.applications.children.length,1);
+ assert.match(h.elements.reviewSummary.textContent,/1 pending · 2 total/);
+ h.elements.applications.children[0].children[1].listeners.click(); await h.settle();
+ assert.equal(h.calls.find(c=>c.name==='fb_review_request').params.p_accept,true);
+ assert.match(h.elements.reviewSummary.textContent,/0 pending/);
+ h.elements.reviewFilter.value='accepted'; await h.fire('reviewFilter','change');
+ assert.equal(h.elements.applications.children.length,1); assert.equal(h.elements.applications.children[0].children.length,1);
+});
+test('collaborators neither fetch nor display the owner application queue', async () => {
+ const h=await harness({owner:false,reviewRequests:[{id:'secret',applicant_id:'other',message:'Private application text',status:'pending'}]});
+ assert.equal(h.elements.reviewSection.hidden,true); assert.equal(h.elements.applications.children.length,0);
+ assert.equal(h.calls.some(c=>c.name==='fb_project_requests'),false);
+});
+test('session loss clears cached application cards and review messages', async () => {
+ const h=await harness({myRequests:[{id:'mine',project_id:'alpha',status:'pending'}],reviewRequests:[{id:'other',applicant_id:'other',message:'Sensitive applicant note',status:'pending'}]});
+ h.expire(); await h.fire('requestFilter','change'); await h.fire('reviewFilter','change');
+ assert.equal(h.elements.myRequests.children.length,0); assert.equal(h.elements.applications.children.length,0);
+ assert.equal(h.elements.reviewSection.hidden,true); assert.equal(h.elements.requestSummary.textContent,'');
 });
