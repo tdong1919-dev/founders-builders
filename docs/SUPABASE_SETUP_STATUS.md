@@ -126,3 +126,5 @@ Applications now show a project name only when it is already available through p
 The real `workspace.html` still loads the disabled real client. The preview alone loads `workspace-preview-client.js`; query parameters cannot switch real authentication to preview mode. Its HTML is generated from the real markup with `python3 scripts/build-workspace-preview.py`; regenerate whenever workspace markup changes.
 
 All 41 local JavaScript tests passed, including application status/withdrawal/review, owner-queue isolation, cache clearing, preview resets, and separation of the preview and real auth entry points. Database migrations are unchanged; the prior 46 SQL assertions still describe the last local database run. Browser verification of the new fictional preview is recorded separately from these unit tests.
+
+Browser verification update: no browser connections are currently available through the computer-use tool (`iab` unavailable; browser inventory empty). The new interactive preview has not been visually or interactively verified in a browser. The 41 passing local tests and successful preview build, if reported, do not replace that check.
