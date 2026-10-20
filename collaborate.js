@@ -262,9 +262,10 @@
     });
 
     function onSuccess() {
-      form.reset();
-      say("Your collab is live! Redirecting you…", "ok");
-      setTimeout(function () { window.location.href = "collaborate.html"; }, 1600);
+      // An opaque no-cors response cannot confirm server acceptance or publication.
+      // Keep the draft visible and prevent an accidental duplicate submission.
+      say("Submission request sent. Publication could not be confirmed. Check the collaboration board before resubmitting; your draft is still visible here.", "ok");
+      btn.textContent = "Request sent — check the board";
     }
 
     function collect() {

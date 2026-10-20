@@ -106,3 +106,9 @@ body{font-family:var(--font);color:var(--text)}
 .contribution-reflection>.btn{margin:8px 8px 8px 0}
 .contribution-panel>#removeContribution,.contribution-panel>#undoContribution{margin-top:12px}
 .founder-task-form{margin-top:32px;max-width:920px}
+.pj-card details{margin:18px 0}.pj-card summary{cursor:pointer;color:var(--brand);font-weight:500}
+.pj-card>.btn{margin:14px 0;white-space:normal;max-width:100%}
+.contribution-progress{list-style:none;display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:0 0 24px}
+.contribution-progress li{font-size:12px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-input);color:var(--text-secondary)}
+.contribution-progress li[aria-current=step]{color:var(--brand);background:var(--brand-soft);border-color:var(--brand)}
+@media(max-width:640px){.pj-tools{flex-direction:column}.pj-tools input,.pj-tools select{flex:auto;width:100%}}
