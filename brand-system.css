@@ -62,3 +62,26 @@ body{font-family:var(--font);color:var(--text)}
 @media(max-width:640px){.living-network__heading,.living-network__footer{flex-direction:column;align-items:flex-start;gap:8px;padding:18px}.living-flow{grid-template-columns:1fr}.living-flow li{border-right:0;border-bottom:1px solid var(--border);padding:22px}.living-flow li:last-child{border-bottom:0}.living-flow__number{margin-bottom:14px}.living-steps,.living-path-grid,.living-support,.community-directory{grid-template-columns:1fr}.living-path{padding:28px}.living-steps{gap:30px}.living-network{margin-top:38px}.living-hero .hero__title{font-size:clamp(35px,9vw,52px)}}
 
 .hub-head__title{line-height:1.12}.community-intro .lead{max-width:760px;margin-left:0}.bt-wrap>h1,.pj-wrap>h1{font-size:clamp(34px,5vw,48px);line-height:1.12;letter-spacing:-.03em}
+
+/* Supporting hubs keep the same readable, contribution-first rhythm. */
+.hub-head__title,.platform-hero__title{font-weight:600}
+.journey-link{margin:24px 0;color:var(--brand);font-size:15px;font-weight:500}
+.journey-link a:hover,.living-text-link:hover{text-decoration:underline}
+.living-path>.living-text-link{display:block;margin-top:20px}
+.learning-checklist{padding-left:22px;color:var(--text-secondary);line-height:1.8}
+.learning-checklist li{margin-bottom:12px}
+.profile-grid{grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))}
+.pj-cards{grid-template-columns:repeat(auto-fill,minmax(min(285px,100%),1fr))}
+.pcard,.platform-card,.platform-panel,.platform-rail,.fieldset{min-width:0;overflow-wrap:anywhere}
+@media(max-width:640px){.search{min-width:0;flex-basis:100%}.select-filter{max-width:100%}.field-grid>*{min-width:0}.pj-tools input,.pj-tools select{min-width:0;width:100%}.community-intro .hero__title{font-size:clamp(34px,9vw,52px)}}
+.hub-head .back-link,.platform-hero .back-link{display:flex;width:fit-content;margin-bottom:18px}
+.hub-head .kicker,.platform-hero .kicker{display:block}
+.learning-guide .community-intro .living-text-link{display:block;margin:0 0 28px}
+.learning-guide .community-intro .kicker{display:block;margin:0 0 14px}
+.learning-guide .hero__title{font-size:clamp(34px,5vw,58px);font-weight:600;line-height:1.12;letter-spacing:-.03em}
+/* Preserve the shared container inset on older full-width tool sections. */
+.container.platform-shell,.container.platform-main{padding-left:24px!important;padding-right:24px!important}
+/* Event titles must not widen a day and push Saturday out of the grid. */
+.calendar-grid{grid-template-columns:repeat(7,minmax(0,1fr))}
+.calendar-day{min-width:0;overflow:hidden}
+.calendar-day__event{min-width:0;max-width:100%}
