@@ -35,7 +35,7 @@
   get('draftIntroduction').addEventListener('click',()=>{const r=read(),error=kit.validate(r);if(error){note(error);return;}if(r.status==='planning'){form.elements.namedItem('status').value='interest';dirty=true;renderProgress();}get('contributionOutput').textContent=kit.message(r);note('Introduction drafted below. Review it and contact someone yourself; nothing was sent.');});
   get('draftFeedbackRequest').addEventListener('click',()=>{try{get('contributionOutput').textContent=kit.feedbackRequest(read());note('Feedback request drafted. Review it and contact your collaborator yourself; nothing was sent.');}catch(e){note(e.message);}});
   function interestPacket(){try{const packet=window.FBInterestReviewKit.interestPacket(read(),get('interestSharePermission').checked);return JSON.stringify(packet,null,2);}catch(e){note(e.message);return '';}}
-  get('previewInterestPacket').addEventListener('click',()=>{const text=interestPacket();if(text){get('contributionOutput').textContent=text;note('Review packet ready. Share manually with the intended founder; nothing was sent.');}});
+  get('previewInterestPacket').addEventListener('click',()=>{const text=interestPacket();if(text){get('contributionOutput').textContent=text;note('Interest note ready. Copy it and send it directly to the founder, who opens it in their review desk. Nothing was sent.');}});
   get('copyInterestPacket').addEventListener('click',()=>{const text=interestPacket();if(text)copy(text);});
   function receivedStatus(t){get('founderReturnStatus').textContent=t;}
   const returns=window.FBFounderReturnKit;

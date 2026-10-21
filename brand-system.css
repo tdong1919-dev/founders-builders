@@ -124,3 +124,7 @@ body{font-family:var(--font);color:var(--text)}
 .contribution-next .btn{margin:12px 0}
 
 .packet-input input[type=search]{font:inherit;width:100%;min-width:0;padding:14px;border:1px solid var(--border-2);border-radius:var(--radius-input);background:var(--white);color:var(--text)}
+
+/* Keep linked journey steps below the fixed navigation. */
+.learning-guide main [id]{scroll-margin-top:90px}
+.learning-guide .hero__cta a{white-space:normal}
