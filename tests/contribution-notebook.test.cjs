@@ -77,6 +77,7 @@ test('editing completed work clears permission before refreshing next-step guida
 test('a newly discovered task guides interest preparation before reviewing proposed terms',()=>{
  const r={title:'Task',project:'Project',deliverable:'Notes',status:'interest'};
  assert.equal(kit.nextAction(r).target,'contributionName');assert.equal(kit.nextAction({...r,interestName:'Contributor'}).target,'interestAvailability');
- assert.equal(kit.nextAction({...r,interestName:'Contributor',interestNote:'I can help',availability:'Friday'}).target,'founderReturnInput');
+ assert.equal(kit.nextAction({...r,interestName:'Contributor',interestNote:'I can help',availability:'Friday'}).target,'interestSharePermission');
+ assert.equal(kit.nextAction({...r,interestName:'Contributor',availability:'Friday'}).target,'interestContribution');
  assert.equal(kit.nextAction({...r,agreementSnapshot:'Received proposal'}).target,'founderReturnInput');
 });

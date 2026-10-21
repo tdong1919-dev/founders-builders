@@ -1,14 +1,14 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const kit=require('../contribution-kit.js');
-const ready={title:'Review a sign-up flow',deliverable:'Document confusing steps',project:'A permitted project',skill:'Testing',result:'Documented three issues and learned to write reproducible notes.',status:'completed',permission:true};
+const ready={title:'Review a sign-up flow',deliverable:'Document confusing steps',project:'A permitted project',skill:'Testing',result:'Documented three issues and learned to write reproducible notes.',status:'completed',permission:true,creditAgreement:'May show anonymized observations with agreed credit'};
 test('starter filtering respects skill and a small time commitment without inventing roles',()=>{
  assert.equal(kit.filterTasks('Code',45).length,0);
  assert.equal(kit.filterTasks('Code',90)[0].id,'code');
  assert.ok(kit.filterTasks('',60).every(t=>t.minutes<=60));
 });
 test('portfolio output requires completed work, evidence of result, and explicit sharing permission',()=>{
- for(const patch of [{status:'planning'},{result:''},{permission:false},{permission:'true'}])assert.throws(()=>kit.summary({...ready,...patch}));
+ for(const patch of [{status:'planning'},{result:''},{permission:false},{permission:'true'},{creditAgreement:''}])assert.throws(()=>kit.summary({...ready,...patch}));
  const text=kit.summary(ready);assert.match(text,/Self-reported contribution; not independently verified/);assert.match(text,/Documented three issues/);
  assert.doesNotMatch(text,/verified credential|increased conversion|employed/);
 });

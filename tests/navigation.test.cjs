@@ -27,3 +27,15 @@ test('every branded page keeps the same four primary destinations',()=>{
  }
  assert.ok(count>=40);
 });
+test('direct links reveal collapsed journey steps on initial load and hash changes',()=>{
+ const events={},outer={tagName:'DETAILS',open:false,parentElement:null};
+ let scrolled=0;
+ const step={tagName:'DETAILS',open:false,parentElement:outer,scrollIntoView:()=>scrolled++};
+ const window={location:{hash:'#founder-return'},addEventListener:(name,fn)=>events[name]=fn};
+ const document={getElementById:id=>id==='founder-return'?step:null};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../navigation.js'),'utf8'),{document,window});
+ assert.equal(step.open,true);assert.equal(outer.open,true);assert.equal(scrolled,1);
+ step.open=false;events.hashchange();assert.equal(step.open,true);assert.equal(scrolled,2);
+ window.location.hash='#%ZZ';assert.doesNotThrow(()=>events.hashchange());
+ window.location.hash='#missing';assert.doesNotThrow(()=>events.hashchange());assert.equal(scrolled,2);
+});

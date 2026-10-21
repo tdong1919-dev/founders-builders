@@ -25,7 +25,7 @@ Verified locally on 20 October 2026. All names, projects, compensation and work 
 
 ## Confusing handoff found and fixed
 
-A newly opened task was marked “interest drafted · not sent” while its name/interest fields were empty. The next-step guide therefore pointed to reviewing terms too early. It now guides the contributor to their chosen name and interest details first, then to proposed terms once those details exist or an agreement source is present. A regression test and a second browser preview verify the correction.
+A newly opened task was marked “interest drafted · not sent” while its name/interest fields were empty. The next-step guide therefore pointed to reviewing terms too early. The initial fix guided the contributor to their chosen name and interest details first. The 21 October follow-up now guides a complete interest to reviewing/sharing the interest note; received agreement sources lead to terms review. See RELEASE_REVIEW_20261021.md for current checks and pending browser verification. A regression test and a second browser preview verify the correction.
 
 The optional founder fields also remain mandatory for sharing. Collapsing them does not supply invented scope or waive completion/compensation/credit requirements. Feedback-only validation does not redirect the founder into unrelated unfinished offer fields.
 

@@ -3,6 +3,17 @@
   'use strict';
   var nav = document.getElementById('nav'), links = document.getElementById('primaryLinks'), toggle = document.getElementById('navToggle');
   var year = document.getElementById('year'); if (year) year.textContent = new Date().getFullYear();
+  // A link into a collapsed step must reveal it, including after same-page navigation.
+  function revealStep() {
+    var hash = window.location && window.location.hash;
+    if (!hash) return;
+    var id; try { id = decodeURIComponent(hash.slice(1)); } catch (error) { return; }
+    var target = document.getElementById(id), parent = target;
+    if (!target) return;
+    while (parent) { if (parent.tagName === 'DETAILS') parent.open = true; parent = parent.parentElement; }
+    if (target.scrollIntoView) target.scrollIntoView({block: 'start'});
+  }
+  revealStep(); window.addEventListener('hashchange', revealStep);
   if (!nav || !links || !toggle) return;
   function close() { links.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); }
   function scroll() { nav.classList.toggle('scrolled', window.scrollY > 8); }
