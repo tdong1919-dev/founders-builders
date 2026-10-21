@@ -11,7 +11,7 @@
   function record(value){
     if(!value||typeof value!=='object'||Array.isArray(value))throw Error('The backup contains an invalid review.');
     bounded(value.interest,interestFields);bounded(value.review,reviewFields);
-    if(!['reviewing','clarification','agreement','working','feedback','closed'].includes(value.review.phase))throw Error('The backup contains an unknown review stage.');
+    if(!['reviewing','clarification','agreement','terms_proposed','working','feedback','feedback_shared','closed'].includes(value.review.phase))throw Error('The backup contains an unknown review stage.');
     for(const flag of ['confirmed','reviewed','creditAgreed'])if(value.review[flag]!=null&&typeof value.review[flag]!=='boolean')throw Error('The backup contains an invalid confirmation field.');
     const interest=kit.parseInterest(JSON.stringify(kit.interestPacket(value.interest,true))),review=kit.normalize(value.review);
     review.confirmed=false;review.reviewed=false;review.creditAgreed=false;

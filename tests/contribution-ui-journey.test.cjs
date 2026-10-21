@@ -52,7 +52,8 @@ test('both UI controllers download and import one contribution through proposal,
   builder.click('previewInterestPacket');assert.equal(builder.get('contributionOutput').textContent,'');
   builder.click('downloadInterestNote');assert.equal(builder.downloads.length,0);
   builder.get('interestSharePermission').checked=true;builder.click('previewInterestPacket');
-  builder.click('downloadInterestNote');assert.equal(builder.downloads.length,1);
+  builder.click('downloadInterestNote');assert.equal(builder.downloads.length,1);assert.equal(builder.fields.status.value,'interest');
+  builder.edit('status','interest_shared');assert.match(builder.get('contributionNextTitle').textContent,/Waiting/);
   const interest=await builder.downloads[0].text();
   founder.get('interestNoteFile').files=[{name:'interest.json',size:interest.length,text:async()=>interest}];
   await founder.get('interestNoteFile').listeners.change();
@@ -63,28 +64,30 @@ test('both UI controllers download and import one contribution through proposal,
     minutes:'60',compensation:'Paid',terms:'A fixed fee agreed directly',support:'A sample and check-in',reviewer:'Owner',
     feedbackTiming:'Within three days',creditTerms:'Anonymized notes with chosen credit name',ownership:'Founder owns sample; contributor may show agreed notes'};
   for(const [key,value] of Object.entries(terms))founder.edit(key,value);
-  founder.click('downloadAgreementNote');assert.equal(founder.downloads.length,1);
+  founder.edit('phase','agreement');founder.click('downloadAgreementNote');assert.equal(founder.downloads.length,1);assert.equal(founder.fields.phase.value,'agreement');
+  founder.edit('phase','terms_proposed');assert.match(founder.get('reviewNextTitle').textContent,/Waiting/);
   const agreement=await founder.downloads[0].text();
   builder.get('founderNoteFile').files=[{name:'agreement.json',size:agreement.length,text:async()=>agreement}];
   await builder.get('founderNoteFile').listeners.change();
-  assert.equal(builder.fields.status.value,'interest');assert.equal(builder.get('founderReturnAck').checked,false);
+  assert.equal(builder.fields.status.value,'interest_shared');assert.equal(builder.get('founderReturnAck').checked,false);
   builder.click('previewFounderReturn');builder.get('founderReturnAck').checked=true;builder.click('applyFounderReturn');
   assert.equal(builder.fields.status.value,'planning');
   builder.get('studentTermsReviewed').checked=true;builder.click('draftStudentConfirmation');
   assert.match(builder.get('contributionOutput').textContent,/not sent or signed/);
-  builder.edit('status','awaiting_feedback');builder.edit('result','Identified three confusing labels in the sample');
+  builder.edit('status','work_delivered');builder.edit('result','Identified three confusing labels in the sample');
   builder.click('draftFeedbackRequest');assert.match(builder.get('contributionOutput').textContent,/What was useful/);
   for(const [key,value] of Object.entries({observed:'Three notes reviewed together',strengths:'Clear reproduction steps',nextStep:'Include expected behavior',
     creditName:'Alex',portfolioUse:'Anonymized notes only',reviewer:'Owner'}))founder.edit(key,value);
   founder.click('previewFeedbackReturn');assert.equal(founder.get('interestReviewOutput').textContent,'');
   founder.click('downloadFeedbackNote');assert.equal(founder.downloads.length,1);
-  founder.fields.reviewed.checked=true;founder.fields.creditAgreed.checked=true;founder.click('downloadFeedbackNote');assert.equal(founder.downloads.length,2);
+  founder.edit('phase','feedback');founder.fields.reviewed.checked=true;founder.fields.creditAgreed.checked=true;founder.click('downloadFeedbackNote');assert.equal(founder.downloads.length,2);assert.equal(founder.fields.phase.value,'feedback');
+  founder.edit('phase','feedback_shared');assert.match(founder.get('reviewNextTitle').textContent,/close the loop/);
   const feedback=await founder.downloads[1].text();
   builder.get('founderNoteFile').files=[{name:'feedback.json',size:feedback.length,text:async()=>feedback}];
   await builder.get('founderNoteFile').listeners.change();
   builder.click('previewFounderReturn');builder.get('founderReturnAck').checked=true;builder.click('applyFounderReturn');
   assert.equal(builder.fields.result.value,'Identified three confusing labels in the sample');
-  assert.equal(builder.fields.status.value,'awaiting_feedback');assert.equal(builder.fields.permission.checked,false);
+  assert.equal(builder.fields.status.value,'work_delivered');assert.equal(builder.fields.permission.checked,false);
   builder.click('previewContribution');assert.equal(builder.get('contributionOutput').textContent,'');
   builder.edit('status','completed');builder.click('previewContribution');assert.equal(builder.get('contributionOutput').textContent,'');
   builder.get('contributionPermission').checked=true;builder.click('previewContribution');

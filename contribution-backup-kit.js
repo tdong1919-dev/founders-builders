@@ -6,7 +6,7 @@
   function record(value){
     if(!value||typeof value!=='object'||Array.isArray(value))throw Error('The backup contains an invalid contribution.');
     for(const [field,max] of Object.entries(limits))if(value[field]!=null&&(typeof value[field]!=='string'||value[field].length>max))throw Error('The backup contains an invalid or oversized field.');
-    if(!['planning','interest','agreed','in_progress','awaiting_feedback','completed'].includes(value.status))throw Error('The backup contains an unknown progress stage.');
+    if(!['planning','interest','interest_shared','agreed','in_progress','awaiting_feedback','work_delivered','completed'].includes(value.status))throw Error('The backup contains an unknown progress stage.');
     const r=kit.normalize(value),error=kit.validate(r);if(error)throw Error(error);r.permission=false;
     const returns=typeof module==='object'&&module.exports?require('./founder-return-kit.js'):root.FBFounderReturnKit;
     for(const field of ['agreementSnapshot','feedbackSnapshot'])if(r[field]){const source=returns.parse(r[field],r);if(source.kind!==(field==='agreementSnapshot'?'agreement':'feedback'))throw Error('The backup contains a mismatched received source.');}

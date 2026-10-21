@@ -88,3 +88,13 @@ test('My next step opens the correct founder review and feedback section without
  assert.equal(s.fields.reviewed.checked,false);assert.equal(s.fields.creditAgreed.checked,false);assert.equal(s.writes.length,0);
  const wrong=controller({saved,resume:JSON.stringify({kind:'contribution',id:'chosen'})});assert.equal(wrong.get('reviewIdentity').textContent,'');assert.equal(wrong.writes.length,0);assert.match(wrong.get('interestReviewStatus').textContent,/unavailable/);
 });
+
+test('explicit proposed-terms and shared-feedback stages save and reopen without closing or confirming',()=>{
+ for(const phase of ['terms_proposed','feedback_shared']){
+  const s=controller();s.get('interestPacketInput').value=JSON.stringify(kit.interestPacket(interest,true));s.get('loadInterestPacket').listeners.click();
+  s.fields.phase.value=phase;s.form.listeners.input({target:s.fields.phase});assert.equal(s.writes.length,0);
+  s.form.listeners.submit({preventDefault(){}});assert.equal(JSON.parse(s.writes[0])[0].review.phase,phase);
+  const reopened=controller({saved:s.writes[0]});reopened.get('savedInterestReviews').children[0].listeners.click();
+  assert.equal(reopened.fields.phase.value,phase);assert.equal(reopened.fields.confirmed.checked,false);assert.equal(reopened.fields.reviewed.checked,false);assert.equal(reopened.fields.creditAgreed.checked,false);
+ }
+});

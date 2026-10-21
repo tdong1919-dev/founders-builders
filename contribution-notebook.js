@@ -6,13 +6,20 @@
   function canReplace(){return !dirty||window.confirm("Replace the unsaved form? Saved contribution records will stay on this device.");}
   function note(text){status.textContent=text;}
   function read(){const data={};new FormData(form).forEach((v,k)=>data[k]=v);data.permission=get('contributionPermission').checked;return kit.normalize(data);}
-  function renderProgress(){const box=get('contributionProgress');box.replaceChildren();const stage={planning:0,interest:0,agreed:1,in_progress:2,awaiting_feedback:3,completed:4}[form.elements.namedItem('status').value]||0;['Draft interest','Agree scope','Contribute','Request feedback','Record result & credit'].forEach((label,i)=>{const li=document.createElement('li');li.textContent=(i+1)+'. '+label;if(i===stage)li.setAttribute('aria-current','step');box.append(li);});const action=kit.nextAction(read());get('contributionNextTitle').textContent=action.title;get('contributionNextText').textContent=action.text;get('contributionNextAction').textContent=action.button;}
-  get('contributionNextAction').addEventListener('click',()=>{
-    const target=get(kit.nextAction(read()).target);
+  function renderProgress(){const box=get('contributionProgress');box.replaceChildren();const stage={planning:0,interest:0,interest_shared:1,agreed:1,in_progress:2,awaiting_feedback:3,work_delivered:3,completed:4}[form.elements.namedItem('status').value]||0;['Draft interest','Agree scope','Contribute','Feedback & credit','Record result & credit'].forEach((label,i)=>{const li=document.createElement('li');li.textContent=(i+1)+'. '+label;if(i===stage)li.setAttribute('aria-current','step');box.append(li);});const action=kit.nextAction(read());get('contributionNextTitle').textContent=action.title;get('contributionNextText').textContent=action.text;get('contributionNextAction').textContent=action.button;}
+  function goNext(){
+    const record=read(),action=kit.nextAction(record);
+    const source=record.status==='work_delivered'?record.feedbackSnapshot:record.agreementSnapshot;
+    if(action.target==='founderReturnInput'&&source&&!get('founderReturnInput').value.trim()){
+      clearReceived();get('founderReturnInput').value=source;
+      receivedStatus('Saved founder note loaded for review. Choose Review received note below. Nothing has been accepted or completed.');
+    }
+    const target=get(action.target==='founderReturnInput'&&get('founderReturnInput').value.trim()?'previewFounderReturn':action.target);
     let parent=target.parentElement;
     while(parent){if(parent.tagName==='DETAILS')parent.open=true;parent=parent.parentElement;}
     target.focus();
-  });
+  }
+  get('contributionNextAction').addEventListener('click',goNext);
   function clearReceived(){receivedRaw='';replyDraft='';get('founderReturnInput').value='';get('founderReturnPreview').textContent='';get('founderReturnStatus').textContent='';get('founderFileStatus').textContent='';get('founderNoteFile').value='';get('founderReturnAck').checked=false;get('studentTermsReviewed').checked=false;}
   function fill(record){clearReceived();get('interestSharePermission').checked=false;Object.entries(kit.normalize(record)).forEach(([k,v])=>{const field=form.elements.namedItem(k);if(field){if(field.type==='checkbox')field.checked=v;else field.value=v;}});get('contributionOutput').textContent='';renderProgress();}
   function renderRecords(){get('notebookBackupOutput').value='';get('removeContribution').hidden=!selected;get('undoContribution').hidden=!removed;const box=get('savedContributions');box.replaceChildren();if(!records.length){const p=document.createElement('p');p.textContent='No contributions saved on this device yet.';box.append(p);return;}
@@ -60,14 +67,7 @@
     try{
       const record=window.FBNextStepKit.consume(sessionStorage,'contribution',records);
       selected=record.id;fill(record);dirty=false;renderRecords();
-      const action=kit.nextAction(read());
-      if(action.target==='founderReturnInput'&&record.agreementSnapshot){
-        get('founderReturnInput').value=record.agreementSnapshot;
-        receivedStatus('Saved proposal loaded for review. Choose Review received note below. Nothing has been accepted.');
-      }
-      const target=get(action.target==='founderReturnInput'&&record.agreementSnapshot?'previewFounderReturn':action.target);let parent=target.parentElement;
-      while(parent){if(parent.tagName==='DETAILS')parent.open=true;parent=parent.parentElement;}
-      target.focus();note('Opened your saved contribution at its next step. Nothing has been changed or sent.');
+      goNext();note('Opened your saved contribution at its next step. Nothing has been changed or sent.');
       if(window.history?.replaceState){const url=new URL(window.location.href);url.searchParams.delete('next-step');window.history.replaceState(null,'',url.pathname+url.search+url.hash);}
     }catch(error){note('The saved task link is unavailable. Open a saved contribution here or return to My next step. Your saved work is unchanged.');}
   }

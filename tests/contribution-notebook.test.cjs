@@ -96,3 +96,23 @@ test('resuming saved proposed terms prepares the stored note for explicit review
  assert.equal(s.get('founderReturnInput').value,JSON.stringify(founderPacket()));assert.equal(s.get('previewFounderReturn').focused,true);
  assert.equal(s.get('founderReturnAck').checked,false);assert.equal(s.get('studentTermsReviewed').checked,false);assert.equal(s.fields.status.value,'planning');assert.equal(s.writes.length,0);
 });
+
+test('explicit waiting stages save and reopen unchanged without claiming completed work',()=>{
+ for(const status of ['interest_shared','work_delivered']){
+  const s=setup();s.fields.title.value='Fictional task';s.fields.deliverable.value='Notes';s.fields.status.value=status;
+  s.get('contributionForm').listeners.input({target:s.fields.status});assert.equal(s.writes.length,0);s.submit();
+  const saved=JSON.parse(s.writes[0]);assert.equal(saved[0].status,status);
+  const reopened=setup({saved:s.writes[0]});reopened.get('savedContributions').children[0].listeners.click();
+  assert.equal(reopened.fields.status.value,status);assert.match(reopened.get('contributionNextTitle').textContent,/Waiting/);assert.equal(reopened.fields.permission.checked,false);
+ }
+});
+
+test('delivered work opens its saved feedback for review and preserves a newly pasted reply',()=>{
+ const who={title:'Review a task',project:'Fictional project',interestName:'Alex'};
+ const raw=JSON.stringify(require('../founder-return-kit.js').feedbackPacket(who,{observed:'Reviewed notes',strengths:'Clear steps',nextStep:'Add expected behavior',creditName:'Alex',portfolioUse:'Anonymized notes only',reviewed:true,creditAgreed:true}));
+ const saved=JSON.stringify([{id:'chosen',...who,deliverable:'Notes',status:'work_delivered',result:'My own result',feedbackSnapshot:raw}]);
+ const s=setup({saved});s.get('savedContributions').children[0].listeners.click();s.get('contributionNextAction').listeners.click();
+ assert.equal(s.get('founderReturnInput').value,raw);assert.equal(s.get('previewFounderReturn').focused,true);assert.equal(s.fields.status.value,'work_delivered');
+ assert.equal(s.get('founderReturnAck').checked,false);assert.equal(s.fields.permission.checked,false);assert.equal(s.fields.result.value,'My own result');assert.equal(s.writes.length,0);
+ s.get('founderReturnInput').value='A newly pasted reply';s.get('contributionNextAction').listeners.click();assert.equal(s.get('founderReturnInput').value,'A newly pasted reply');
+});
