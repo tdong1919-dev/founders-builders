@@ -98,3 +98,17 @@ test('explicit proposed-terms and shared-feedback stages save and reopen without
   assert.equal(reopened.fields.phase.value,phase);assert.equal(reopened.fields.confirmed.checked,false);assert.equal(reopened.fields.reviewed.checked,false);assert.equal(reopened.fields.creditAgreed.checked,false);
  }
 });
+
+test('one malformed saved founder review cannot hide valid work or permit overwriting the damaged store',()=>{
+ const saved=JSON.stringify([{id:'bad',interest:{}},{id:'good',interest,review:{phase:'terms_proposed'}}]);
+ const s=controller({saved,resume:JSON.stringify({kind:'review',id:'good'})});
+ assert.equal(s.fields.phase.value,'terms_proposed');assert.match(s.get('reviewStorageNotice').textContent,/recovery/);
+ s.get('prepareReviewBackup').listeners.click();assert.match(s.get('reviewBackupStatus').textContent,/not a complete backup/);assert.equal(JSON.parse(s.get('reviewBackupOutput').value).records.length,1);
+ s.fields.response.value='An unsaved follow-up';s.form.listeners.submit({preventDefault(){}});assert.equal(s.writes.length,0);
+ s.get('removeInterestReview').listeners.click();assert.equal(s.writes.length,0);
+ s.get('reviewBackupInput').value=require('../review-backup-kit.js').pack([{interest:{...interest,interestName:'Another contributor'},review:{phase:'reviewing'}}]);s.get('previewReviewBackup').listeners.click();s.get('reviewBackupAck').checked=true;s.get('restoreReviewBackup').listeners.click();assert.equal(s.writes.length,0);assert.match(s.get('reviewBackupStatus').textContent,/recovery/);
+});
+
+test('interest export refuses an encoded snapshot too large for the receiving review desk',()=>{
+ assert.throws(()=>kit.interestPacket({...interest,scope:'\\'.repeat(12000)},true),/too large to share/);
+});

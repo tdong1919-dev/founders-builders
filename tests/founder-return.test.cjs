@@ -25,3 +25,17 @@ test('received feedback preserves personal notes, result and progress and never 
 test('portfolio includes received notes only after completion, actual result and separate permission and still identifies unverified source',()=>{
  const r=api.apply(JSON.stringify(api.feedbackPacket(person,feedback)),record,true);assert.throws(()=>contributions.summary(r));const complete={...r,result:'My actual work',status:'completed',permission:true};const text=contributions.summary(complete);assert.match(text,/Received feedback · sender and work unverified/);assert.match(text,/My actual work/);assert.throws(()=>contributions.summary({...complete,interestName:'Someone else'}));
 });
+
+test('an accepted long feedback source survives notebook normalization, backup and reload intact',()=>{
+ const raw=JSON.stringify(api.feedbackPacket(person,{...feedback,observed:'"'.repeat(2500),strengths:'"'.repeat(2500),nextStep:'"'.repeat(2500),portfolioUse:'"'.repeat(800)}));
+ assert.ok(raw.length>16000&&raw.length<18000);
+ const applied=contributions.normalize(api.apply(raw,{...record,status:'work_delivered'},true));
+ assert.equal(applied.feedbackSnapshot,raw);
+ const backups=require('../contribution-backup-kit.js');
+ const restored=backups.unpack(backups.pack([applied]))[0];assert.equal(restored.feedbackSnapshot,raw);assert.equal(restored.status,'work_delivered');assert.equal(restored.permission,false);
+});
+
+test('feedback export refuses a note that exceeds the recipient limit before offering it to share',()=>{
+ const who={title:'"'.repeat(160),project:'"'.repeat(160),interestName:'"'.repeat(160)};
+ assert.throws(()=>api.feedbackPacket(who,{...feedback,observed:'"'.repeat(2500),strengths:'"'.repeat(2500),nextStep:'"'.repeat(2500),creditName:'"'.repeat(160),reviewer:'"'.repeat(160),portfolioUse:'"'.repeat(800)}),/too large to share/);
+});

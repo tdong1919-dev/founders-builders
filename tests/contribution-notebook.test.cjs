@@ -116,3 +116,12 @@ test('delivered work opens its saved feedback for review and preserves a newly p
  assert.equal(s.get('founderReturnAck').checked,false);assert.equal(s.fields.permission.checked,false);assert.equal(s.fields.result.value,'My own result');assert.equal(s.writes.length,0);
  s.get('founderReturnInput').value='A newly pasted reply';s.get('contributionNextAction').listeners.click();assert.equal(s.get('founderReturnInput').value,'A newly pasted reply');
 });
+
+test('malformed saved notebook records remain untouched while valid records can be opened',()=>{
+ const saved=JSON.stringify([{id:'bad',title:{unexpected:true},deliverable:'Notes'},{id:'good',title:'Fictional task',deliverable:'Notes',status:'work_delivered'}]);
+ const s=setup({saved,resume:JSON.stringify({kind:'contribution',id:'good'})});assert.equal(s.fields.title.value,'Fictional task');
+ assert.match(s.get('contributionStorageNotice').textContent,/recovery/);assert.equal(s.get('savedContributions').children.length,1);
+ s.get('prepareNotebookBackup').listeners.click();assert.match(s.get('notebookBackupStatus').textContent,/not a complete backup/);assert.equal(JSON.parse(s.get('notebookBackupOutput').value).records.length,1);
+ s.submit();assert.equal(s.writes.length,0);s.get('removeContribution').listeners.click();assert.equal(s.writes.length,0);
+ s.get('notebookBackupInput').value=require('../contribution-backup-kit.js').pack([{title:'New task',deliverable:'Notes',status:'planning'}]);s.get('reviewNotebookBackup').listeners.click();s.get('notebookBackupAck').checked=true;s.get('restoreNotebookBackup').listeners.click();assert.equal(s.writes.length,0);assert.match(s.get('notebookBackupStatus').textContent,/recovery/);
+});

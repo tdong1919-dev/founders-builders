@@ -19,9 +19,10 @@
         if(!value||typeof value.id!=='string'||!value.id||value.id.length>200||ids.has(value.id))throw Error();
         const format=kind==='contribution'?'fb-contribution-backup-v1':'fb-founder-review-backup-v1';
         const kit=kind==='contribution'?contributionBackup:reviewBackup;
-        const checked=kit.unpack(JSON.stringify({format,records:[value]}))[0];
+        const candidate=kind==='contribution'?{...value,status:value.status??'planning'}:{...value,review:{...(value.review||{}),phase:value.review?.phase??'reviewing'}};
+        const checked=kit.unpack(JSON.stringify({format,records:[candidate]}))[0];
         if(kind==='contribution')records.push({...checked,permission:value.permission===true,id:value.id});
-        else records.push({...checked,id:value.id});
+        else records.push({...checked,review:reviews.normalize(candidate.review),id:value.id});
         ids.add(value.id);
       }catch(error){skipped++;}
     }

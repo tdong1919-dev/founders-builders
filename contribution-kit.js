@@ -11,7 +11,7 @@
   ];
   const fields=['title','project','skill','deliverable','collaborator','nextStep','result','evidence','credit','scope','feedback','creditAgreement','interestName','interestNote','availability','questions','agreementSnapshot','feedbackSnapshot','agreementQuestions'];
   function normalize(input){
-    const r={};fields.forEach(k=>r[k]=String(input[k]||'').trim().slice(0,['scope','agreementSnapshot','feedbackSnapshot'].includes(k)?16000:['result','feedback','interestNote','agreementQuestions'].includes(k)?2500:800));
+    const r={};fields.forEach(k=>r[k]=String(input[k]||'').trim().slice(0,['agreementSnapshot','feedbackSnapshot'].includes(k)?18000:k==='scope'?16000:['result','feedback','interestNote','agreementQuestions'].includes(k)?2500:800));
     r.status=['planning','interest','interest_shared','agreed','in_progress','awaiting_feedback','work_delivered','completed'].includes(input.status)?input.status:'planning';r.permission=input.permission===true;
     return r;
   }

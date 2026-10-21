@@ -28,7 +28,7 @@ function page(founder=false,failSave=false){
   form.elements={namedItem:name=>fields[name]};form.reportValidity=()=>true;
   form.reset=()=>Object.values(fields).forEach(f=>{f.value='';f.checked=false;});
   class FormData{forEach(fn){Object.entries(fields).forEach(([k,f])=>fn(f.value,k));}}
-  const window={FBContributionKit:contribution,FBInterestReviewKit:reviews,FBFounderReturnKit:returns,
+  const window={FBNextStepKit:require('../next-step-kit.js'),FBContributionKit:contribution,FBInterestReviewKit:reviews,FBFounderReturnKit:returns,
     FBContributionBackupKit:require('../contribution-backup-kit.js'),FBReviewBackupKit:require('../review-backup-kit.js'),
     Blob,URL:{createObjectURL:blob=>{downloads.push(blob);return 'blob:test';},revokeObjectURL(){}},setTimeout:fn=>fn(),location:{search:''},confirm:()=>false,addEventListener:(name,fn)=>events[name]=fn};
   vm.runInNewContext(fs.readFileSync(require.resolve('../draft-guard.js'),'utf8'),{window});

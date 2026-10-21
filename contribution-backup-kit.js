@@ -2,7 +2,7 @@
 (function(root){
   'use strict';
   const kit=typeof module==='object'&&module.exports?require('./contribution-kit.js'):root.FBContributionKit;
-  const limits={title:800,project:800,skill:800,deliverable:800,collaborator:800,nextStep:800,result:2500,evidence:800,credit:800,scope:16000,feedback:2500,creditAgreement:800,interestName:800,interestNote:2500,availability:800,questions:800,agreementSnapshot:16000,feedbackSnapshot:16000,agreementQuestions:2500};
+  const limits={title:800,project:800,skill:800,deliverable:800,collaborator:800,nextStep:800,result:2500,evidence:800,credit:800,scope:16000,feedback:2500,creditAgreement:800,interestName:800,interestNote:2500,availability:800,questions:800,agreementSnapshot:18000,feedbackSnapshot:18000,agreementQuestions:2500};
   function record(value){
     if(!value||typeof value!=='object'||Array.isArray(value))throw Error('The backup contains an invalid contribution.');
     for(const [field,max] of Object.entries(limits))if(value[field]!=null&&(typeof value[field]!=='string'||value[field].length>max))throw Error('The backup contains an invalid or oversized field.');
