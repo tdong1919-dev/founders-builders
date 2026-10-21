@@ -133,3 +133,9 @@ body{font-family:var(--font);color:var(--text)}
 .packet-input input[type=file]{display:block;width:100%;max-width:100%;min-width:0;font:inherit;color:var(--text-secondary)}
 .packet-input input[type=file]::file-selector-button{font:inherit;padding:10px 14px;margin-right:12px;border:1px solid var(--border-2);border-radius:var(--radius-input);background:var(--white);color:var(--brand);cursor:pointer}
 .packet-input input[type=file]:focus-visible{outline:2px solid var(--brand);outline-offset:4px}
+
+.next-step-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:24px}
+.next-step-card{min-width:0;display:flex;flex-direction:column;align-items:flex-start;overflow-wrap:anywhere}
+.next-step-card h2{font-size:25px;line-height:1.3;margin:10px 0}.next-step-card h3{font-size:19px;margin:20px 0 10px}
+.next-step-card .btn{margin-top:auto;white-space:normal;max-width:100%}.next-step-context{color:var(--text-secondary);margin:4px 0}
+@media(max-width:700px){.next-step-grid{grid-template-columns:1fr}}

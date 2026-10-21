@@ -56,6 +56,21 @@
   get('copyPlan').addEventListener('click',()=>{const r=read(),error=kit.validate(r);if(error){note(error);return;}copy('Contribution plan — not completed work\n'+r.title+'\nProject: '+(r.project||'To discuss')+'\nDeliverable: '+r.deliverable+'\nSkill: '+r.skill+'\nNext conversation: '+r.nextStep+'\n\nConfirm scope, timing, feedback, compensation if any, and sharing permission together.');});
   form.addEventListener('input',e=>{dirty=true;replyDraft='';if(e.target!==get('founderReturnAck'))get('founderReturnAck').checked=false;if(e.target!==get('studentTermsReviewed'))get('studentTermsReviewed').checked=false;if(e.target!==get('interestSharePermission'))get('interestSharePermission').checked=false;if(e.target!==get('contributionPermission'))get('contributionPermission').checked=false;renderProgress();get('contributionOutput').textContent='';note('Unsaved changes. Save on this device to keep them after leaving.');});
   renderTasks();renderRecords();renderProgress();
+  if(new URLSearchParams(window.location.search).get('next-step')==='1'){
+    try{
+      const record=window.FBNextStepKit.consume(sessionStorage,'contribution',records);
+      selected=record.id;fill(record);dirty=false;renderRecords();
+      const action=kit.nextAction(read());
+      if(action.target==='founderReturnInput'&&record.agreementSnapshot){
+        get('founderReturnInput').value=record.agreementSnapshot;
+        receivedStatus('Saved proposal loaded for review. Choose Review received note below. Nothing has been accepted.');
+      }
+      const target=get(action.target==='founderReturnInput'&&record.agreementSnapshot?'previewFounderReturn':action.target);let parent=target.parentElement;
+      while(parent){if(parent.tagName==='DETAILS')parent.open=true;parent=parent.parentElement;}
+      target.focus();note('Opened your saved contribution at its next step. Nothing has been changed or sent.');
+      if(window.history?.replaceState){const url=new URL(window.location.href);url.searchParams.delete('next-step');window.history.replaceState(null,'',url.pathname+url.search+url.hash);}
+    }catch(error){note('The saved task link is unavailable. Open a saved contribution here or return to My next step. Your saved work is unchanged.');}
+  }
   if(new URLSearchParams(window.location.search).get('founder-task')==='1'){
     try{const raw=sessionStorage.getItem('fb_task_interest_draft_v1');if(!raw)throw Error('No task draft is available in this tab. Open a task from project discovery to begin.');const r=window.FBTaskJourneyKit.unpack(raw);selected=null;fill(r);dirty=true;renderRecords();sessionStorage.removeItem('fb_task_interest_draft_v1');if(window.history?.replaceState){const url=new URL(window.location.href);url.searchParams.delete('founder-task');window.history.replaceState(null,'',url.pathname+url.search+url.hash);}get('taskInterestNotice').textContent='Task brief loaded as an unverified snapshot. Your interest has not been sent, no place is reserved, and nothing is saved until you choose to save.';note('Review the scope and draft your interest. Then contact the owner yourself.');get('contributionTitle').focus();}catch(e){get('taskInterestNotice').textContent='The task draft is unavailable or invalid. Your saved records are unchanged. Open a task from discovery or start a plan below.';}
   }

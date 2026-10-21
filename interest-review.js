@@ -45,4 +45,12 @@
   get('removeInterestReview').addEventListener('click',()=>{if(!selected||!canReplace())return;const record=records.find(r=>r.id===selected),next=records.filter(r=>r.id!==selected);try{localStorage.setItem(key,JSON.stringify(next));records=next;removed=record;selected=null;current=null;dirty=false;get('reviewWorkspace').hidden=true;render();note('Removed the saved local review. Undo is available until you leave.');}catch(e){note('Unable to remove the saved review.');}});
   get('undoInterestReview').addEventListener('click',()=>{if(!removed)return;if(records.length>=20){note('Open a space before restoring the review.');return;}try{const next=[removed,...records];localStorage.setItem(key,JSON.stringify(next));records=next;removed=null;render();note('Restored the saved review.');}catch(e){note('Unable to restore the saved review.');}});
   form.addEventListener('input',e=>{dirty=true;if(!['confirmed','reviewed','creditAgreed'].includes(e.target.name))['confirmed','reviewed','creditAgreed'].forEach(k=>form.elements.namedItem(k).checked=false);get('interestReviewOutput').textContent='';guide();note('Unsaved review notes. Check confirmation and sharing choices before copying.');});render();
+  if(window.location?.search&&new URLSearchParams(window.location.search).get('next-step')==='1'){
+    try{
+      const record=window.FBNextStepKit.consume(sessionStorage,'review',records);
+      selected=record.id;open(record.interest,record.review);dirty=false;render();go(kit.nextAction(read()).target);
+      note('Opened your saved founder review at its next step. Nothing has been changed or sent.');
+      if(window.history?.replaceState){const url=new URL(window.location.href);url.searchParams.delete('next-step');window.history.replaceState(null,'',url.pathname+url.search+url.hash);}
+    }catch(error){note('The saved task link is unavailable. Open a saved review here or return to My next step. Your saved work is unchanged.');}
+  }
 })();

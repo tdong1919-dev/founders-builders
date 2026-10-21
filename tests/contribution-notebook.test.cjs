@@ -1,10 +1,10 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const vm=require('node:vm');const kit=require('../contribution-kit.js');
-function setup({fail=false,saved='[]',incoming=null}={}){
- const elements={},writes=[];class E{constructor(){this.listeners={};this.children=[];this.value='';this.checked=false;this.type='text';this.textContent='';}addEventListener(k,f){this.listeners[k]=f;}append(...xs){this.children.push(...xs);}replaceChildren(){this.children=[];}setAttribute(){}focus(){}}
+function setup({fail=false,saved='[]',incoming=null,resume=null}={}){
+ const elements={},writes=[];class E{constructor(){this.listeners={};this.children=[];this.value='';this.checked=false;this.type='text';this.textContent='';}addEventListener(k,f){this.listeners[k]=f;}append(...xs){this.children.push(...xs);}replaceChildren(){this.children=[];}setAttribute(){}focus(){this.focused=true;}}
  const get=id=>elements[id]||(elements[id]=new E());const form=get('contributionForm');form.reportValidity=()=>true;
  const fields={};['title','project','skill','deliverable','collaborator','nextStep','result','evidence','credit','scope','feedback','creditAgreement','interestName','interestNote','availability','questions','agreementSnapshot','feedbackSnapshot','agreementQuestions','status','permission'].forEach(k=>fields[k]=new E());fields.permission=get('contributionPermission');fields.permission.type='checkbox';form.elements={namedItem:k=>fields[k]};form.reset=()=>Object.values(fields).forEach(f=>{f.value='';f.checked=false;});get('starterTime').value='60';
  class FormData{forEach(fn){Object.entries(fields).forEach(([k,e])=>fn(e.value,k));}}
- vm.runInNewContext(fs.readFileSync(require.resolve('../contribution-notebook.js'),'utf8'),{URLSearchParams,window:{FBContributionBackupKit:require('../contribution-backup-kit.js'),FBContributionKit:kit,FBFounderReturnKit:require('../founder-return-kit.js'),FBTaskJourneyKit:require('../task-journey-kit.js'),location:{search:incoming?'?founder-task=1':''},confirm:()=>false},document:{getElementById:get,createElement:()=>new E()},sessionStorage:{getItem:()=>incoming,removeItem(){}},localStorage:{getItem:()=>saved,setItem:(k,v)=>{if(fail)throw Error('full');writes.push(v);}},FormData,navigator:{},Date,Math});
+ vm.runInNewContext(fs.readFileSync(require.resolve('../contribution-notebook.js'),'utf8'),{URLSearchParams,window:{FBNextStepKit:require('../next-step-kit.js'),FBContributionBackupKit:require('../contribution-backup-kit.js'),FBContributionKit:kit,FBFounderReturnKit:require('../founder-return-kit.js'),FBTaskJourneyKit:require('../task-journey-kit.js'),location:{search:resume?'?next-step=1':incoming?'?founder-task=1':''},confirm:()=>false},document:{getElementById:get,createElement:()=>new E()},sessionStorage:{getItem:()=>resume||incoming,removeItem(){}},localStorage:{getItem:()=>saved,setItem:(k,v)=>{if(fail)throw Error('full');writes.push(v);}},FormData,navigator:{},Date,Math});
  return {get,fields,writes,submit:()=>form.listeners.submit({preventDefault(){}})};
 }
 test('saving is explicit and storage failure never claims to have saved a record',()=>{
@@ -80,4 +80,19 @@ test('a newly discovered task guides interest preparation before reviewing propo
  assert.equal(kit.nextAction({...r,interestName:'Contributor',interestNote:'I can help',availability:'Friday'}).target,'interestSharePermission');
  assert.equal(kit.nextAction({...r,interestName:'Contributor',availability:'Friday'}).target,'interestContribution');
  assert.equal(kit.nextAction({...r,agreementSnapshot:'Received proposal'}).target,'founderReturnInput');
+});
+
+test('My next step resumes the matching contribution at a fresh next action without saving',()=>{
+ const saved=JSON.stringify([{id:'first',title:'Another task',deliverable:'Notes',status:'planning'},{id:'chosen',title:'Fictional task',deliverable:'Three notes',status:'awaiting_feedback'}]);
+ const s=setup({saved,resume:JSON.stringify({kind:'contribution',id:'chosen',target:'untrusted'})});
+ assert.equal(s.fields.title.value,'Fictional task');assert.equal(s.fields.status.value,'awaiting_feedback');
+ assert.equal(s.get('draftFeedbackRequest').focused,true);assert.equal(s.writes.length,0);assert.equal(s.fields.permission.checked,false);
+ assert.match(s.get('contributionStatus').textContent,/Nothing has been changed or sent/);
+ const missing=setup({saved,resume:JSON.stringify({kind:'contribution',id:'removed'})});assert.equal(missing.fields.title.value,'');assert.equal(missing.writes.length,0);assert.match(missing.get('contributionStatus').textContent,/unavailable/);
+});
+test('resuming saved proposed terms prepares the stored note for explicit review without accepting it',()=>{
+ const saved=JSON.stringify([{id:'chosen',title:'Review a task',project:'Fictional project',interestName:'Student',deliverable:'Notes',status:'planning',agreementSnapshot:JSON.stringify(founderPacket())}]);
+ const s=setup({saved,resume:JSON.stringify({kind:'contribution',id:'chosen'})});
+ assert.equal(s.get('founderReturnInput').value,JSON.stringify(founderPacket()));assert.equal(s.get('previewFounderReturn').focused,true);
+ assert.equal(s.get('founderReturnAck').checked,false);assert.equal(s.get('studentTermsReviewed').checked,false);assert.equal(s.fields.status.value,'planning');assert.equal(s.writes.length,0);
 });

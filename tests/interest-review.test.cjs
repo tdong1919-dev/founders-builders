@@ -20,11 +20,11 @@ test('feedback credit requires actual reviewed work and agreed sharing without g
 test('replies require a specific response and do not automatically confirm a place',()=>{
  assert.throws(()=>kit.response(interest,{}));assert.match(kit.response(interest,{response:'Could you test this sample on Tuesday?'}),/not confirmed/);
 });
-function controller({fail=false,saved='[]'}={}){
- class E{constructor(){this.listeners={};this.children=[];this.value='';this.checked=false;this.textContent='';}addEventListener(k,fn){this.listeners[k]=fn;}append(...xs){this.children.push(...xs);}replaceChildren(){this.children=[];}setAttribute(){}focus(){}}
+function controller({fail=false,saved='[]',resume=null}={}){
+ class E{constructor(){this.listeners={};this.children=[];this.value='';this.checked=false;this.textContent='';}addEventListener(k,fn){this.listeners[k]=fn;}append(...xs){this.children.push(...xs);}replaceChildren(){this.children=[];}setAttribute(){}focus(){this.focused=true;}}
  const nodes={},fields={},writes=[],get=id=>nodes[id]||(nodes[id]=new E());const defaults=kit.normalize({});Object.keys(defaults).forEach(k=>{fields[k]=new E();fields[k].name=k;fields[k].value=typeof defaults[k]==='string'?defaults[k]:'';if(typeof defaults[k]==='boolean')fields[k].type='checkbox';});const form=get('interestReviewForm');form.elements={namedItem:k=>fields[k]};form.reset=()=>Object.values(fields).forEach(f=>{f.value='';f.checked=false;});
  class FormData{forEach(fn){Object.entries(fields).forEach(([k,f])=>fn(f.value,k));}}
- vm.runInNewContext(fs.readFileSync(require.resolve('../interest-review.js'),'utf8'),{window:{FBReviewBackupKit:require('../review-backup-kit.js'),FBInterestReviewKit:kit,confirm:()=>false},document:{getElementById:get,createElement:()=>new E()},localStorage:{getItem:()=>saved,setItem:(k,v)=>{if(fail)throw Error('Full');writes.push(v);}},FormData,navigator:{},Date,Math});return {get,fields,writes,form};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../interest-review.js'),'utf8'),{URLSearchParams,sessionStorage:{getItem:()=>resume,removeItem(){}},window:{location:{search:resume?'?next-step=1':''},FBNextStepKit:require('../next-step-kit.js'),FBReviewBackupKit:require('../review-backup-kit.js'),FBInterestReviewKit:kit,confirm:()=>false},document:{getElementById:get,createElement:()=>new E()},localStorage:{getItem:()=>saved,setItem:(k,v)=>{if(fail)throw Error('Full');writes.push(v);}},FormData,navigator:{},Date,Math});return {get,fields,writes,form};
 }
 test('opening an interest renders hostile strings literally and never saves automatically',()=>{
  const s=controller();s.get('interestPacketInput').value=JSON.stringify(kit.interestPacket({...interest,interestName:'<img src=x onerror=alert(1)>'},true));s.get('loadInterestPacket').listeners.click();assert.equal(s.writes.length,0);assert.match(s.get('interestReviewContext').textContent,/<img src=x/);assert.equal(s.get('interestReviewContext').children.length,0);assert.equal(s.fields.deliverable.value,interest.deliverable);
@@ -79,4 +79,12 @@ test('changed review backups revoke acknowledgment and failed writes preserve ex
 });
 test('review backups include only saved versions, not open edits or filtered subsets',()=>{
  const s=controller({saved:JSON.stringify([{id:'1',interest,review:{phase:'working',response:'Saved notes'}},{id:'2',interest:{...interest,interestName:'Another contributor'},review:{phase:'closed'}}])});s.get('savedInterestReviews').children[0].listeners.click();s.fields.response.value='UNSAVED PRIVATE TEXT';s.get('reviewStageFilter').value='closed';s.get('reviewStageFilter').listeners.change();s.get('prepareReviewBackup').listeners.click();const raw=s.get('reviewBackupOutput').value;assert.equal(JSON.parse(raw).records.length,2);assert.doesNotMatch(raw,/UNSAVED PRIVATE TEXT/);assert.match(raw,/Saved notes/);
+});
+
+test('My next step opens the correct founder review and feedback section without changing its stage',()=>{
+ const saved=JSON.stringify([{id:'chosen',interest,review:{phase:'working',observed:'Already reviewed notes'}}]);
+ const s=controller({saved,resume:JSON.stringify({kind:'review',id:'chosen'})});
+ assert.equal(s.fields.phase.value,'working');assert.equal(s.fields.observed.value,'Already reviewed notes');assert.equal(s.fields.observed.focused,true);assert.equal(s.get('reviewFeedback').open,true);
+ assert.equal(s.fields.reviewed.checked,false);assert.equal(s.fields.creditAgreed.checked,false);assert.equal(s.writes.length,0);
+ const wrong=controller({saved,resume:JSON.stringify({kind:'contribution',id:'chosen'})});assert.equal(wrong.get('reviewIdentity').textContent,'');assert.equal(wrong.writes.length,0);assert.match(wrong.get('interestReviewStatus').textContent,/unavailable/);
 });
