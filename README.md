@@ -123,6 +123,8 @@ deploy once no matter how many hubs get added.
 4. Copy the **Web app URL** (ends in `/exec`).
 5. Paste it into [`config.js`](config.js) as `PROFILES_API`, commit, and push.
 
+**Public/private boundary:** this endpoint serves allowlisted public directories and one-way intake for reports, event-source requests and concierge questions. Private reads and anonymous account/admin writes are denied. Owner keys and account emails are not authentication. Review [the boundary and deployment checks](docs/APPS_SCRIPT_PUBLIC_BOUNDARY.md) before updating a deployment; the local tests do not establish live security. Supabase/private shared accounts remain deferred.
+
 **When `apps-script/Code.gs` changes** (e.g. a new hub is added), update the existing
 deployment rather than creating a new one — the URL in `config.js` stays valid:
 **Deploy → Manage deployments → Edit (pencil) → Version: New → Deploy**.

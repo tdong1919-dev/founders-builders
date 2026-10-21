@@ -10,6 +10,14 @@ written for it. There is no separate "database" beyond this sheet — see the ma
 [README](../README.md#google-sheets-backend) for how the single Apps Script Web App
 routes every hub's reads/writes to the right tab via a `type` parameter.
 
+## Anonymous API boundary
+
+The sheet schema describes storage, not public access. `Code.gs` separately allowlists public entity fields and one-way private intake. Private entity reads and account/admin writes are denied before sheet access. Public reads return declared fields only, filter nonpublic/unknown statuses at the server, and omit `ownerKey`, `accountEmail`, `reportCount`, consent receipts and unknown columns. Public form contact emails remain public for existing contact workflows.
+
+Server-generated IDs/timestamps, moderation/report defaults and intake workflow states cannot be supplied by callers. Public `chapter` remains an optional classification. Other shared metadata columns remain in the sheet for compatibility but are not writable from public forms. Reports, event-source requests and concierge requests can be appended through bounded field lists, with no public reads; account, saved-item and admin-operation routes require a future authenticated implementation.
+
+Investor requests use `type: "investor"` for routing and `investorType` for the classification stored in the sheet's `type` column. A query `type=investor` with the classification in the body `type` is also supported. The default profile route, public response aliases and append receipt shape are preserved. See [boundary details](../docs/APPS_SCRIPT_PUBLIC_BOUNDARY.md).
+
 ## Conventions
 
 These apply across every entity unless a table below says otherwise:
