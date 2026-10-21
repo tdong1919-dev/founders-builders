@@ -2,6 +2,7 @@
   'use strict';
   const kit=window.FBContributionKit,key='fb_contributions_v1',get=id=>document.getElementById(id);
   const form=get('contributionForm'),status=get('contributionStatus');let records=[],selected=null,dirty=false,removed=null,receivedRaw="",replyDraft="";
+  window.FBDraftGuard?.install(()=>dirty);
   function canReplace(){return !dirty||window.confirm("Replace the unsaved form? Saved contribution records will stay on this device.");}
   function note(text){status.textContent=text;}
   function read(){const data={};new FormData(form).forEach((v,k)=>data[k]=v);data.permission=get('contributionPermission').checked;return kit.normalize(data);}

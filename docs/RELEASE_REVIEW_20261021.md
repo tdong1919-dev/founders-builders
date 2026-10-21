@@ -13,10 +13,18 @@ Production is unchanged. Supabase remains disabled and deferred. No paid service
 
 ## Verification
 
-- **125 frontend tests pass**, including a two-controller walkthrough and linked-step navigation regression. The walkthrough checks explicit interest sharing, proposal, contributor acknowledgment, confirmation draft, feedback request, actual-work/credit gates, matching feedback, preserved contributor results, completion/portfolio permission gates, and explicit saving on both sides. No real network, clipboard access, public submission, or automatic save is used.
-- **138 tests pass in a disposable combined source tree** containing this frontend plus backend PR #9. This verifies proposed compatibility without merging branches or touching production; Google APIs remain mocked.
+- **127 frontend tests pass**, including a two-controller walkthrough and linked-step navigation regression. The walkthrough checks explicit interest sharing, proposal, contributor acknowledgment, confirmation draft, feedback request, actual-work/credit gates, matching feedback, preserved contributor results, completion/portfolio permission gates, and explicit saving on both sides. No real network, clipboard access, public submission, or automatic save is used.
+- **140 tests pass in a disposable combined source tree** containing this frontend plus backend PR #9. This verifies proposed compatibility without merging branches or touching production; Google APIs remain mocked.
 - All **44 HTML pages** pass local asset/link/anchor and duplicate-ID checks. Changed JavaScript passes syntax checks; the diff passes whitespace checks. Changed CSS/notebook asset references are refreshed on the journey pages.
 - Source review confirms disabled Supabase settings with empty URL/key. Local note tools retain network/form restrictions, explicit acknowledgments, literal text rendering, and separate portfolio permission. No service-role key was added. The Sheets endpoint configuration is unchanged.
+
+## Local follow-up while Google login is unavailable
+
+The notebook, founder review desk, and task builder now register a standard browser unsaved-edit warning. It activates after form edits/imports/outlines and clears only when the form is saved successfully or explicitly reset. Failed saves retain protection. It never uploads or automatically saves contents; browser support for the prompt, especially on mobile, still needs real-browser verification. The warning does not guarantee recovery after a browser/process crash.
+
+Portfolio generation now requires recorded credit/portfolio-use terms in addition to completed work, an actual result and separate permission. This closes a direct-button bypass of the existing next-step guidance. Existing saved records remain readable; add terms before generating a new summary.
+
+Reproduce checks with `node --test tests/*.test.cjs`, `python3 scripts/check-static-pages.py`, and `git diff --check`.
 
 ## PR dependencies and release decision
 

@@ -8,7 +8,7 @@ const returns=require('../founder-return-kit.js');
 
 // Executes both real page controllers through their button/form handlers. This
 // checks UI wiring without claiming layout, clipboard permission, or Google QA.
-function page(founder=false){
+function page(founder=false,failSave=false){
   class Element{
     constructor(){this.listeners={};this.value='';this.checked=false;this.children=[];this.textContent='';this.type='text';}
     addEventListener(k,fn){this.listeners[k]=fn;}
@@ -16,6 +16,7 @@ function page(founder=false){
     replaceChildren(){this.children=[];}
     setAttribute(){} focus(){}
   }
+  const events={};
   const nodes={},get=id=>nodes[id]||(nodes[id]=new Element()),fields={},saved=[];
   const values=founder?reviews.normalize({}):contribution.normalize({});
   for(const [name,value] of Object.entries(values)){
@@ -29,19 +30,21 @@ function page(founder=false){
   class FormData{forEach(fn){Object.entries(fields).forEach(([k,f])=>fn(f.value,k));}}
   const window={FBContributionKit:contribution,FBInterestReviewKit:reviews,FBFounderReturnKit:returns,
     FBContributionBackupKit:require('../contribution-backup-kit.js'),FBReviewBackupKit:require('../review-backup-kit.js'),
-    location:{search:''},confirm:()=>false};
+    location:{search:''},confirm:()=>false,addEventListener:(name,fn)=>events[name]=fn};
+  vm.runInNewContext(fs.readFileSync(require.resolve('../draft-guard.js'),'utf8'),{window});
   vm.runInNewContext(fs.readFileSync(require.resolve(founder?'../interest-review.js':'../contribution-notebook.js'),'utf8'),{
     window,document:{getElementById:get,createElement:()=>new Element()},FormData,URLSearchParams,
-    localStorage:{getItem:()=>null,setItem:(key,value)=>saved.push(JSON.parse(value))},navigator:{},
+    localStorage:{getItem:()=>null,setItem:(key,value)=>{if(failSave)throw Error('Storage full');saved.push(JSON.parse(value));}},navigator:{},
     fetch:()=>{throw Error('Journey must not make network requests');}
   });
-  return {get,fields,saved,click:id=>get(id).listeners.click(),
+  return {get,fields,saved,warns:()=>{let prevented=false;events.beforeunload({preventDefault(){prevented=true;}});return prevented;},click:id=>get(id).listeners.click(),
     edit:(key,value)=>{fields[key].value=value;form.listeners.input({target:fields[key]});},
     submit:()=>form.listeners.submit({preventDefault(){}})};
 }
 
 test('both UI controllers carry one fictional contribution through proposal, feedback and permitted credit',()=>{
   const builder=page(),founder=page(true);
+  assert.equal(builder.warns(),false);assert.equal(founder.warns(),false);
   for(const [key,value] of Object.entries({title:'Review one sample screen',project:'Fictional project',deliverable:'Three usability notes',
     interestName:'Alex',interestNote:'I can test the sample and want to practice clear feedback',availability:'One hour Friday',status:'interest'}))builder.edit(key,value);
   assert.match(builder.get('contributionNextTitle').textContent,/Share your interest/);
@@ -76,5 +79,18 @@ test('both UI controllers carry one fictional contribution through proposal, fee
   assert.match(builder.get('contributionOutput').textContent,/Anonymized notes only/);
   assert.match(builder.get('contributionOutput').textContent,/Self-reported/);
   assert.equal(builder.saved.length,0);assert.equal(founder.saved.length,0);
+  assert.equal(builder.warns(),true);assert.equal(founder.warns(),true);
   builder.submit();founder.submit();assert.equal(builder.saved.length,1);assert.equal(founder.saved.length,1);
+  assert.equal(builder.warns(),false);assert.equal(founder.warns(),false);
+});
+
+test('failed notebook or founder saves keep unsaved-work protection active',()=>{
+ for(const founder of [false,true]){
+  const p=page(founder,true);
+  if(founder){
+   p.get('interestPacketInput').value=JSON.stringify(reviews.interestPacket({title:'Fictional task',project:'Fictional project',deliverable:'Notes',interestName:'Alex',interestNote:'I can review',availability:'Friday'},true));
+   p.click('loadInterestPacket');
+  }else{p.edit('title','Fictional task');p.edit('deliverable','Notes');}
+  p.submit();assert.equal(p.warns(),true);assert.equal(p.saved.length,0);
+ }
 });

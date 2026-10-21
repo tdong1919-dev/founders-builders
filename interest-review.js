@@ -1,6 +1,7 @@
 (function(){
   'use strict';
   const kit=window.FBInterestReviewKit,get=id=>document.getElementById(id),form=get('interestReviewForm'),key='fb_interest_reviews_v1';let records=[],selected=null,current=null,dirty=false,removed=null;
+  window.FBDraftGuard?.install(()=>dirty);
   function note(t){get('interestReviewStatus').textContent=t;}
   function read(){const r={};new FormData(form).forEach((v,k)=>r[k]=v);['confirmed','reviewed','creditAgreed'].forEach(k=>r[k]=form.elements.namedItem(k).checked);return kit.normalize(r);}
   function guide(){const action=kit.nextAction(read());get('reviewNextTitle').textContent=action.title;get('reviewNextText').textContent=action.text;get('reviewNextAction').textContent=action.button;}

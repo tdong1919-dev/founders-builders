@@ -27,11 +27,11 @@ test('malformed, missing or oversized handoff data never fills public fields',()
  assert.equal(handoff({query:'',payload:JSON.stringify({format:'fb-small-task-v1',title:'X',description:'Y'})}).fields.title.value,'');
 });
 function controller({failSave=false,failHandoff=false}={}){
- const nodes={},fields={},writes=[];let handoffData;const location={href:''};
+ const nodes={},fields={},writes=[];let handoffData,unsaved=()=>false;const location={href:''};
  const node=()=>({value:'',checked:false,textContent:'',hidden:false,listeners:{},addEventListener(k,f){this.listeners[k]=f;},focus(){}});const get=id=>nodes[id]||(nodes[id]=node());
  [...Object.keys(ready),'contributor','observed','strengths','nextStep','publicReady','reviewed','creditAgreed'].forEach(k=>{fields[k]=node();fields[k].name=k;fields[k].value=ready[k]||'';if(['publicReady','reviewed','creditAgreed'].includes(k))fields[k].type='checkbox';});const form=get('taskOfferForm');form.elements={namedItem:k=>fields[k]};
  class FormData{forEach(fn){Object.entries(fields).forEach(([k,n])=>fn(n.value,k));}}
- vm.runInNewContext(fs.readFileSync(require.resolve('../task-offer.js'),'utf8'),{window:{FBTaskOfferKit:kit,location},document:{getElementById:get},FormData,navigator:{},localStorage:{getItem:()=>null,setItem:(k,v)=>{if(failSave)throw Error();writes.push(v);},removeItem(){}},sessionStorage:{setItem:(k,v)=>{if(failHandoff)throw Error();handoffData=v;}}});return {get,fields,writes,location,handoffData:()=>handoffData};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../task-offer.js'),'utf8'),{window:{FBTaskOfferKit:kit,location,FBDraftGuard:{install:fn=>unsaved=fn}},document:{getElementById:get},FormData,navigator:{},localStorage:{getItem:()=>null,setItem:(k,v)=>{if(failSave)throw Error();writes.push(v);},removeItem(){}},sessionStorage:{setItem:(k,v)=>{if(failHandoff)throw Error();handoffData=v;}}});return {get,fields,writes,location,unsaved:()=>unsaved(),handoffData:()=>handoffData};
 }
 test('outline preserves founder edits and clears any earlier sharing/review confirmations',()=>{
  const s=controller();s.fields.project.value='My existing project';s.fields.deliverable.value='';s.fields.publicReady.checked=true;s.get('useTaskOutline').listeners.click();assert.equal(s.fields.project.value,'My existing project');assert.match(s.fields.deliverable.value,/Three annotated/);assert.equal(s.fields.publicReady.checked,false);
@@ -54,4 +54,13 @@ test('brief readiness includes every required scope field and incomplete details
 });
 test('feedback validation does not redirect the founder into unrelated unfinished offer fields',()=>{
  const s=controller();s.fields.project.value='';let focused=false;s.fields.project.focus=()=>focused=true;s.get('previewFeedback').listeners.click();assert.equal(focused,false);assert.match(s.get('taskOfferStatus').textContent,/work you reviewed/);
+});
+
+test('founder task warns after edits and outlines, clearing only after successful save',()=>{
+ const s=controller();assert.equal(s.unsaved(),false);
+ s.get('taskOfferForm').listeners.input({target:s.fields.title});assert.equal(s.unsaved(),true);
+ s.get('taskOfferForm').listeners.submit({preventDefault(){}});assert.equal(s.unsaved(),false);
+ s.get('useTaskOutline').listeners.click();assert.equal(s.unsaved(),true);
+ const failed=controller({failSave:true});failed.get('taskOfferForm').listeners.input({target:failed.fields.title});
+ failed.get('taskOfferForm').listeners.submit({preventDefault(){}});assert.equal(failed.unsaved(),true);
 });
