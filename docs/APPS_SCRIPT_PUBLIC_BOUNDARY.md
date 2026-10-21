@@ -43,6 +43,14 @@ These tests do not establish behavior in the deployed Google runtime, spreadshee
 
 ## Release steps remaining
 
+### Isolated Google runtime runner
+
+`apps-script/StagingVerification.gs` provides six real-runtime checks for private-route denial, JSONP validation, public append/read and hidden-row filtering, literal formula storage, private intake, and investor classification. It is **not run in Google yet**. The cloud browser was unavailable on 21 October 2026; all 136 local tests pass, including the runner's refusal to write to a missing, differently named, populated, or existing application workbook.
+
+To run: create a new, empty Google spreadsheet named exactly `F&B ISOLATED BOUNDARY TEST`, with one empty tab. Open its bound Apps Script editor and add the current `Code.gs` plus `StagingVerification.gs`. Run `verifyPublicBoundaryInGoogle`. Inspect Google's authorization request before granting access; the harness declares `@OnlyCurrentDoc`. Do not use the production project, deploy a web app, or change `config.js`. The runner appends fictional fixtures and PASS/FAIL results to the new workbook and never clears existing data. It intentionally refuses a second run; use a fresh workbook for each run. Review every result in `Verification`, especially literal cell readback. Passing these checks still does not verify HTTP deployment, anonymous permissions, rate limits, or authenticated access. Keep the runner out of any production script deployment.
+
+### Deployment checklist
+
 1. Review this backend diff independently of the frontend PR and verify the explicit public field lists match intended publication, especially contact emails and legacy blank-status rows.
 2. Use an isolated test sheet/deployment to verify denied private types, public-only returned columns, literal-text storage, one-way intake and unchanged profile/collab response shapes. Do not test private-route denial against production records or post fictional tasks publicly.
 3. Check the funding classification handoff and opaque-response message. Private admin/account HTTP features intentionally remain disabled until an authenticated backend exists.
