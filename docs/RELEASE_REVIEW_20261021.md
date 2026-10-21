@@ -13,8 +13,8 @@ Production is unchanged. Supabase remains disabled and deferred. No paid service
 
 ## Verification
 
-- **127 frontend tests pass**, including a two-controller walkthrough and linked-step navigation regression. The walkthrough checks explicit interest sharing, proposal, contributor acknowledgment, confirmation draft, feedback request, actual-work/credit gates, matching feedback, preserved contributor results, completion/portfolio permission gates, and explicit saving on both sides. No real network, clipboard access, public submission, or automatic save is used.
-- **140 tests pass in a disposable combined source tree** containing this frontend plus backend PR #9. This verifies proposed compatibility without merging branches or touching production; Google APIs remain mocked.
+- **132 frontend tests pass**, including a two-controller walkthrough and linked-step navigation regression. The walkthrough checks explicit interest sharing, proposal, contributor acknowledgment, confirmation draft, feedback request, actual-work/credit gates, matching feedback, preserved contributor results, completion/portfolio permission gates, and explicit saving on both sides. No real network, clipboard access, public submission, or automatic save is used.
+- **145 tests pass in a disposable combined source tree** containing this frontend plus backend PR #9. This verifies proposed compatibility without merging branches or touching production; Google APIs remain mocked.
 - All **44 HTML pages** pass local asset/link/anchor and duplicate-ID checks. Changed JavaScript passes syntax checks; the diff passes whitespace checks. Changed CSS/notebook asset references are refreshed on the journey pages.
 - Source review confirms disabled Supabase settings with empty URL/key. Local note tools retain network/form restrictions, explicit acknowledgments, literal text rendering, and separate portfolio permission. No service-role key was added. The Sheets endpoint configuration is unchanged.
 
@@ -25,6 +25,16 @@ The notebook, founder review desk, and task builder now register a standard brow
 Portfolio generation now requires recorded credit/portfolio-use terms in addition to completed work, an actual result and separate permission. This closes a direct-button bypass of the existing next-step guidance. Existing saved records remain readable; add terms before generating a new summary.
 
 Reproduce checks with `node --test tests/*.test.cjs`, `python3 scripts/check-static-pages.py`, and `git diff --check`.
+
+## Downloadable handoff notes
+
+Contributors can download a minimized interest JSON note after permission is checked. Founders import it into the review desk and open it for review, then download an agreement or feedback JSON note for the contributor. Contributors import return files into the matching notebook record and still preview, acknowledge, and explicitly add them. Copy/paste remains available. The public walkthrough explains both routes.
+
+File reads remain local. Imports use existing format/field/recipient validators, reject incorrect formats and oversized or unreadable files, discard undeclared fields, and retain the existing input on failure. No file is uploaded, auto-saved, or treated as verified identity, acceptance or credit. Failed imports and pending imports clear earlier acknowledgment/preview state. A late read cannot replace a newer selection, manual text edits or a changed notebook record. Generic download filenames exclude names and project titles; temporary blob URLs are revoked. The file picker is constrained for narrow panels in shared CSS, but its rendered desktop/mobile behavior is unverified.
+
+The two-controller journey now downloads actual JSON blobs, imports them through the file-input handlers, and follows the existing proposal/feedback/portfolio gates. Tests also verify consent prevents interest downloads, review/credit checks prevent feedback downloads, parsing preserves the legacy packets, malformed/oversized/wrong-recipient handling, stale async reads, field minimization and blob cleanup.
+
+A fresh browser inventory still returned no browsers; the desktop/mobile walkthrough cannot run. No callable Google Apps Script executor is exposed, and Google login cannot be completed while the user is remote. The guarded runtime runner remains ready in #9; no test workbook or Google execution is claimed. No production changes occurred.
 
 ## PR dependencies and release decision
 

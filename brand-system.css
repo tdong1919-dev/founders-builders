@@ -128,3 +128,8 @@ body{font-family:var(--font);color:var(--text)}
 /* Keep linked journey steps below the fixed navigation. */
 .learning-guide main [id]{scroll-margin-top:90px}
 .learning-guide .hero__cta a{white-space:normal}
+
+/* Keep native file pickers usable inside narrow contribution panels. */
+.packet-input input[type=file]{display:block;width:100%;max-width:100%;min-width:0;font:inherit;color:var(--text-secondary)}
+.packet-input input[type=file]::file-selector-button{font:inherit;padding:10px 14px;margin-right:12px;border:1px solid var(--border-2);border-radius:var(--radius-input);background:var(--white);color:var(--brand);cursor:pointer}
+.packet-input input[type=file]:focus-visible{outline:2px solid var(--brand);outline-offset:4px}
