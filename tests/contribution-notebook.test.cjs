@@ -140,3 +140,10 @@ test('stale notebook tabs preserve newer work during save, removal, restore and 
  }
  const s=setup({saved:JSON.stringify(original)});s.get('savedContributions').children[0].listeners.click();s.get('removeContribution').listeners.click();s.external(newer);s.get('undoContribution').listeners.click();assert.equal(s.stored(),newer);assert.equal(s.writes.length,1);
 });
+
+test('preparing interest guides a missing project name before the sharing step',()=>{
+ const s=setup();s.fields.title.value='A small task';s.fields.deliverable.value='Three notes';s.fields.interestName.value='Alex';s.fields.interestNote.value='I can review';s.fields.availability.value='Friday';s.fields.status.value='interest';
+ s.get('contributionForm').listeners.input({target:s.fields.status});assert.equal(s.get('contributionNextAction').textContent,'Add the project name');
+ s.get('contributionNextAction').listeners.click();assert.equal(s.get('contributionProject').focused,true);assert.equal(s.fields.status.value,'interest');assert.equal(s.writes.length,0);
+ s.fields.project.value='A permitted project';s.get('contributionForm').listeners.input({target:s.fields.project});assert.equal(s.get('contributionNextAction').textContent,'Review and copy my interest');
+});

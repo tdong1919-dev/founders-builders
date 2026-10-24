@@ -42,7 +42,7 @@ Regression tests reproduce the original truncation and partial-corruption failur
 
 ## Verification
 
-All 159 frontend tests pass. New coverage checks stage-appropriate actions, finished-work filtering, literal text rendering, one action per card, minimized session pointers, no automatic record writes, blocked storage, malformed records, refresh/history/cross-tab behavior and stale or wrong-tool pointers. Waiting-state tests check explicit stage save/reopen, backup preservation, open-review filtering, follow-up actions and unchanged download/credit gates. Actual notebook/review controller tests verify resuming the right record, current-action focus, opening feedback, prefilled saved proposals, unchanged stages and separate review/credit acknowledgment.
+All 161 frontend tests pass. New coverage checks stage-appropriate actions, finished-work filtering, literal text rendering, one action per card, minimized session pointers, no automatic record writes, blocked storage, malformed records, refresh/history/cross-tab behavior and stale or wrong-tool pointers. Waiting-state tests check explicit stage save/reopen, backup preservation, open-review filtering, follow-up actions and unchanged download/credit gates. Actual notebook/review controller tests verify resuming the right record, current-action focus, opening feedback, prefilled saved proposals, unchanged stages and separate review/credit acknowledgment.
 
 All 45 HTML pages pass local asset/link/anchor and unique-ID checks using `python3 scripts/check-static-pages.py`. Changed JavaScript syntax and diff whitespace checks pass. Desktop/mobile rendering and actual browser focus behavior remain unverified because browser automation is unavailable. No Google runtime test, production deployment or paid service was added. Supabase remains deferred.
 
@@ -57,3 +57,9 @@ This detects changes visible immediately before writing. It is not a transaction
 ## Compensation wording
 
 The founder/contributor journey, public opportunity pages, and generated briefs/agreement text explain that compensation is agreed directly between the project owner and contributor. Project owners are responsible for their offers; the platform does not set rates, process payments, guarantee payment, or resolve payment disputes. Paid, unpaid/voluntary and terms-to-discuss options remain available, with existing stored/API values and pre-start agreement requirements preserved. Feedback and portfolio credit are explicitly separate from compensation. Reporting remains available for misleading listings or misconduct without promising payment recovery or dispute resolution. This copy describes platform behavior; it does not claim a legal exemption or change any backend/payment feature.
+
+## First-use guidance
+
+A new, empty board offers two paths: plan a first contribution or prepare a founder task. Existing finished work shows a clear-list message instead, while failed storage reads show recovery guidance instead of first-visit onboarding. These choices add no records, account requirement or remembered onboarding flag. Original-tool links remain available in every state. Task action buttons include the task title in their accessible name so repeated actions are distinguishable to assistive technology.
+
+An interest draft without a project name now focuses the project field before suggesting sharing, avoiding a predictable validation dead end. Already-shared interest retains its waiting state. Tests verify first-visit visibility, finished/unavailable states, task-specific button labels and missing-project focus without saving or advancing progress. Desktop/mobile rendering and assistive-technology behavior still need real-browser review. All database work remains deferred.
