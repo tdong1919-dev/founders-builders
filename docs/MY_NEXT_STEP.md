@@ -42,9 +42,17 @@ Regression tests reproduce the original truncation and partial-corruption failur
 
 ## Verification
 
-All 153 frontend tests pass. New coverage checks stage-appropriate actions, finished-work filtering, literal text rendering, one action per card, minimized session pointers, no automatic record writes, blocked storage, malformed records, refresh/history/cross-tab behavior and stale or wrong-tool pointers. Waiting-state tests check explicit stage save/reopen, backup preservation, open-review filtering, follow-up actions and unchanged download/credit gates. Actual notebook/review controller tests verify resuming the right record, current-action focus, opening feedback, prefilled saved proposals, unchanged stages and separate review/credit acknowledgment.
+All 159 frontend tests pass. New coverage checks stage-appropriate actions, finished-work filtering, literal text rendering, one action per card, minimized session pointers, no automatic record writes, blocked storage, malformed records, refresh/history/cross-tab behavior and stale or wrong-tool pointers. Waiting-state tests check explicit stage save/reopen, backup preservation, open-review filtering, follow-up actions and unchanged download/credit gates. Actual notebook/review controller tests verify resuming the right record, current-action focus, opening feedback, prefilled saved proposals, unchanged stages and separate review/credit acknowledgment.
 
 All 45 HTML pages pass local asset/link/anchor and unique-ID checks using `python3 scripts/check-static-pages.py`. Changed JavaScript syntax and diff whitespace checks pass. Desktop/mobile rendering and actual browser focus behavior remain unverified because browser automation is unavailable. No Google runtime test, production deployment or paid service was added. Supabase remains deferred.
+
+## Stale-tab protection
+
+The contribution notebook, founder review desk and founder task builder capture the original saved value when opened. Before an explicit save, removal, restore or undo, they compare it with the current saved value. If another tab has changed it, the write is blocked and a persistent notice explains how to copy unsaved notes before reloading. Open forms, consent choices and newer saved records are not replaced. Successful operations update the local baseline; failed storage operations leave it intact so a later retry is possible.
+
+Regression tests exercise stale saves, removals, backup restores and undo in the actual page controllers, plus repeated successful writes and failed-write retries in the shared storage adapter. The fixtures now model real storage updates rather than returning the initial value forever.
+
+This detects changes visible immediately before writing. It is not a transactional database lock and cannot guarantee resolution of simultaneous writes from independent browser contexts. Real cross-tab/browser behavior still needs a rendered walkthrough. It adds no network calls, sync or database dependency; all database work remains deferred.
 
 ## Compensation wording
 

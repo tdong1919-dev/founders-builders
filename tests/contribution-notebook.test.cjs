@@ -4,8 +4,8 @@ function setup({fail=false,saved='[]',incoming=null,resume=null}={}){
  const get=id=>elements[id]||(elements[id]=new E());const form=get('contributionForm');form.reportValidity=()=>true;
  const fields={};['title','project','skill','deliverable','collaborator','nextStep','result','evidence','credit','scope','feedback','creditAgreement','interestName','interestNote','availability','questions','agreementSnapshot','feedbackSnapshot','agreementQuestions','status','permission'].forEach(k=>fields[k]=new E());fields.permission=get('contributionPermission');fields.permission.type='checkbox';form.elements={namedItem:k=>fields[k]};form.reset=()=>Object.values(fields).forEach(f=>{f.value='';f.checked=false;});get('starterTime').value='60';
  class FormData{forEach(fn){Object.entries(fields).forEach(([k,e])=>fn(e.value,k));}}
- vm.runInNewContext(fs.readFileSync(require.resolve('../contribution-notebook.js'),'utf8'),{URLSearchParams,window:{FBNextStepKit:require('../next-step-kit.js'),FBContributionBackupKit:require('../contribution-backup-kit.js'),FBContributionKit:kit,FBFounderReturnKit:require('../founder-return-kit.js'),FBTaskJourneyKit:require('../task-journey-kit.js'),location:{search:resume?'?next-step=1':incoming?'?founder-task=1':''},confirm:()=>false},document:{getElementById:get,createElement:()=>new E()},sessionStorage:{getItem:()=>resume||incoming,removeItem(){}},localStorage:{getItem:()=>saved,setItem:(k,v)=>{if(fail)throw Error('full');writes.push(v);}},FormData,navigator:{},Date,Math});
- return {get,fields,writes,submit:()=>form.listeners.submit({preventDefault(){}})};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../contribution-notebook.js'),'utf8'),{URLSearchParams,window:{FBLocalWorkStore:require('../local-work-store.js'),FBNextStepKit:require('../next-step-kit.js'),FBContributionBackupKit:require('../contribution-backup-kit.js'),FBContributionKit:kit,FBFounderReturnKit:require('../founder-return-kit.js'),FBTaskJourneyKit:require('../task-journey-kit.js'),location:{search:resume?'?next-step=1':incoming?'?founder-task=1':''},confirm:()=>false},document:{getElementById:get,createElement:()=>new E()},sessionStorage:{getItem:()=>resume||incoming,removeItem(){}},localStorage:{getItem:()=>saved,setItem:(k,v)=>{if(fail)throw Error('full');writes.push(v);saved=v;}},FormData,navigator:{},Date,Math});
+ return {get,fields,writes,external:value=>saved=value,stored:()=>saved,submit:()=>form.listeners.submit({preventDefault(){}})};
 }
 test('saving is explicit and storage failure never claims to have saved a record',()=>{
  const a=setup();assert.equal(a.writes.length,0);a.fields.title.value='A task';a.fields.deliverable.value='A short summary';a.submit();assert.equal(a.writes.length,1);assert.match(a.get('contributionStatus').textContent,/Saved on this device only/);
@@ -124,4 +124,19 @@ test('malformed saved notebook records remain untouched while valid records can 
  s.get('prepareNotebookBackup').listeners.click();assert.match(s.get('notebookBackupStatus').textContent,/not a complete backup/);assert.equal(JSON.parse(s.get('notebookBackupOutput').value).records.length,1);
  s.submit();assert.equal(s.writes.length,0);s.get('removeContribution').listeners.click();assert.equal(s.writes.length,0);
  s.get('notebookBackupInput').value=require('../contribution-backup-kit.js').pack([{title:'New task',deliverable:'Notes',status:'planning'}]);s.get('reviewNotebookBackup').listeners.click();s.get('notebookBackupAck').checked=true;s.get('restoreNotebookBackup').listeners.click();assert.equal(s.writes.length,0);assert.match(s.get('notebookBackupStatus').textContent,/recovery/);
+});
+
+test('stale notebook tabs preserve newer work during save, removal, restore and undo',()=>{
+ const original=[{id:'c',title:'Original task',deliverable:'Notes',status:'planning'}];
+ const newer=JSON.stringify([{...original[0],title:'Newer task'}]);
+ for(const action of ['save','remove','restore']){
+  const s=setup({saved:JSON.stringify(original)});s.get('savedContributions').children[0].listeners.click();s.fields.result.value='My open reflection';s.external(newer);
+  if(action==='save')s.submit();
+  if(action==='remove')s.get('removeContribution').listeners.click();
+  if(action==='restore'){
+   s.get('notebookBackupInput').value=require('../contribution-backup-kit.js').pack([{title:'Incoming',deliverable:'Notes',status:'planning'}]);s.get('reviewNotebookBackup').listeners.click();s.get('notebookBackupAck').checked=true;s.get('restoreNotebookBackup').listeners.click();
+  }
+  assert.equal(s.stored(),newer);assert.equal(s.writes.length,0);assert.equal(s.fields.result.value,'My open reflection');assert.match(s.get('contributionStorageNotice').textContent,/another tab/);
+ }
+ const s=setup({saved:JSON.stringify(original)});s.get('savedContributions').children[0].listeners.click();s.get('removeContribution').listeners.click();s.external(newer);s.get('undoContribution').listeners.click();assert.equal(s.stored(),newer);assert.equal(s.writes.length,1);
 });

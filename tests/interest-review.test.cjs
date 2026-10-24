@@ -24,7 +24,7 @@ function controller({fail=false,saved='[]',resume=null}={}){
  class E{constructor(){this.listeners={};this.children=[];this.value='';this.checked=false;this.textContent='';}addEventListener(k,fn){this.listeners[k]=fn;}append(...xs){this.children.push(...xs);}replaceChildren(){this.children=[];}setAttribute(){}focus(){this.focused=true;}}
  const nodes={},fields={},writes=[],get=id=>nodes[id]||(nodes[id]=new E());const defaults=kit.normalize({});Object.keys(defaults).forEach(k=>{fields[k]=new E();fields[k].name=k;fields[k].value=typeof defaults[k]==='string'?defaults[k]:'';if(typeof defaults[k]==='boolean')fields[k].type='checkbox';});const form=get('interestReviewForm');form.elements={namedItem:k=>fields[k]};form.reset=()=>Object.values(fields).forEach(f=>{f.value='';f.checked=false;});
  class FormData{forEach(fn){Object.entries(fields).forEach(([k,f])=>fn(f.value,k));}}
- vm.runInNewContext(fs.readFileSync(require.resolve('../interest-review.js'),'utf8'),{URLSearchParams,sessionStorage:{getItem:()=>resume,removeItem(){}},window:{location:{search:resume?'?next-step=1':''},FBNextStepKit:require('../next-step-kit.js'),FBReviewBackupKit:require('../review-backup-kit.js'),FBInterestReviewKit:kit,confirm:()=>false},document:{getElementById:get,createElement:()=>new E()},localStorage:{getItem:()=>saved,setItem:(k,v)=>{if(fail)throw Error('Full');writes.push(v);}},FormData,navigator:{},Date,Math});return {get,fields,writes,form};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../interest-review.js'),'utf8'),{URLSearchParams,sessionStorage:{getItem:()=>resume,removeItem(){}},window:{location:{search:resume?'?next-step=1':''},FBLocalWorkStore:require('../local-work-store.js'),FBNextStepKit:require('../next-step-kit.js'),FBReviewBackupKit:require('../review-backup-kit.js'),FBInterestReviewKit:kit,confirm:()=>false},document:{getElementById:get,createElement:()=>new E()},localStorage:{getItem:()=>saved,setItem:(k,v)=>{if(fail)throw Error('Full');writes.push(v);saved=v;}},FormData,navigator:{},Date,Math});return {get,fields,writes,form,external:value=>saved=value,stored:()=>saved};
 }
 test('opening an interest renders hostile strings literally and never saves automatically',()=>{
  const s=controller();s.get('interestPacketInput').value=JSON.stringify(kit.interestPacket({...interest,interestName:'<img src=x onerror=alert(1)>'},true));s.get('loadInterestPacket').listeners.click();assert.equal(s.writes.length,0);assert.match(s.get('interestReviewContext').textContent,/<img src=x/);assert.equal(s.get('interestReviewContext').children.length,0);assert.equal(s.fields.deliverable.value,interest.deliverable);
@@ -111,4 +111,19 @@ test('one malformed saved founder review cannot hide valid work or permit overwr
 
 test('interest export refuses an encoded snapshot too large for the receiving review desk',()=>{
  assert.throws(()=>kit.interestPacket({...interest,scope:'\\'.repeat(12000)},true),/too large to share/);
+});
+
+test('stale founder review tabs cannot save, remove, restore or undo over newer work',()=>{
+ const original=[{id:'r',interest,review:{phase:'terms_proposed'}}];
+ const newer=JSON.stringify([{...original[0],review:{phase:'feedback_shared'}}]);
+ for(const action of ['save','remove','restore']){
+  const s=controller({saved:JSON.stringify(original)});s.get('savedInterestReviews').children[0].listeners.click();s.fields.response.value='My open reply';s.external(newer);
+  if(action==='save')s.form.listeners.submit({preventDefault(){}});
+  if(action==='remove')s.get('removeInterestReview').listeners.click();
+  if(action==='restore'){
+   s.get('reviewBackupInput').value=require('../review-backup-kit.js').pack([{interest:{...interest,interestName:'Another contributor'},review:{phase:'reviewing'}}]);s.get('previewReviewBackup').listeners.click();s.get('reviewBackupAck').checked=true;s.get('restoreReviewBackup').listeners.click();
+  }
+  assert.equal(s.stored(),newer);assert.equal(s.writes.length,0);assert.equal(s.fields.response.value,'My open reply');assert.match(s.get('reviewStorageNotice').textContent,/another tab/);
+ }
+ const s=controller({saved:JSON.stringify(original)});s.get('savedInterestReviews').children[0].listeners.click();s.get('removeInterestReview').listeners.click();s.external(newer);s.get('undoInterestReview').listeners.click();assert.equal(s.stored(),newer);assert.equal(s.writes.length,1);
 });

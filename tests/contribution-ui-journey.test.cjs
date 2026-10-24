@@ -16,7 +16,7 @@ function page(founder=false,failSave=false){
     replaceChildren(){this.children=[];}
     setAttribute(){} focus(){} click(){this.listeners.click?.();} remove(){}
   }
-  const events={},downloads=[];
+  const events={},downloads=[];let stored=null;
   const nodes={},get=id=>nodes[id]||(nodes[id]=new Element()),fields={},saved=[];
   const values=founder?reviews.normalize({}):contribution.normalize({});
   for(const [name,value] of Object.entries(values)){
@@ -28,14 +28,14 @@ function page(founder=false,failSave=false){
   form.elements={namedItem:name=>fields[name]};form.reportValidity=()=>true;
   form.reset=()=>Object.values(fields).forEach(f=>{f.value='';f.checked=false;});
   class FormData{forEach(fn){Object.entries(fields).forEach(([k,f])=>fn(f.value,k));}}
-  const window={FBNextStepKit:require('../next-step-kit.js'),FBContributionKit:contribution,FBInterestReviewKit:reviews,FBFounderReturnKit:returns,
+  const window={FBLocalWorkStore:require('../local-work-store.js'),FBNextStepKit:require('../next-step-kit.js'),FBContributionKit:contribution,FBInterestReviewKit:reviews,FBFounderReturnKit:returns,
     FBContributionBackupKit:require('../contribution-backup-kit.js'),FBReviewBackupKit:require('../review-backup-kit.js'),
     Blob,URL:{createObjectURL:blob=>{downloads.push(blob);return 'blob:test';},revokeObjectURL(){}},setTimeout:fn=>fn(),location:{search:''},confirm:()=>false,addEventListener:(name,fn)=>events[name]=fn};
   vm.runInNewContext(fs.readFileSync(require.resolve('../draft-guard.js'),'utf8'),{window});
   vm.runInNewContext(fs.readFileSync(require.resolve('../handoff-files.js'),'utf8'),{window});
   vm.runInNewContext(fs.readFileSync(require.resolve(founder?'../interest-review.js':'../contribution-notebook.js'),'utf8'),{
     window,document:(window.document={getElementById:get,createElement:()=>new Element(),body:{append(){}}}),FormData,URLSearchParams,
-    localStorage:{getItem:()=>null,setItem:(key,value)=>{if(failSave)throw Error('Storage full');saved.push(JSON.parse(value));}},navigator:{},
+    localStorage:{getItem:()=>stored,setItem:(key,value)=>{if(failSave)throw Error('Storage full');saved.push(JSON.parse(value));stored=value;}},navigator:{},
     fetch:()=>{throw Error('Journey must not make network requests');}
   });
   return {get,fields,saved,downloads,warns:()=>{let prevented=false;events.beforeunload({preventDefault(){prevented=true;}});return prevented;},click:id=>get(id).listeners.click(),
