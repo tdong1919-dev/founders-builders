@@ -42,7 +42,7 @@ Regression tests reproduce the original truncation and partial-corruption failur
 
 ## Verification
 
-All 161 frontend tests pass. New coverage checks stage-appropriate actions, finished-work filtering, literal text rendering, one action per card, minimized session pointers, no automatic record writes, blocked storage, malformed records, refresh/history/cross-tab behavior and stale or wrong-tool pointers. Waiting-state tests check explicit stage save/reopen, backup preservation, open-review filtering, follow-up actions and unchanged download/credit gates. Actual notebook/review controller tests verify resuming the right record, current-action focus, opening feedback, prefilled saved proposals, unchanged stages and separate review/credit acknowledgment.
+All 165 frontend tests pass. New coverage checks stage-appropriate actions, finished-work filtering, literal text rendering, one action per card, minimized session pointers, no automatic record writes, blocked storage, malformed records, refresh/history/cross-tab behavior and stale or wrong-tool pointers. Waiting-state tests check explicit stage save/reopen, backup preservation, open-review filtering, follow-up actions and unchanged download/credit gates. Actual notebook/review controller tests verify resuming the right record, current-action focus, opening feedback, prefilled saved proposals, unchanged stages and separate review/credit acknowledgment.
 
 All 45 HTML pages pass local asset/link/anchor and unique-ID checks using `python3 scripts/check-static-pages.py`. Changed JavaScript syntax and diff whitespace checks pass. Desktop/mobile rendering and actual browser focus behavior remain unverified because browser automation is unavailable. No Google runtime test, production deployment or paid service was added. Supabase remains deferred.
 
@@ -63,3 +63,11 @@ The founder/contributor journey, public opportunity pages, and generated briefs/
 A new, empty board offers two paths: plan a first contribution or prepare a founder task. Existing finished work shows a clear-list message instead, while failed storage reads show recovery guidance instead of first-visit onboarding. These choices add no records, account requirement or remembered onboarding flag. Original-tool links remain available in every state. Task action buttons include the task title in their accessible name so repeated actions are distinguishable to assistive technology.
 
 An interest draft without a project name now focuses the project field before suggesting sharing, avoiding a predictable validation dead end. Already-shared interest retains its waiting state. Tests verify first-visit visibility, finished/unavailable states, task-specific button labels and missing-project focus without saving or advancing progress. Desktop/mobile rendering and assistive-technology behavior still need real-browser review. All database work remains deferred.
+
+## Relationship follow-up drafts
+
+The notebook's existing check-in section offers optional draft/copy controls while interest is shared or work is delivered. The draft asks for a next step or feedback without asserting an overdue deadline, guaranteeing an outcome or embedding private results, scope, feedback history or credit terms. Use the timing and channel agreed directly with the other person; no reminders are scheduled.
+
+The founder desk offers an optional closing-conversation draft after feedback is explicitly marked shared. It invites questions and a discussion about staying in touch. It does not close the review, verify work, grant portfolio permission or alter compensation. The user still chooses the Closed stage and saves when appropriate.
+
+Both controls live inside existing expandable sections. Preparing or copying a draft does not save, send, or change a stage. Stage guards remain active even if a hidden control is invoked. New tests cover draft minimization, appropriate stage visibility, unchanged progress/permissions, rejection outside waiting/feedback-shared stages, and exclusion of private note history. Rendered browser behavior remains unverified. No database or external messaging service is involved.

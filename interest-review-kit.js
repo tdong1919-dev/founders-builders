@@ -21,5 +21,9 @@
     if(r.phase==='closed')return {title:'Keep a useful record',text:'This review is marked closed in your local notes. Reopen a conversation only if useful; the tools below remain available.',target:'reviewReply',button:'Review the conversation'};
     return {title:'Start with one useful conversation',text:'Recognize what they can bring and clarify fit or availability. You can also move directly to proposing terms when the details are clear.',target:'reviewReply',button:'Clarify interest'};
   }
-  const api={interestPacket,parseInterest,normalize,response,agreement,feedback,scopeTemplate,nextAction,phaseLabel,filterReviews};if(typeof module==='object'&&module.exports)module.exports=api;else root.FBInterestReviewKit=api;
+  function closingReply(interest,input){
+    if(normalize(input).phase!=='feedback_shared')throw Error('Record feedback shared before preparing the closing conversation.');
+    return 'Closing conversation draft · not sent\n\nHi '+interest.interestName+',\n\nThank you for contributing to '+interest.title+' for '+interest.project+'. Do you have any questions about the feedback or the portfolio use we discussed?\n\nIf it would be useful, I would be happy to discuss a next step or staying in touch.\n\nReview this draft before sharing directly. Preparing it does not close the review, verify the work, or grant portfolio permission.';
+  }
+  const api={interestPacket,parseInterest,normalize,response,agreement,feedback,scopeTemplate,nextAction,phaseLabel,filterReviews,closingReply};if(typeof module==='object'&&module.exports)module.exports=api;else root.FBInterestReviewKit=api;
 })(typeof window==='undefined'?{}:window);

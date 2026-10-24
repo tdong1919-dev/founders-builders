@@ -147,3 +147,12 @@ test('preparing interest guides a missing project name before the sharing step',
  s.get('contributionNextAction').listeners.click();assert.equal(s.get('contributionProject').focused,true);assert.equal(s.fields.status.value,'interest');assert.equal(s.writes.length,0);
  s.fields.project.value='A permitted project';s.get('contributionForm').listeners.input({target:s.fields.project});assert.equal(s.get('contributionNextAction').textContent,'Review and copy my interest');
 });
+
+test('check-in controls appear only while waiting and drafts preserve notes, permissions and progress',()=>{
+ const s=setup();assert.equal(s.get('waitingCheckInActions').hidden,true);s.fields.title.value='Fictional task';s.fields.deliverable.value='Notes';s.fields.result.value='My result';
+ for(const status of ['interest_shared','work_delivered']){
+  s.fields.status.value=status;s.get('contributionForm').listeners.input({target:s.fields.status});assert.equal(s.get('waitingCheckInActions').hidden,false);
+  s.get('previewWaitingCheckIn').listeners.click();assert.match(s.get('contributionOutput').textContent,/not sent/);assert.equal(s.fields.status.value,status);assert.equal(s.fields.result.value,'My result');assert.equal(s.fields.permission.checked,false);assert.equal(s.writes.length,0);
+ }
+ s.fields.status.value='completed';s.get('contributionForm').listeners.input({target:s.fields.status});assert.equal(s.get('waitingCheckInActions').hidden,true);s.get('previewWaitingCheckIn').listeners.click();assert.equal(s.get('contributionOutput').textContent,'');assert.equal(s.writes.length,0);
+});

@@ -48,6 +48,15 @@
     if(r.agreementSnapshot)return {title:'Agree the details before starting',text:'Discuss scope, timing, compensation, support, ownership and credit directly. If the founder shared a return note, review it here before drafting your reply.',target:'founderReturnInput',button:'Review a founder’s terms'};
     return {title:'Start a useful conversation',text:'Introduce the contribution you can make and what you hope to practice. Review your note, then contact the owner yourself.',target:'interestAvailability',button:'Prepare my interest'};
   }
-  const api={tasks,normalize,validate,filterTasks,message,summary,statusLabel,feedbackRequest,nextAction};
+  function checkIn(input){
+    const r=normalize(input),error=validate(r);if(error)throw Error(error);
+    if(!['interest_shared','work_delivered'].includes(r.status))throw Error('Record interest shared or work delivered before preparing a waiting-stage check-in.');
+    const context=r.title+(r.project?' for '+r.project:'');
+    return 'Check-in draft · not sent\n\nHi'+(r.collaborator?' '+r.collaborator:'')+',\n\n'+
+      (r.status==='interest_shared'?'I wanted to check in about '+context+'. Is there a useful next step, or anything you would like me to clarify? No rush if you are still reviewing interest.':
+      'Could we arrange the feedback check-in for '+context+' when convenient? I would appreciate hearing what helped, what I could improve, and which details we agree I may show in a portfolio.')+
+      '\n\nThank you.\n\nReview the timing and recipient before sharing directly. This draft does not send a reminder or change progress.';
+  }
+  const api={tasks,normalize,validate,filterTasks,message,summary,statusLabel,feedbackRequest,nextAction,checkIn};
   if(typeof module==='object'&&module.exports)module.exports=api;else root.FBContributionKit=api;
 })(typeof window==='undefined'?{}:window);

@@ -127,3 +127,10 @@ test('stale founder review tabs cannot save, remove, restore or undo over newer 
  }
  const s=controller({saved:JSON.stringify(original)});s.get('savedInterestReviews').children[0].listeners.click();s.get('removeInterestReview').listeners.click();s.external(newer);s.get('undoInterestReview').listeners.click();assert.equal(s.stored(),newer);assert.equal(s.writes.length,1);
 });
+
+test('closing draft controls require feedback-shared stage and never close or save the review',()=>{
+ const s=controller();s.get('interestPacketInput').value=JSON.stringify(kit.interestPacket(interest,true));s.get('loadInterestPacket').listeners.click();assert.equal(s.get('closingReplyActions').hidden,true);
+ s.fields.phase.value='feedback_shared';s.form.listeners.input({target:s.fields.phase});assert.equal(s.get('closingReplyActions').hidden,false);
+ s.get('previewReviewclosingReply').listeners.click();assert.match(s.get('interestReviewOutput').textContent,/Closing conversation draft/);assert.equal(s.fields.phase.value,'feedback_shared');assert.equal(s.fields.reviewed.checked,false);assert.equal(s.fields.creditAgreed.checked,false);assert.equal(s.writes.length,0);
+ s.fields.phase.value='closed';s.form.listeners.input({target:s.fields.phase});assert.equal(s.get('closingReplyActions').hidden,true);s.get('previewReviewclosingReply').listeners.click();assert.equal(s.get('interestReviewOutput').textContent,'');assert.equal(s.writes.length,0);
+});
