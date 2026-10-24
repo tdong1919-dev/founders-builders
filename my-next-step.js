@@ -10,20 +10,25 @@
   function element(tag,text,cls){const node=document.createElement(tag);node.textContent=text;if(cls)node.className=cls;return node;}
   function render(){
     const box=get('nextStepCards');box.replaceChildren();
-    const list=kit.items(contributions,reviews,get('includeFinishedWork').checked),all=kit.items(contributions,reviews,true);
-    const completed=all.filter(item=>item.kind==='contribution'&&item.closed);
+    const query=get('nextStepSearch').value||'',searching=!!query.trim(),visible=kit.items(contributions,reviews,get('includeFinishedWork').checked),all=kit.items(contributions,reviews,true);
+    const list=kit.filterItems(visible,query),allCompleted=all.filter(item=>item.kind==='contribution'&&item.closed),completed=kit.filterItems(allCompleted,query);
+    get('nextStepSearch').disabled=!all.length;get('clearNextStepSearch').hidden=!searching;
     const finishedMessage=completed.length?'Completed contributions are available in the work-and-credit section below. Include finished work above to revisit closed founder reviews too.':'Closed founder reviews stay saved in your local review desk. Include finished work above to revisit them.';
-    get('nextStepCount').textContent=list.length+' saved '+(list.length===1?'task':'tasks')+' shown · '+all.filter(item=>!item.closed).length+' active';
+    get('nextStepCount').textContent=list.length+' of '+visible.length+' saved '+(visible.length===1?'task':'tasks')+' shown · '+all.filter(item=>!item.closed).length+' active overall';
     get('nextStepWarning').textContent=warnings.join(' ');
     get('nextStepEmpty').hidden=!!list.length;
     const firstVisit=!all.length&&!warnings.length;
     get('nextStepStartPaths').hidden=!firstVisit;
     get('nextStepEmptyTitle').textContent=warnings.length?'Your saved work could not be fully loaded.':all.length?'Your active list is clear.':'Your next step starts with one small task.';
     get('nextStepEmptyText').textContent=warnings.length?'Your saved copies have not been changed. Use the notebook or founder desk links below to review readable work and recovery guidance.':all.length?finishedMessage:'Choose a place to start. Saved contributions and founder reviews will appear here on this device. No account is needed for these local tools; nothing is sent automatically.';
+    if(searching&&all.length&&!list.length){
+      get('nextStepEmptyTitle').textContent=completed.length&&!get('includeFinishedWork').checked?'No active tasks match this search.':'No saved tasks match this view.';
+      get('nextStepEmptyText').textContent=completed.length&&!get('includeFinishedWork').checked?'Matching completed contributions are in the work-and-credit section below.':'Try another task, project, collaborator or stage, clear the search, or include finished work. Your saved records have not changed.';
+    }
     for(const item of list)box.append(taskCard(item));
     const finished=get('completedWorkCards');finished.replaceChildren();
     get('completedWorkSection').hidden=!completed.length||get('includeFinishedWork').checked;
-    get('completedWorkSummary').textContent=completed.length+' completed '+(completed.length===1?'contribution':'contributions')+' · review work and credit';
+    get('completedWorkSummary').textContent=completed.length+' of '+allCompleted.length+' completed '+(allCompleted.length===1?'contribution':'contributions')+' · review work and credit';
     if(!get('includeFinishedWork').checked)for(const item of completed)finished.append(taskCard(item));
   }
   function taskCard(item){
@@ -38,6 +43,8 @@
       });
       card.append(button);return card;
   }
+  get('nextStepSearch').addEventListener('input',render);
+  get('clearNextStepSearch').addEventListener('click',()=>{get('nextStepSearch').value='';render();get('nextStepSearch').focus();});
   get('includeFinishedWork').addEventListener('change',render);
   get('refreshNextSteps').addEventListener('click',refresh);
   window.addEventListener('storage',event=>{if(event.key===null||['fb_contributions_v1','fb_interest_reviews_v1'].includes(event.key))refresh();});

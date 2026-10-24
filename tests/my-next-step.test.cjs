@@ -32,7 +32,7 @@ test('one-time resume pointers cannot choose another tool or a removed record',(
 });
 function board({blocked=false,sessionBlocked=false,cs=[],rs=[]}={}){
  const nodes={},events={},writes=[],reads=[];
- class E{constructor(){this.textContent='';this.children=[];this.listeners={};this.checked=false;this.attributes={};}setAttribute(k,v){this.attributes[k]=v;}append(...v){this.children.push(...v);}replaceChildren(){this.children=[];}addEventListener(k,fn){this.listeners[k]=fn;}}
+ class E{constructor(){this.textContent='';this.children=[];this.listeners={};this.checked=false;this.attributes={};}focus(){this.focused=true;}setAttribute(k,v){this.attributes[k]=v;}append(...v){this.children.push(...v);}replaceChildren(){this.children=[];}addEventListener(k,fn){this.listeners[k]=fn;}}
  const get=id=>nodes[id]||(nodes[id]=new E());const stored={fb_contributions_v1:JSON.stringify(cs),fb_interest_reviews_v1:JSON.stringify(rs)};
  const location={href:''};
  vm.runInNewContext(fs.readFileSync(require.resolve('../my-next-step.js'),'utf8'),{window:{FBNextStepKit:kit,location,addEventListener:(k,fn)=>events[k]=fn},document:{getElementById:get,createElement:()=>new E()},
@@ -84,4 +84,24 @@ test('including finished work moves completed cards into the main list without d
  s.get('includeFinishedWork').checked=true;s.get('includeFinishedWork').listeners.change();assert.equal(s.get('completedWorkSection').hidden,true);assert.equal(s.get('completedWorkCards').children.length,0);assert.equal(s.get('nextStepCards').children.length,3);
  s.get('includeFinishedWork').checked=false;s.get('includeFinishedWork').listeners.change();assert.equal(s.get('nextStepCards').children.length,1);assert.equal(s.get('completedWorkCards').children.length,1);assert.equal(s.writes.length,0);
  const founder=board({rs:[review('r','closed')]});assert.equal(founder.get('completedWorkSection').hidden,true);assert.match(founder.get('nextStepEmptyText').textContent,/Closed founder reviews/);
+});
+
+test('saved-work search matches only visible task metadata and bounds the query',()=>{
+ const records=[{title:'Review a screen',project:'Atlas',person:'Sam',stage:'Waiting for feedback',result:'PRIVATE RESULT',feedback:'PRIVATE FEEDBACK',scope:'PRIVATE SCOPE'},{title:'Write a guide',project:'Beacon',person:'Alex',stage:'Work underway'}];
+ const before=JSON.stringify(records);assert.equal(kit.filterItems(records,' SAM atlas ').length,1);assert.equal(kit.filterItems(records,'feedback waiting')[0].project,'Atlas');
+ assert.equal(kit.filterItems(records,'PRIVATE').length,0);assert.equal(kit.filterItems(records,'[script]').length,0);assert.equal(kit.filterItems(records,'').length,2);assert.equal(JSON.stringify(records),before);
+ assert.equal(kit.filterItems(records,'Atlas'+' '.repeat(155)+'Beacon').length,1);
+});
+test('search filters active work locally, preserves queries on refresh, and clears without record writes',()=>{
+ const s=board({cs:[contribution('c','work_delivered',{title:'Review a screen',project:'Atlas',collaborator:'Sam',result:'PRIVATE RESULT'})],rs:[{...review('r','working'),interest:{...interest,title:'Write a guide',project:'Beacon',interestName:'Alex'}}]});
+ s.get('nextStepSearch').value='SAM ATLAS';s.get('nextStepSearch').listeners.input();assert.equal(s.get('nextStepCards').children.length,1);assert.equal(s.get('nextStepCards').children[0].children[1].textContent,'Review a screen');assert.equal(s.reads.length,2);
+ s.events.pageshow();assert.equal(s.get('nextStepSearch').value,'SAM ATLAS');assert.equal(s.get('nextStepCards').children.length,1);
+ s.get('nextStepSearch').value='PRIVATE RESULT';s.get('nextStepSearch').listeners.input();assert.equal(s.get('nextStepCards').children.length,0);assert.match(s.get('nextStepEmptyTitle').textContent,/No saved tasks match/);assert.equal(s.get('nextStepStartPaths').hidden,true);
+ s.get('clearNextStepSearch').listeners.click();assert.equal(s.get('nextStepSearch').value,'');assert.equal(s.get('nextStepSearch').focused,true);assert.equal(s.get('nextStepCards').children.length,2);assert.equal(s.writes.length,0);assert.equal(s.location.href,'');
+});
+test('search covers completed work without duplicates and distinguishes its matches from active work',()=>{
+ const s=board({cs:[contribution('a','interest',{title:'Active task'}),contribution('d','completed',{title:'Finished notes',project:'Atlas'})]});
+ s.get('nextStepSearch').value='Finished';s.get('nextStepSearch').listeners.input();assert.equal(s.get('nextStepCards').children.length,0);assert.equal(s.get('completedWorkCards').children.length,1);assert.match(s.get('nextStepEmptyText').textContent,/Matching completed/);assert.match(s.get('completedWorkSummary').textContent,/1 of 1/);
+ s.get('includeFinishedWork').checked=true;s.get('includeFinishedWork').listeners.change();assert.equal(s.get('nextStepCards').children.length,1);assert.equal(s.get('completedWorkCards').children.length,0);assert.equal(s.get('nextStepSearch').value,'Finished');assert.equal(s.writes.length,0);
+ const empty=board();assert.equal(empty.get('nextStepSearch').disabled,true);assert.equal(empty.get('clearNextStepSearch').hidden,true);
 });

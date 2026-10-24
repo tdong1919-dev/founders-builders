@@ -30,9 +30,16 @@
   }
   function items(savedContributions,savedReviews,includeClosed){
     return [
-      ...savedContributions.filter(r=>includeClosed||r.status!=='completed').map(r=>({kind:'contribution',id:r.id,title:r.title,project:r.project,person:'',stage:contributions.statusLabel(r.status),closed:r.status==='completed',action:contributions.nextAction(r)})),
+      ...savedContributions.filter(r=>includeClosed||r.status!=='completed').map(r=>({kind:'contribution',id:r.id,title:r.title,project:r.project,person:r.collaborator||'',stage:contributions.statusLabel(r.status),closed:r.status==='completed',action:contributions.nextAction(r)})),
       ...savedReviews.filter(r=>includeClosed||r.review.phase!=='closed').map(r=>({kind:'review',id:r.id,title:r.interest.title,project:r.interest.project,person:r.interest.interestName,stage:reviews.phaseLabel(r.review.phase),closed:r.review.phase==='closed',action:reviews.nextAction(r.review)}))
     ];
+  }
+  function filterItems(items,query){
+    const terms=String(query||'').trim().slice(0,160).toLowerCase().split(/\s+/).filter(Boolean);
+    return items.filter(item=>{
+      const text=[item.title,item.project,item.person,item.stage].join(' ').toLowerCase();
+      return terms.every(term=>text.includes(term));
+    });
   }
   function consume(storage,kind,records){
     const raw=storage.getItem(pointerKey);storage.removeItem(pointerKey);
@@ -43,6 +50,6 @@
     if(!record)throw Error('This saved task was removed or could not be read. Open My next step again.');
     return record;
   }
-  const api={load,items,consume,pointerKey};
+  const api={load,items,consume,pointerKey,filterItems};
   if(local)module.exports=api;else root.FBNextStepKit=api;
 })(typeof window==='undefined'?{}:window);
