@@ -65,3 +65,23 @@ test('first-visit choices stay hidden for existing work and return only when all
  s.stored.fb_contributions_v1='[]';s.events.pageshow();assert.equal(s.get('nextStepStartPaths').hidden,false);assert.equal(s.writes.length,0);
  const finished=board({rs:[review('r','closed')]});assert.equal(finished.get('nextStepStartPaths').hidden,true);assert.match(finished.get('nextStepEmptyTitle').textContent,/list is clear/);
 });
+
+test('completed contributions offer gated work-story actions without showing private results or exporting',()=>{
+ const s=board({cs:[
+  contribution('result','completed'),
+  contribution('terms','completed',{result:'PRIVATE RESULT',feedback:'PRIVATE FEEDBACK',scope:'PRIVATE SCOPE'}),
+  contribution('ready','completed',{result:'PRIVATE READY RESULT',creditAgreement:'PRIVATE CREDIT TERMS',permission:true})
+ ]});
+ assert.equal(s.get('nextStepCards').children.length,0);assert.equal(s.get('completedWorkSection').hidden,false);
+ const cards=s.get('completedWorkCards').children;assert.equal(cards.length,3);
+ assert.deepEqual(cards.map(card=>card.children.at(-1).textContent),['Record my result →','Review credit and sharing →','Go to portfolio preview →']);
+ const text=node=>node.textContent+' '+node.children.map(text).join(' ');assert.doesNotMatch(cards.map(text).join(' '),/PRIVATE/);assert.equal(s.writes.length,0);
+ cards[2].children.at(-1).listeners.click();assert.equal(s.location.href,'learn-by-building.html?next-step=1');assert.equal(s.writes[0].value,'{"kind":"contribution","id":"ready"}');
+});
+test('including finished work moves completed cards into the main list without duplicates or writes',()=>{
+ const s=board({cs:[contribution('active','in_progress'),contribution('done','completed')],rs:[review('closed','closed')]});
+ assert.equal(s.get('nextStepCards').children.length,1);assert.equal(s.get('completedWorkCards').children.length,1);
+ s.get('includeFinishedWork').checked=true;s.get('includeFinishedWork').listeners.change();assert.equal(s.get('completedWorkSection').hidden,true);assert.equal(s.get('completedWorkCards').children.length,0);assert.equal(s.get('nextStepCards').children.length,3);
+ s.get('includeFinishedWork').checked=false;s.get('includeFinishedWork').listeners.change();assert.equal(s.get('nextStepCards').children.length,1);assert.equal(s.get('completedWorkCards').children.length,1);assert.equal(s.writes.length,0);
+ const founder=board({rs:[review('r','closed')]});assert.equal(founder.get('completedWorkSection').hidden,true);assert.match(founder.get('nextStepEmptyText').textContent,/Closed founder reviews/);
+});

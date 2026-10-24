@@ -156,3 +156,8 @@ test('check-in controls appear only while waiting and drafts preserve notes, per
  }
  s.fields.status.value='completed';s.get('contributionForm').listeners.input({target:s.fields.status});assert.equal(s.get('waitingCheckInActions').hidden,true);s.get('previewWaitingCheckIn').listeners.click();assert.equal(s.get('contributionOutput').textContent,'');assert.equal(s.writes.length,0);
 });
+
+test('opening completed work focuses its portfolio review without generating or saving a summary',()=>{
+ const saved=JSON.stringify([{id:'done',title:'Fictional task',project:'Fictional project',deliverable:'Notes',status:'completed',result:'Actual result',creditAgreement:'Agreed public notes',permission:true}]);
+ const s=setup({saved,resume:JSON.stringify({kind:'contribution',id:'done'})});assert.equal(s.get('previewContribution').focused,true);assert.equal(s.get('contributionOutput').textContent,'');assert.equal(s.fields.status.value,'completed');assert.equal(s.writes.length,0);
+});
