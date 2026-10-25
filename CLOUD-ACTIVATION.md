@@ -16,12 +16,12 @@ The approved authentication Site URL is `https://founders-builders-ux-review.hel
 - 51 HTML pages pass local asset/link/anchor/ID checks.
 - 60 SQL assertions passed against hosted PostgreSQL inside rollback-only test transactions.
 - 10 live anonymous/forged-credential boundary requests passed.
-- The first approved real sign-in email was sent. Opening the link remains the user's action.
+- The owner completed real email sign-in and saved “Cloud save test” from their phone. A scoped agent credential read that persisted task (HTTP 200), broader listing was denied (403), and revocation blocked the same task read (403) before expiry. Credentials were not saved in source.
 
 Security advisors still identify intentional scoped SECURITY DEFINER functions and default-deny tables without policies; these are reviewed design choices, not a warning-free advisory report.
 
 ## Remaining release gates
 
-Complete a real authenticated save/reload test after the owner opens the email, then a second separately approved real account and second-device test of interest → versioned agreement → delivery → feedback → portfolio permission/revocation. Test fixtures and injected identities do not establish real multi-user JWT verification. Broad signup remains closed.
+Complete the owner UI refresh/reload check, then a second separately approved real account and second-device test of interest → versioned agreement → delivery → feedback → portfolio permission/revocation. Test fixtures and injected identities do not establish real multi-user JWT verification. Broad signup remains closed.
 
 The first beta uses an atomic revisioned aggregate with explicit size limits. It is not a claim of production-scale storage. Binary uploads and Supabase Storage buckets are not enabled. Cloud storage here means persistent private collaboration records in PostgreSQL. No GitHub main deployment or merge is part of this activation.
