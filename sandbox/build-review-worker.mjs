@@ -1,4 +1,4 @@
-/* Build the owner-private review Worker, embedding only reviewed public assets. */
+/* Build the fictional review Worker, embedding only reviewed public assets. */
 import fs from 'node:fs';
 import path from 'node:path';
 const root=process.cwd(),manifest=JSON.parse(fs.readFileSync(path.join(root,'.openai/hosting.json'),'utf8'));
@@ -7,7 +7,9 @@ const assets={};const types={'.html':'text/html; charset=utf-8','.js':'text/java
 for(const name of fs.readdirSync(path.join(root,'public')).sort()){
  const full=path.join(root,'public',name);if(!fs.statSync(full).isFile())continue;
  const type=types[path.extname(name)];if(!type)throw Error('Unsupported review asset: '+name);
- assets['/'+name]={type,body:fs.readFileSync(full,'utf8')};
+ let body=fs.readFileSync(full,'utf8');
+ if(path.extname(name)==='.html')body=body.replace(/Private UX review/g,'Public UX sandbox');
+ assets['/'+name]={type,body};
 }
 if(!assets['/index.html']||!assets['/a2a-sandbox.html'])throw Error('Review pages missing.');
 if(Object.values(assets).some(a=>a.body.includes('script.google.com/macros/s/')))throw Error('Review must not include a live Sheets endpoint.');

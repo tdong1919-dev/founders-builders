@@ -1,6 +1,6 @@
 {
   "name": "Fictional founder agent",
-  "description": "Rule-based sandbox for one fictional design task. Implements the A2A 1.0 SendMessage JSON-RPC subset only. No real offers or external messaging. Private review access is enforced by Sites sign-in.",
+  "description": "Rule-based sandbox for one fictional design task. Implements the A2A 1.0 SendMessage JSON-RPC subset only. No real offers or external messaging. Public fictional sandbox; no private data or authenticated owner delegation.",
   "version": "0.1.0",
   "supportedInterfaces": [
     {
