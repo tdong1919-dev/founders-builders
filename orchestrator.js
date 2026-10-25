@@ -2,22 +2,28 @@
   'use strict';
   const get=id=>document.getElementById(id),kit=window.FBOrchestratorKit;
   const controls=['missionMode','missionClarification','missionDraft','missionMessages','missionMinutes','founderClarification','founderDraft'];
-  let runs=[],active=null,client=null,aborter=null,epoch=0,decisionBusy=false,recoveryTarget=null;
+  let runs=[],active=null,client=null,aborter=null,epoch=0,decisionBusy=false,recoveryTarget=null,dashboardFresh=true;
   const settings=()=>kit.normalize({mode:get('missionMode').value,allowClarification:get('missionClarification').checked,allowDraft:get('missionDraft').checked,maxMessages:get('missionMessages').value,maxTaskMinutes:get('missionMinutes').value,founderClarification:get('founderClarification').checked,founderDraft:get('founderDraft').checked});
   function renderPlan(){
-    const plan=kit.plan(settings());get('missionTaskTitle').textContent=plan.title;get('missionTaskDeliverable').textContent=plan.deliverable+' · '+plan.minutes+' minutes';
+    renderDashboard();const plan=kit.plan(settings());get('missionTaskTitle').textContent=plan.title;get('missionTaskDeliverable').textContent=plan.deliverable+' · '+plan.minutes+' minutes';
     get('missionPlanSummary').textContent=plan.summary;get('missionPlanLimits').textContent=plan.limitSummary;get('missionPlanWarnings').replaceChildren();
     for(const warning of plan.warnings){const node=document.createElement('li');node.textContent=warning;get('missionPlanWarnings').append(node);}
     get('missionPlanHint').textContent=plan.warnings.length?'These are predicted boundaries for this fixed sample. You may run it to test the stop; no settings will be expanded.':'No predicted policy stop for this fixed sample. The server still checks permissions on every step.';
   }
+  function renderDashboard(){
+    const d=kit.dashboard(runs,settings(),dashboardFresh);
+    for(const [id,key] of [['dashboardTitle','title'],['dashboardSummary','summary'],['dashboardAction','label'],['dashboardRuns','runs'],['dashboardDrafts','drafts'],['dashboardAttention','attention'],['dashboardBoundaries','boundaries'],['dashboardActivity','activity']])get(id).textContent=String(d[key]);
+    get('dashboardAction').disabled=d.action==='activity';
+  }
+  function reveal(id){get('missionSettingsPanel').open=true;get(id).focus();}
   function renderReport(){
-    const r=kit.report(runs);get('missionMetrics').textContent=r.runs+' runs · '+r.drafts+' drafts · '+r.blocked+' policy blocks · '+r.failed+' failures · '+r.waiting+' awaiting review';
+    renderDashboard();const r=kit.report(runs);get('missionMetrics').textContent=r.runs+' runs · '+r.drafts+' drafts · '+r.blocked+' policy blocks · '+r.failed+' failures · '+r.waiting+' awaiting review';
     get('missionReport').textContent=JSON.stringify(r,null,2);get('missionCopyReport').disabled=!runs.length;
     get('founderAdvice').textContent=r.feedback.founder.join(' ');get('builderAdvice').textContent=r.feedback.builder.join(' ');get('ownerAdvice').textContent=r.ownerRecommendations.join(' ');
     for(const [mode,prefix] of [['review-first','review'],['delegated','delegated']]){const values=r.byMode[mode];get(prefix+'Runs').textContent=String(values.runs);get(prefix+'Drafts').textContent=String(values.drafts);get(prefix+'Blocks').textContent=String(values.blocked);}
   }
   function stop(message){
-    epoch++;aborter?.abort();decisionBusy=false;recoveryTarget=null;get('missionRecover').hidden=true;
+    dashboardFresh=true;epoch++;aborter?.abort();decisionBusy=false;recoveryTarget=null;get('missionRecover').hidden=true;
     if(active&&['running','waiting'].includes(active.outcome)){active.outcome='cleared';active.endedAt=Date.now();}
     active=null;client=null;get('missionStart').disabled=false;get('missionDecision').hidden=true;get('missionResult').textContent='';
     if(message)get('missionStatus').textContent=message;renderReport();renderPlan();
@@ -45,7 +51,7 @@
   }
   async function start(){
     stop();if(runs.length>=50){get('missionStatus').textContent='The session has 50 runs. Copy the report, then clear session history to continue.';return;}
-    const ticket=epoch,policy=settings(),run=kit.begin(window.crypto.randomUUID(),policy,Date.now());runs.push(run);active=run;aborter=new AbortController();const currentAborter=aborter;
+    const ticket=epoch,policy=settings(),run=kit.begin(window.crypto.randomUUID(),policy,Date.now());runs.push(run);dashboardFresh=false;active=run;aborter=new AbortController();const currentAborter=aborter;
     get('missionTrace').replaceChildren();get('missionStart').disabled=true;get('missionApprove').disabled=false;get('missionDecline').disabled=false;get('missionStatus').textContent='Applying your settings and starting the fictional mission…';renderReport();
     client=window.FBA2ASandboxClient.create({fetcher:window.fetch.bind(window),origin:window.location.origin,uuid:()=>window.crypto.randomUUID(),policies:policy,signal:aborter.signal,onEvent:e=>event(e,ticket,run)});
     const timer=setTimeout(()=>currentAborter.abort(),15000);
@@ -56,10 +62,18 @@
     }catch(error){fail(error,ticket,run);}finally{clearTimeout(timer);}
   }
   controls.forEach(id=>get(id).addEventListener('change',()=>stop('Settings changed. Any pending run was stopped. Start a new run to apply these permissions.')));
-  get('missionRecover').addEventListener('click',()=>{if(!recoveryTarget)return;get(recoveryTarget).focus();get('missionStatus').textContent='Review this setting and the other person’s preferences. Nothing was changed or retried automatically.';});
+  get('missionRecover').addEventListener('click',()=>{if(!recoveryTarget)return;reveal(recoveryTarget);get('missionStatus').textContent='Review this setting and the other person’s preferences. Nothing was changed or retried automatically.';});
   get('missionStart').addEventListener('click',start);get('missionStop').addEventListener('click',()=>stop('Run stopped locally. Previously signed fictional snapshots expire separately.'));
   get('missionApprove').addEventListener('click',()=>decision(true));get('missionDecline').addEventListener('click',()=>decision(false));
   get('missionClear').addEventListener('click',()=>{stop();runs=[];get('missionTrace').replaceChildren();get('missionStatus').textContent='Session history cleared from this page. Nothing is stored in a database.';renderReport();});
   get('missionCopyReport').addEventListener('click',async()=>{const ticket=epoch;try{if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable. Select the report text to copy it.');await navigator.clipboard.writeText(kit.exportReport(runs));if(ticket===epoch)get('missionReportStatus').textContent='Aggregate report copied. It excludes message bodies, names, task IDs, continuation tokens and secrets.';}catch(error){if(ticket===epoch)get('missionReportStatus').textContent=error.message;}});
-  window.addEventListener('pagehide',()=>{epoch++;aborter?.abort();});renderReport();renderPlan();
+  get('dashboardSettings').addEventListener('click',()=>reveal('missionMode'));
+  get('dashboardAction').addEventListener('click',()=>{
+    const action=kit.dashboard(runs,settings(),dashboardFresh).action;
+    if(action==='start')return start();
+    if(action==='review')get('missionApprove').focus();
+    if(action==='result')get('missionResult').focus();
+    if(action==='recover')reveal(recoveryTarget||'missionMode');
+  });
+  window.addEventListener('pagehide' ,()=>{epoch++;aborter?.abort();});renderReport();renderPlan();
 })();

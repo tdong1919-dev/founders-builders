@@ -27,3 +27,14 @@ test('journey markup contains controller and recovery targets, and task scope ma
  for(const reason of ['scope_limit','message_limit','clarification_permission','draft_permission','network'])assert.ok(ids.has(kit.recovery(reason,kit.normalize({})).target));
  const task=require('../agent-network-kit.js').find('sample-design'),plan=kit.plan(kit.normalize({}));assert.equal(plan.title,task.title);assert.equal(plan.deliverable,task.deliverable);assert.equal(plan.minutes,task.minutes);assert.match(task.support,/three days/);
 });
+
+test('minimal dashboard follows approval, draft and protected recovery without silently acting',async()=>{
+ const s=await journey();assert.equal(s.get('dashboardTitle').textContent,'Ready when you are.');
+ await s.get('dashboardAction').listeners.click();assert.equal(s.calls.length,3);assert.equal(s.get('dashboardTitle').textContent,'Review the task.');assert.equal(s.get('dashboardAttention').textContent,'1');
+ s.get('dashboardAction').listeners.click();assert.equal(s.get('missionApprove').focused,true);assert.equal(s.calls.length,3);
+ await s.get('missionApprove').listeners.click();assert.equal(s.get('dashboardTitle').textContent,'Your draft is ready.');assert.equal(s.get('dashboardDrafts').textContent,'1');assert.equal(s.get('dashboardAttention').textContent,'0');
+ s.get('dashboardAction').listeners.click();assert.equal(s.get('missionResult').focused,true);assert.equal(s.calls.length,4);
+ const b=await journey({time:'30'});await b.get('dashboardAction').listeners.click();assert.equal(b.get('dashboardTitle').textContent,'A boundary protected you.');b.get('dashboardAction').listeners.click();assert.equal(b.get('missionSettingsPanel').open,true);assert.equal(b.calls.length,3);assert.equal(b.get('missionMinutes').value,'30');
+ b.get('missionMinutes').value='45';b.get('missionMinutes').listeners.change();assert.equal(b.get('dashboardAction').textContent,'Start sample mission');assert.equal(b.get('dashboardRuns').textContent,'1');
+ b.get('missionClear').listeners.click();assert.equal(b.get('dashboardRuns').textContent,'0');assert.equal(b.get('dashboardTitle').textContent,'Ready when you are.');
+});

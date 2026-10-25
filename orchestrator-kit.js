@@ -46,6 +46,20 @@
     result.ownerRecommendations.push('No real collaboration outcomes or cross-ecosystem comparison data are available. Do not infer impact, rank people, or broaden permissions from draft counts.');
     return result;
   }
+  function dashboard(runs,policy,fresh=false){
+    const latest=runs[runs.length-1],r=report(runs),mode=policy.builder.mode;
+    const states={
+      running:['Your agent is on it.','Checking the task against both people’s boundaries.','View activity','activity'],
+      waiting:['Review the task.','Your agent clarified the scope. Review it before preparing a fictional introduction.','Review task','review'],
+      prepared:['Your draft is ready.','Read the fictional introduction. Nothing has been sent or agreed.','Read draft','result'],
+      declined:['You closed the loop.','The exchange ended without an introduction. You can try another sample run.','Try again','start'],
+      blocked:['A boundary protected you.','This run stopped at a permission or budget limit. Review the reason before trying again.','Review boundary','recover'],
+      failed:['The connection needs attention.','The request did not finish. Review the error and retry when ready.','Review issue','recover'],
+      cleared:['The mission is stopped.','No further action will happen in this page. Start a fresh run when you’re ready.','Start again','start']
+    };
+    const state=latest&&!fresh?states[latest.outcome]:null;
+    return {title:state?.[0]||'Ready when you are.',summary:state?.[1]||(mode==='delegated'?'Your agent may prepare a fictional draft within both people’s limits.':'Your agent will clarify the task, then ask before preparing a draft.'),label:state?.[2]||'Start sample mission',action:state?.[3]||'start',runs:r.runs,drafts:r.drafts,attention:r.waiting,boundaries:(mode==='delegated'?'Hands-free sample drafting':'Ask before drafting')+' · '+policy.builder.maxTaskMinutes+' min · '+policy.builder.maxMessages+' messages max',activity:latest?'Latest mission: '+(states[latest.outcome]?.[0]||'In progress')+' '+r.exchanges+' processed messages in this session.':'No activity yet. Start a sample mission to see your agents work together.'};
+  }
   function exportReport(runs){return JSON.stringify(report(runs),null,2);}
-  const api={normalize,plan,recovery,begin,record,report,exportReport};if(typeof module==='object'&&module.exports)module.exports=api;else root.FBOrchestratorKit=api;
+  const api={normalize,plan,recovery,begin,record,report,dashboard,exportReport};if(typeof module==='object'&&module.exports)module.exports=api;else root.FBOrchestratorKit=api;
 })(typeof window==='undefined'?{}:window);
