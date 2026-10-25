@@ -9,8 +9,45 @@ test('unauthenticated login email operation has no bearer and rejected verificat
  assert.equal((await client.sendEmail('owner@example.test')).message,'Check your email');assert.equal(calls[0].options.headers.Authorization,undefined);await assert.rejects(client.acceptToken('signed_test_access_token',3600),/verified/);assert.equal(client.user(),null);
 });
 test('sign-out immediately clears identity and invalidates late cloud responses',async()=>{
- let release;const client=create(config,async(url)=>url.endsWith('/user')?new Response(JSON.stringify({id:'owner',email_confirmed_at:'now'})):new Promise(r=>release=r));await client.acceptToken('signed_test_access_token',3600);const pending=client.execute('list');client.clear();release(new Response(JSON.stringify({data:{tasks:['private']}})));await assert.rejects(pending,/Session changed/);assert.equal(client.user(),null);
+ let release;const client=create(config,async(url)=>url.endsWith('/user')?new Response(JSON.stringify({id:'owner',email_confirmed_at:'now'})):new Promise(r=>release=r));await client.acceptToken('signed_test_access_token',3600);const pending=client.execute('list');await new Promise(setImmediate);client.clear();release(new Response(JSON.stringify({data:{tasks:['private']}})));await assert.rejects(pending,/Session changed/);assert.equal(client.user(),null);
 });
 test('wrong project or secret keys cannot initialize the browser cloud client',()=>{
  assert.throws(()=>create({...config,url:'https://wrong.supabase.co'}),/connection/);assert.throws(()=>create({...config,publishableKey:'sb_secret_not_allowed'}),/connection/);
+});
+function tabStorage(){const entries=new Map();return {getItem:k=>entries.get(k)||null,setItem:(k,v)=>entries.set(k,v),removeItem:k=>entries.delete(k),entries};}
+const confirmed={id:'owner',email:'owner@example.test',email_confirmed_at:'now'};
+const response=data=>new Response(JSON.stringify(data));
+test('navigation restores tokens from tab storage, verifies identity afresh and never caches private records',async()=>{
+ const storage=tabStorage(),calls=[];const fetcher=async(url,options)=>{calls.push({url,options});return response(url.endsWith('/user')?confirmed:{data:{tasks:[{title:'Private task'}]}});};
+ const first=create(config,fetcher,{storage});await first.acceptToken('access_before_navigation',3600,'refresh_before_navigation');await first.execute('list');assert.equal(storage.entries.size,1);const saved=[...storage.entries.values()][0];assert.ok(!saved.includes('Private task'));assert.ok(!saved.includes(confirmed.email));first.suspend();assert.equal(first.user(),null);assert.equal(storage.entries.size,1);
+ const next=create(config,fetcher,{storage});assert.equal(next.user(),null);assert.equal((await next.restore()).id,'owner');assert.equal(calls.filter(c=>c.url.endsWith('/user')).length,2);await next.signOut();assert.equal(storage.entries.size,0);assert.equal(next.user(),null);assert.equal(await create(config,fetcher,{storage}).restore(),null);
+});
+test('concurrent work refreshes a nearing-expiry token once and persists the rotated refresh token',async()=>{
+ const storage=tabStorage(),calls=[];let clock=100000,release;const fetcher=async(url,options)=>{calls.push({url,options});if(url.includes('/token?'))return new Promise(r=>release=()=>r(response({access_token:'rotated_access_token',refresh_token:'rotated_refresh_token',expires_in:3600})));return response(url.endsWith('/user')?confirmed:{data:{tasks:[]}});};
+ const client=create(config,fetcher,{storage,now:()=>clock});await client.acceptToken('old_access_token',3600,'old_refresh_token');clock+=3540001;const one=client.execute('list'),two=client.execute('list');await new Promise(setImmediate);assert.equal(calls.filter(c=>c.url.includes('/token?')).length,1);release();await Promise.all([one,two]);assert.ok(calls.filter(c=>c.url.includes('/functions/')).every(c=>c.options.headers.Authorization==='Bearer rotated_access_token'));assert.equal(JSON.parse([...storage.entries.values()][0]).refreshToken,'rotated_refresh_token');assert.ok(!calls.find(c=>c.url.includes('/token?')).options.headers.Authorization);
+});
+test('expired saved access renews and is verified before restoring; a revoked refresh removes saved sign-in',async()=>{
+ const storage=tabStorage();let clock=100000,deny=false,reads=0;const fetcher=async url=>{if(url.includes('/token?'))return deny?new Response('{}',{status:400}):response({access_token:'new_access_token',refresh_token:'new_refresh_token',expires_in:3600});reads++;return response(confirmed);};
+ const first=create(config,fetcher,{storage,now:()=>clock});await first.acceptToken('initial_access_token',3600,'initial_refresh_token');first.suspend();clock+=3600001;const next=create(config,fetcher,{storage,now:()=>clock});await next.restore();assert.equal(reads,2);next.suspend();clock+=3600001;deny=true;const denied=create(config,fetcher,{storage,now:()=>clock});await assert.rejects(denied.restore(),/sign in again/);assert.equal(denied.user(),null);assert.equal(storage.entries.size,0);
+});
+test('sign-out during renewal cannot resurrect identity or overwrite cleared storage',async()=>{
+ const storage=tabStorage();let clock=100000,release;const client=create(config,async url=>url.includes('/token?')?new Promise(r=>release=r):response(confirmed),{storage,now:()=>clock});await client.acceptToken('initial_access_token',3600,'initial_refresh_token');clock+=3540001;const pending=client.maintain();await new Promise(setImmediate);await client.signOut();release(response({access_token:'late_access_token',refresh_token:'late_refresh_token',expires_in:3600}));await assert.rejects(pending,/Session changed/);assert.equal(client.user(),null);assert.equal(storage.entries.size,0);
+});
+test('corrupt, oversized and over-age saved sessions fail closed without authenticating',async()=>{
+ for(const raw of ['bad-json','x'.repeat(13000),JSON.stringify({version:1,token:'a',refreshToken:'b',expiresAt:100001,until:99999}),JSON.stringify({version:1,token:'a',refreshToken:'b',expiresAt:100001,until:100000+13*3600000})]){const storage=tabStorage();storage.setItem('fb.cloud.session.v1',raw);const client=create(config,async()=>{throw Error('Must not fetch');},{storage,now:()=>100000});assert.equal(await client.restore(),null);assert.equal(storage.entries.size,0);}
+});
+test('browser storage failures preserve a working memory-only sign-in',async()=>{
+ const storage={getItem(){throw Error('blocked');},setItem(){throw Error('blocked');},removeItem(){throw Error('blocked');}};const client=create(config,async()=>response(confirmed),{storage});assert.equal(await client.restore(),null);await client.acceptToken('memory_access_token',3600,'memory_refresh_token');assert.equal(client.user().id,'owner');await client.signOut();assert.equal(client.user(),null);
+});
+test('a transient renewal failure preserves retry state without pretending an expired identity is active',async()=>{
+ const storage=tabStorage();let clock=100000,offline=true;const fetcher=async url=>{if(url.includes('/token?')){if(offline)throw Error('offline');return response({access_token:'renewed_access_token',refresh_token:'renewed_refresh_token',expires_in:3600});}return response(confirmed);};const client=create(config,fetcher,{storage,now:()=>clock});await client.acceptToken('initial_access_token',3600,'initial_refresh_token');clock+=3600001;await assert.rejects(client.maintain(),/offline/);assert.equal(client.user(),null);assert.equal(storage.entries.size,1);offline=false;await client.restore();assert.equal(client.user().id,'owner');
+});
+test('twelve-hour tab lifetime requires a new sign-in even after token rotations',async()=>{
+ const storage=tabStorage();let clock=100000;const client=create(config,async()=>response(confirmed),{storage,now:()=>clock});await client.acceptToken('initial_access_token',3600,'initial_refresh_token');clock+=12*3600000;assert.equal(client.user(),null);assert.equal(storage.entries.size,0);await assert.rejects(client.execute('list'),/sign in again/);
+});
+test('restoring an unverified or rejected saved identity never grants access',async()=>{
+ const storage=tabStorage();await create(config,async()=>response(confirmed),{storage}).acceptToken('initial_access_token',3600,'initial_refresh_token');const client=create(config,async()=>response({id:'different-unverified'}),{storage});await assert.rejects(client.restore(),/verified/);assert.equal(client.user(),null);assert.equal(storage.entries.size,0);
+});
+test('renewal verifies identity again and rejects a token pair that changes the active account',async()=>{
+ const storage=tabStorage();let clock=100000,changed=false;const client=create(config,async url=>url.includes('/token?')?response({access_token:'different_access_token',refresh_token:'different_refresh_token',expires_in:3600}):response(changed?{...confirmed,id:'other-account'}:confirmed),{storage,now:()=>clock});await client.acceptToken('initial_access_token',3600,'initial_refresh_token');clock+=3540001;changed=true;await assert.rejects(client.maintain(),/Session changed/);assert.equal(client.user(),null);assert.equal(storage.entries.size,0);
 });
