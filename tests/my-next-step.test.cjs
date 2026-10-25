@@ -105,3 +105,19 @@ test('search covers completed work without duplicates and distinguishes its matc
  s.get('includeFinishedWork').checked=true;s.get('includeFinishedWork').listeners.change();assert.equal(s.get('nextStepCards').children.length,1);assert.equal(s.get('completedWorkCards').children.length,0);assert.equal(s.get('nextStepSearch').value,'Finished');assert.equal(s.writes.length,0);
  const empty=board();assert.equal(empty.get('nextStepSearch').disabled,true);assert.equal(empty.get('clearNextStepSearch').hidden,true);
 });
+
+test('actionable work precedes waiting work and finished work without changing saved order',()=>{
+ const cs=[contribution('waiting','interest_shared'),contribution('done','completed'),contribution('ready','in_progress'),contribution('delivered','work_delivered')],rs=[review('terms','terms_proposed'),review('closing','feedback_shared')];
+ const before=JSON.stringify([cs,rs]);const items=kit.items(cs,rs,true);
+ assert.deepEqual(items.map(i=>i.id),['ready','closing','waiting','delivered','terms','done']);
+ assert.equal(items.filter(i=>i.action.waiting).length,3);assert.equal(JSON.stringify([cs,rs]),before);
+ const s=board({cs,rs});assert.match(s.get('nextStepCount').textContent,/2 ready for your attention · 3 waiting overall/);
+ assert.equal(s.get('nextStepCards').children[0].children[1].textContent,'Task ready');assert.equal(s.writes.length,0);
+});
+test('received notes and incomplete briefs need attention even when the recorded stage is waiting',()=>{
+ const cs=[contribution('proposal','interest_shared',{agreementSnapshot:'Saved proposal'}),contribution('feedback','work_delivered',{feedbackSnapshot:'Saved feedback'}),contribution('incomplete','interest_shared',{deliverable:''})];
+ const items=kit.items(cs,[],false);assert.ok(items.every(i=>!i.action.waiting));
+ assert.deepEqual(items.map(i=>i.action.target),['founderReturnInput','founderReturnInput','contributionTitle']);
+ const s=board({cs:[contribution('waiting','work_delivered')]});assert.match(s.get('nextStepCount').textContent,/0 ready for your attention · 1 waiting overall/);
+ s.get('nextStepSearch').value='absent';s.get('nextStepSearch').listeners.input();assert.match(s.get('nextStepCount').textContent,/0 of 1.*1 waiting overall/);assert.equal(s.writes.length,0);
+});

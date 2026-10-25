@@ -32,7 +32,7 @@
     return [
       ...savedContributions.filter(r=>includeClosed||r.status!=='completed').map(r=>({kind:'contribution',id:r.id,title:r.title,project:r.project,person:r.collaborator||'',stage:contributions.statusLabel(r.status),closed:r.status==='completed',action:contributions.nextAction(r)})),
       ...savedReviews.filter(r=>includeClosed||r.review.phase!=='closed').map(r=>({kind:'review',id:r.id,title:r.interest.title,project:r.interest.project,person:r.interest.interestName,stage:reviews.phaseLabel(r.review.phase),closed:r.review.phase==='closed',action:reviews.nextAction(r.review)}))
-    ];
+    ].sort((a,b)=>(a.closed?2:a.action.waiting?1:0)-(b.closed?2:b.action.waiting?1:0));
   }
   function filterItems(items,query){
     const terms=String(query||'').trim().slice(0,160).toLowerCase().split(/\s+/).filter(Boolean);

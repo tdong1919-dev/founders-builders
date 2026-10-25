@@ -7,8 +7,8 @@ test('waiting cards show one useful follow-up rather than repeating the action a
  const rs=['terms_proposed','feedback_shared'].map((phase,i)=>({id:'r'+i,interest,review:{phase}}));
  const before=JSON.stringify([cs,rs]),items=board.items(cs,rs,false);
  assert.equal(items.length,4);assert.ok(items.every(item=>!item.closed));
- assert.deepEqual(items.map(item=>item.action.target),['founderReturnInput','contributionNextStep','reviewAgreement','reviewReply']);
- assert.match(items[0].action.title,/Waiting/);assert.match(items[1].action.title,/Waiting/);assert.match(items[2].action.title,/Waiting/);assert.match(items[3].action.title,/close the loop/);
+ assert.deepEqual(items.map(item=>item.action.target),['reviewReply','founderReturnInput','contributionNextStep','reviewAgreement']);
+ assert.match(items[0].action.title,/close the loop/);assert.ok(items.slice(1).every(item=>item.action.waiting));
  assert.doesNotMatch(items.map(item=>item.action.button).join(' '),/copy|share|download/i);
  assert.equal(JSON.stringify([cs,rs]),before);
 });

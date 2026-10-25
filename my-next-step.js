@@ -14,7 +14,8 @@
     const list=kit.filterItems(visible,query),allCompleted=all.filter(item=>item.kind==='contribution'&&item.closed),completed=kit.filterItems(allCompleted,query);
     get('nextStepSearch').disabled=!all.length;get('clearNextStepSearch').hidden=!searching;
     const finishedMessage=completed.length?'Completed contributions are available in the work-and-credit section below. Include finished work above to revisit closed founder reviews too.':'Closed founder reviews stay saved in your local review desk. Include finished work above to revisit them.';
-    get('nextStepCount').textContent=list.length+' of '+visible.length+' saved '+(visible.length===1?'task':'tasks')+' shown · '+all.filter(item=>!item.closed).length+' active overall';
+    const active=all.filter(item=>!item.closed),waiting=active.filter(item=>item.action.waiting).length;
+    get('nextStepCount').textContent=list.length+' of '+visible.length+' saved '+(visible.length===1?'task':'tasks')+' shown · '+(active.length-waiting)+' ready for your attention · '+waiting+' waiting overall';
     get('nextStepWarning').textContent=warnings.join(' ');
     get('nextStepEmpty').hidden=!!list.length;
     const firstVisit=!all.length&&!warnings.length;
@@ -35,7 +36,7 @@
       const card=element('article','','contribution-panel next-step-card');
       card.append(element('p',item.kind==='review'?'Founder review':'My contribution','kicker'),element('h2',item.title),element('p',item.project||'Project to discuss','next-step-context'));
       if(item.person)card.append(element('p','With '+item.person,'next-step-context'));
-      card.append(element('p',item.stage+' · local record','contribution-hint'),element('h3',item.action.title),element('p',item.action.text));
+      card.append(element('p',item.stage+' · local record'+(item.action.waiting?' · follow up when appropriate':''),'contribution-hint'),element('h3',item.action.title),element('p',item.action.text));
       const button=element('button',item.action.button+' →','btn btn--secondary');button.type='button';button.setAttribute('aria-label',item.action.button+' for '+item.title);
       button.addEventListener('click',()=>{
         try{sessionStorage.setItem(kit.pointerKey,JSON.stringify({kind:item.kind,id:item.id}));window.location.href=(item.kind==='review'?'review-interest.html':'learn-by-building.html')+'?next-step=1';}
