@@ -9,7 +9,7 @@ try{
  const origin=new URL(args.url).origin;
  if(origin!=='https://founders-builders-ux-review.hello978822.chatgpt.site')throw Error('Unexpected review origin');
  let count=0;
- const fetcher=async(url,options)=>{count++;const headers=new Headers(options?.headers);headers.set('OAI-Sites-Authorization','Bearer '+args.bearer);return fetch(url,{...options,headers,signal:AbortSignal.timeout(15000)});};
+ const fetcher=async(url,options)=>{count++;const headers=new Headers(options?.headers);headers.set('OAI-Sites-Authorization','Bearer '+args.bearer);return fetch(url,{...options,redirect:'error',headers,signal:AbortSignal.timeout(15000)});};
  for(const decision of [true,false]){
   const events=[],client=create({fetcher,origin,uuid:()=>crypto.randomUUID(),onEvent:e=>events.push(e)});
   await client.start();assert.equal(events.at(-1).state,'TASK_STATE_INPUT_REQUIRED');assert.equal(events.length,3);
@@ -29,5 +29,8 @@ try{
  const comparisonResult=await comparison.compare({settings:{},fetcher,origin,uuid:()=>crypto.randomUUID()});
  assert.deepEqual(comparisonResult.arms.map(a=>a.outcome),['ready-for-review','ready-for-review']);assert.equal(comparisonResult.processedMessageDifference,1);assert.deepEqual(comparisonResult.arms[0].policies,comparisonResult.arms[1].policies);console.log('Clearer brief: one fewer message with identical permissions: PASS');
  const limited=await comparison.compare({settings:{maxTaskMinutes:30},fetcher,origin,uuid:()=>crypto.randomUUID()});assert.ok(limited.arms.every(a=>a.reason==='scope_limit'));assert.equal(limited.processedMessageDifference,null);console.log('Both brief variants respect task-time boundary: PASS');
+ const page=await fetcher(origin+'/orchestrator.html',{redirect:'error'});assert.equal(page.status,200);const html=await page.text();assert.ok(html.includes('id="missionPlanSummary"')&&html.includes('id="missionRecover"')&&html.includes('id="mission-task"'));console.log('Hosted task → plan → recovery markup: PASS');
+ for(const name of ['orchestrator.js','orchestrator-kit.js','agent-network.js']){const r=await fetcher(origin+'/'+name,{redirect:'error'});assert.equal(r.status,200);assert.equal(await r.text(),require('node:fs').readFileSync(new URL('../'+name,import.meta.url),'utf8'));}console.log('Hosted journey/controller assets match tested source: PASS');
+ const directory=await fetcher(origin+'/agent-tasks.json',{redirect:'error'});assert.equal(directory.status,200);assert.deepEqual(await directory.json(),require('../agent-network-kit.js').directory());console.log('Hosted discovery scope matches journey source: PASS');
  console.log('Verified '+count+' real HTTPS requests; no private data, external messages or terms accepted.');
 }catch{console.error('Hosted sandbox verification failed. No credentials or response bodies printed.');process.exitCode=1;}

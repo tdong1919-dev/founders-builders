@@ -5,6 +5,19 @@
   function normalize(input={}){
     return {builder:{mode:input.mode==='delegated'?'delegated':'review-first',allowClarification:input.allowClarification!==false,allowDraft:input.allowDraft!==false,maxMessages:[1,2,3].includes(Number(input.maxMessages))?Number(input.maxMessages):3,maxTaskMinutes:[30,45,60].includes(Number(input.maxTaskMinutes))?Number(input.maxTaskMinutes):45},founder:{allowClarification:input.founderClarification!==false,allowDraft:input.founderDraft!==false}};
   }
+  function plan(policy){
+    const b=policy.builder,f=policy.founder,warnings=[];
+    if(!b.allowClarification||!f.allowClarification)warnings.push('The follow-up question will stop because one side does not allow clarification.');
+    if(b.maxTaskMinutes<45)warnings.push('This fictional task needs 45 minutes, beyond the selected task-time limit.');
+    if(b.maxMessages<2)warnings.push('The message budget does not cover the inquiry and clarification needed for a proposal.');
+    else if(b.maxMessages<3)warnings.push('The budget can reach a proposal, but does not cover a draft or a server-recorded decline. You can always stop locally.');
+    if(!b.allowDraft||!f.allowDraft)warnings.push('Introduction drafting is not allowed by one side. A human click cannot override that restriction.');
+    return {title:'Review one onboarding screen',deliverable:'Three written observations on one sample onboarding screen',minutes:45,summary:b.mode==='delegated'?'Your agent may inquire, clarify and attempt a fictional draft within both sides’ permissions. No fresh decision click is required for that draft.':'Your agent may inquire and clarify, then pauses for your decision before attempting a fictional draft.',warnings,limitSummary:b.maxMessages+' outgoing messages maximum; '+b.maxTaskMinutes+' minutes maximum task time. No real contact, accepted terms, payment or private access.'};
+  }
+  function recovery(reason,policy){
+    const choices={scope_limit:{label:'Review the task-time limit',target:'missionMinutes'},message_limit:{label:'Review the message budget',target:'missionMessages'},clarification_permission:{label:'Review clarification permissions',target:policy?.builder.allowClarification===false?'missionClarification':'founderClarification'},draft_permission:{label:'Review drafting permissions',target:policy?.builder.allowDraft===false?'missionDraft':'founderDraft'}};
+    return choices[reason]||{label:'Review this mission before retrying',target:'missionMode'};
+  }
   function begin(id,policies,at){return {id,policies:normalize({mode:policies.builder.mode,allowClarification:policies.builder.allowClarification,allowDraft:policies.builder.allowDraft,maxMessages:policies.builder.maxMessages,maxTaskMinutes:policies.builder.maxTaskMinutes,founderClarification:policies.founder.allowClarification,founderDraft:policies.founder.allowDraft}),startedAt:at,endedAt:null,outcome:'running',events:[]};}
   function record(run,event,at){
     if(!['running','waiting'].includes(run.outcome)||run.events.length>=20)return;
@@ -34,5 +47,5 @@
     return result;
   }
   function exportReport(runs){return JSON.stringify(report(runs),null,2);}
-  const api={normalize,begin,record,report,exportReport};if(typeof module==='object'&&module.exports)module.exports=api;else root.FBOrchestratorKit=api;
+  const api={normalize,plan,recovery,begin,record,report,exportReport};if(typeof module==='object'&&module.exports)module.exports=api;else root.FBOrchestratorKit=api;
 })(typeof window==='undefined'?{}:window);

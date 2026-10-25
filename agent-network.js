@@ -15,7 +15,7 @@
       add('p','Fictional task · '+task.skill+' · '+task.minutes+' minutes');add('h3',task.title);add('p',task.project);add('p','Deliver: '+task.deliverable);add('p','Support: '+task.support);add('p','Compensation: '+task.compensation);add('p','Credit: '+task.credit);
       add('p','Why this fits: '+task.skill+' practice within your '+get('agentTime').value+'-minute limit. This is a filter match, not a suitability guarantee.');
       const button=document.createElement('button');button.type='button';button.className='btn btn--secondary';button.textContent='Preview an introduction →';button.setAttribute('aria-label','Preview an introduction for '+task.title);
-      button.addEventListener('click',()=>{selected=task.id;invalidate();get('agentComposer').hidden=false;get('agentSelected').textContent=task.title+' · '+task.project;get('agentName').focus();});card.append(button);box.append(card);
+      button.addEventListener('click',()=>{selected=task.id;invalidate();get('agentComposer').hidden=false;get('agentSelected').textContent=task.title+' · '+task.project;get('agentName').focus();});if(task.id==='sample-design'){const link=document.createElement('a');link.href='orchestrator.html#mission-task';link.className='living-text-link';link.textContent='Walk through this task with test agents →';card.append(link);}card.append(button);box.append(card);
     }
   }
   get('agentSkill').addEventListener('change',render);get('agentTime').addEventListener('change',render);

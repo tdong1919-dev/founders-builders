@@ -55,3 +55,18 @@ test('policy changes stop a pending run and ignore late messages, while report c
 test('server policy stops are reported as blocks and never mislabeled as prepared drafts',async()=>{
  const s=screen({mode:'delegated',blocked:true}),p=s.get('missionStart').listeners.click();s.starts[0].resolve();await p;assert.equal(s.get('missionResult').textContent,'');assert.match(s.get('missionMetrics').textContent,/0 drafts · 1 policy blocks · 0 failures/);assert.match(s.get('missionStatus').textContent,/does not allow/);assert.match(s.get('builderAdvice').textContent,/Respect/);
 });
+
+test('mission plan predicts fixed-scenario stops without changing either policy',()=>{
+ const policies=policy({mode:'delegated',maxMessages:1,maxTaskMinutes:30,founderDraft:false,founderClarification:false}),before=JSON.stringify(policies),plan=kit.plan(policies);assert.equal(plan.minutes,45);assert.match(plan.summary,/No fresh decision/);assert.equal(plan.warnings.length,4);assert.equal(JSON.stringify(policies),before);assert.match(plan.limitSummary,/No real contact/);
+ assert.equal(kit.plan(policy({})).warnings.length,0);assert.match(kit.plan(policy({})).summary,/pauses/);
+});
+test('recovery targets are allowlisted and respect which side restricts permission',()=>{
+ assert.equal(kit.recovery('scope_limit',policy({})).target,'missionMinutes');assert.equal(kit.recovery('draft_permission',policy({founderDraft:false})).target,'founderDraft');assert.equal(kit.recovery('clarification_permission',policy({allowClarification:false})).target,'missionClarification');assert.equal(kit.recovery('PRIVATE arbitrary target',policy({})).target,'missionMode');
+});
+test('plan previews are read-only and recovery focuses settings without changing or retrying',async()=>{
+ const s=screen({mode:'delegated',blocked:true});assert.match(s.get('missionPlanSummary').textContent,/No fresh decision/);assert.equal(s.starts.length,0);const run=s.get('missionStart').listeners.click();s.starts[0].resolve();await run;assert.equal(s.get('missionRecover').hidden,false);const before=JSON.stringify(s.getPolicy());s.get('missionRecover').listeners.click();assert.equal(s.get('founderDraft').focused,true);assert.equal(JSON.stringify(s.getPolicy()),before);assert.equal(s.starts.length,1);assert.equal(s.decisions.length,1);assert.match(s.get('missionStatus').textContent,/Nothing was changed/);
+});
+test('duplicate or post-completion decisions do not send again or turn a completed run into failure',async()=>{
+ const s=screen(),run=s.get('missionStart').listeners.click();s.starts[0].resolve();await run;
+ const first=s.get('missionApprove').listeners.click(),second=s.get('missionApprove').listeners.click();await Promise.all([first,second]);assert.deepEqual(s.decisions,[true]);await s.get('missionDecline').listeners.click();assert.deepEqual(s.decisions,[true]);assert.match(s.get('missionMetrics').textContent,/1 drafts · 0 policy blocks · 0 failures/);assert.equal(s.get('missionResult').textContent,'Fictional draft');
+});

@@ -37,3 +37,7 @@ test('empty filters recover and stale clipboard completion never overwrites new 
 test('clipboard failure is visible without claiming a message was sent',async()=>{
  const s=screen({clipboardFail:true});s.choose();s.get('agentConsent').checked=true;s.get('agentConsent').listeners.change();await s.get('agentCopy').listeners.click();assert.match(s.get('agentStatus').textContent,/Copy unavailable/);assert.doesNotMatch(s.get('agentStatus').textContent,/Draft copied/);
 });
+
+test('only the supported fictional design task links into the complete agent journey',()=>{
+ const s=screen(),cards=s.get('agentTasks').children;const links=cards.flatMap(c=>c.children.filter(e=>e.href==='orchestrator.html#mission-task'));assert.equal(links.length,1);assert.match(links[0].textContent,/Walk through/);assert.equal(s.writes.length,0);
+});

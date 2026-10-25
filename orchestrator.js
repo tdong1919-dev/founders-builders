@@ -2,8 +2,14 @@
   'use strict';
   const get=id=>document.getElementById(id),kit=window.FBOrchestratorKit;
   const controls=['missionMode','missionClarification','missionDraft','missionMessages','missionMinutes','founderClarification','founderDraft'];
-  let runs=[],active=null,client=null,aborter=null,epoch=0;
+  let runs=[],active=null,client=null,aborter=null,epoch=0,decisionBusy=false,recoveryTarget=null;
   const settings=()=>kit.normalize({mode:get('missionMode').value,allowClarification:get('missionClarification').checked,allowDraft:get('missionDraft').checked,maxMessages:get('missionMessages').value,maxTaskMinutes:get('missionMinutes').value,founderClarification:get('founderClarification').checked,founderDraft:get('founderDraft').checked});
+  function renderPlan(){
+    const plan=kit.plan(settings());get('missionTaskTitle').textContent=plan.title;get('missionTaskDeliverable').textContent=plan.deliverable+' · '+plan.minutes+' minutes';
+    get('missionPlanSummary').textContent=plan.summary;get('missionPlanLimits').textContent=plan.limitSummary;get('missionPlanWarnings').replaceChildren();
+    for(const warning of plan.warnings){const node=document.createElement('li');node.textContent=warning;get('missionPlanWarnings').append(node);}
+    get('missionPlanHint').textContent=plan.warnings.length?'These are predicted boundaries for this fixed sample. You may run it to test the stop; no settings will be expanded.':'No predicted policy stop for this fixed sample. The server still checks permissions on every step.';
+  }
   function renderReport(){
     const r=kit.report(runs);get('missionMetrics').textContent=r.runs+' runs · '+r.drafts+' drafts · '+r.blocked+' policy blocks · '+r.failed+' failures · '+r.waiting+' awaiting review';
     get('missionReport').textContent=JSON.stringify(r,null,2);get('missionCopyReport').disabled=!runs.length;
@@ -11,10 +17,10 @@
     for(const [mode,prefix] of [['review-first','review'],['delegated','delegated']]){const values=r.byMode[mode];get(prefix+'Runs').textContent=String(values.runs);get(prefix+'Drafts').textContent=String(values.drafts);get(prefix+'Blocks').textContent=String(values.blocked);}
   }
   function stop(message){
-    epoch++;aborter?.abort();
+    epoch++;aborter?.abort();decisionBusy=false;recoveryTarget=null;get('missionRecover').hidden=true;
     if(active&&['running','waiting'].includes(active.outcome)){active.outcome='cleared';active.endedAt=Date.now();}
     active=null;client=null;get('missionStart').disabled=false;get('missionDecision').hidden=true;get('missionResult').textContent='';
-    if(message)get('missionStatus').textContent=message;renderReport();
+    if(message)get('missionStatus').textContent=message;renderReport();renderPlan();
   }
   function event(e,ticket,run){
     if(ticket!==epoch)return;kit.record(run,e,Date.now());
@@ -26,14 +32,15 @@
     get('missionTrace').append(item);renderReport();
   }
   async function decision(approve,ticket=epoch){
-    if(!client||!active||ticket!==epoch)return;const run=active,currentClient=client,currentAborter=aborter;
+    if(decisionBusy||!client||!active||!['running','waiting'].includes(active.outcome)||ticket!==epoch)return;decisionBusy=true;const run=active,currentClient=client,currentAborter=aborter;
     get('missionApprove').disabled=true;get('missionDecline').disabled=true;get('missionStatus').textContent='Checking both sides’ permissions before the next step…';
     const timer=setTimeout(()=>currentAborter.abort(),15000);
     try{const result=await currentClient.decide(approve);if(ticket!==epoch)return;run.outcome=result.phase;run.endedAt=Date.now();get('missionResult').textContent=result.artifact;get('missionDecision').hidden=true;get('missionStart').disabled=false;get('missionStatus').textContent=approve?'Fictional draft prepared within this run’s settings. No real message, agreement or portfolio permission.':'Exchange stopped. Declining is a valid outcome.';renderReport();}
-    catch(error){fail(error,ticket,run);}finally{clearTimeout(timer);}
+    catch(error){fail(error,ticket,run);}finally{clearTimeout(timer);if(ticket===epoch)decisionBusy=false;}
   }
   function fail(error,ticket,run){
     if(ticket!==epoch)return;run.outcome=error.sandboxReason?'blocked':'failed';run.endedAt=Date.now();get('missionDecision').hidden=true;get('missionStart').disabled=false;
+    const recovery=kit.recovery(error.sandboxReason,run.policies);recoveryTarget=recovery.target;get('missionRecover').textContent=recovery.label;get('missionRecover').hidden=false;
     get('missionStatus').textContent=error.name==='AbortError'?'Request timed out. Start a new run; the trace is incomplete.':error.message;renderReport();
   }
   async function start(){
@@ -49,9 +56,10 @@
     }catch(error){fail(error,ticket,run);}finally{clearTimeout(timer);}
   }
   controls.forEach(id=>get(id).addEventListener('change',()=>stop('Settings changed. Any pending run was stopped. Start a new run to apply these permissions.')));
+  get('missionRecover').addEventListener('click',()=>{if(!recoveryTarget)return;get(recoveryTarget).focus();get('missionStatus').textContent='Review this setting and the other person’s preferences. Nothing was changed or retried automatically.';});
   get('missionStart').addEventListener('click',start);get('missionStop').addEventListener('click',()=>stop('Run stopped locally. Previously signed fictional snapshots expire separately.'));
   get('missionApprove').addEventListener('click',()=>decision(true));get('missionDecline').addEventListener('click',()=>decision(false));
   get('missionClear').addEventListener('click',()=>{stop();runs=[];get('missionTrace').replaceChildren();get('missionStatus').textContent='Session history cleared from this page. Nothing is stored in a database.';renderReport();});
   get('missionCopyReport').addEventListener('click',async()=>{const ticket=epoch;try{if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable. Select the report text to copy it.');await navigator.clipboard.writeText(kit.exportReport(runs));if(ticket===epoch)get('missionReportStatus').textContent='Aggregate report copied. It excludes message bodies, names, task IDs, continuation tokens and secrets.';}catch(error){if(ticket===epoch)get('missionReportStatus').textContent=error.message;}});
-  window.addEventListener('pagehide',()=>{epoch++;aborter?.abort();});renderReport();
+  window.addEventListener('pagehide',()=>{epoch++;aborter?.abort();});renderReport();renderPlan();
 })();

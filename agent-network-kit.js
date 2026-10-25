@@ -2,7 +2,7 @@
 (function(root){
   'use strict';
   const tasks=[
-    {id:'sample-design',title:'Review one onboarding screen',project:'Fictional community tool',skill:'Design',minutes:45,deliverable:'Three annotated suggestions for one screen',support:'A sample screen and a 15-minute founder check-in',compensation:'Unpaid voluntary sample; no real offer',credit:'Discuss attribution and separate portfolio permission before starting'},
+    {id:'sample-design',title:'Review one onboarding screen',project:'Fictional community tool',skill:'Design',minutes:45,deliverable:'Three written observations on one sample onboarding screen',support:'A sample screen, a 15-minute founder check-in and written feedback within three days',compensation:'Unpaid voluntary sample; no real offer',credit:'Discuss attribution and separate portfolio permission before starting'},
     {id:'sample-code',title:'Improve one empty state',project:'Fictional learning app',skill:'Development',minutes:90,deliverable:'One accessible empty-state component and a short explanation',support:'A starter component, acceptance checklist and code review',compensation:'Discuss before starting; no real offer',credit:'Agree credit directly; no automatic permission to publish code'},
     {id:'sample-research',title:'Test a first-time task journey',project:'Fictional local network',skill:'Research',minutes:30,deliverable:'Five observations from a fictional task walkthrough',support:'A walkthrough script and written feedback within three days',compensation:'Unpaid voluntary sample; no real offer',credit:'Agree which observations may be shared and how collaborators are credited'}
   ];
