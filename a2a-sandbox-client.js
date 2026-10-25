@@ -1,7 +1,8 @@
 /* A rule-based builder agent: actual HTTP client, no model or private storage. */
 (function(root){
   'use strict';
-  function create({fetcher,origin,uuid,onEvent=()=>{},signal,policies,clock=Date.now}){
+  function create({fetcher,origin,uuid,onEvent=()=>{},signal,policies,brief='needs-clarification',clock=Date.now}){
+    if(!['needs-clarification','clear'].includes(brief))throw Error('Choose a supported fictional brief.');
     let task=null,phase='new',busy=false;
     const fixedOrigin=new URL(origin).origin;
     async function read(path,options){
@@ -13,7 +14,7 @@
     async function send(action){
       const started=clock();
       const message={messageId:uuid(),role:'ROLE_USER',parts:[{data:{action}}]};
-      const params={message};if(!task&&policies!==undefined)params.metadata={policies};if(task){message.taskId=task.id;message.contextId=task.contextId;params.metadata={resumeToken:task.metadata.resumeToken};}
+      const params={message};if(!task&&policies!==undefined)params.metadata={policies};if(!task&&brief==='clear')params.metadata={...params.metadata,brief};if(task){message.taskId=task.id;message.contextId=task.contextId;params.metadata={resumeToken:task.metadata.resumeToken};}
       const id=uuid(),reply=await read('/a2a/founder',{method:'POST',headers:{'content-type':'application/json','A2A-Version':'1.0'},body:JSON.stringify({jsonrpc:'2.0',id,method:'SendMessage',params})});
       if(reply.error){
         const reasons=['message_limit','scope_limit','clarification_permission','draft_permission','policy_change','old_run','invalid_policy'];
@@ -21,8 +22,8 @@
         onEvent({kind:'blocked',action,reason,elapsedMs:Math.max(0,clock()-started)});
         const error=Error(reply.error.message||'The sandbox rejected this step.');error.sandboxReason=reason;throw error;
       }
-      const next=reply.result?.task,expected={inquire:['question','TASK_STATE_INPUT_REQUIRED'],clarify:['approval','TASK_STATE_INPUT_REQUIRED'],approve:['prepared','TASK_STATE_COMPLETED'],decline:['declined','TASK_STATE_CANCELED']}[action];
-      if(reply.jsonrpc!=='2.0'||reply.id!==id||!next?.id||!next.contextId||next.metadata?.fictional!==true||next.metadata.phase!==expected[0]||next.status?.state!==expected[1]||typeof next.metadata.resumeToken!=='string'||next.metadata.resumeToken.length>2000||typeof next.status.message?.parts?.[0]?.text!=='string'||next.status.message.parts[0].text.length>4000||next.metadata.authority?.realMessageSent!==false||next.metadata.authority?.termsAccepted!==false||next.metadata.authority?.portfolioPermission!==false||(task&&(next.id!==task.id||next.contextId!==task.contextId)))throw Error('Unexpected task response. Nothing further was sent.');
+      const next=reply.result?.task,expected={inquire:[brief==='clear'?'approval':'question','TASK_STATE_INPUT_REQUIRED'],clarify:['approval','TASK_STATE_INPUT_REQUIRED'],approve:['prepared','TASK_STATE_COMPLETED'],decline:['declined','TASK_STATE_CANCELED']}[action];
+      if(reply.jsonrpc!=='2.0'||reply.id!==id||!next?.id||!next.contextId||next.metadata?.fictional!==true||next.metadata.phase!==expected[0]||(next.metadata.brief||'needs-clarification')!==brief||next.status?.state!==expected[1]||typeof next.metadata.resumeToken!=='string'||next.metadata.resumeToken.length>2000||typeof next.status.message?.parts?.[0]?.text!=='string'||next.status.message.parts[0].text.length>4000||next.metadata.authority?.realMessageSent!==false||next.metadata.authority?.termsAccepted!==false||next.metadata.authority?.portfolioPermission!==false||(task&&(next.id!==task.id||next.contextId!==task.contextId)))throw Error('Unexpected task response. Nothing further was sent.');
       task=next;phase=expected[0];
       onEvent({kind:'exchange',action,method:'SendMessage',endpoint:'/a2a/founder',taskId:task.id,state:task.status.state,elapsedMs:Math.max(0,clock()-started),sequence:task.metadata.orchestrator?.processedMessages,decisionBasis:task.metadata.orchestrator?.decisionBasis,builder:task.history?.[0]?.parts?.[0]?.text||'Fictional '+action,founder:task.status.message.parts[0].text});
       return task;
@@ -33,7 +34,7 @@
         const card=await read('/.well-known/agent-card.json',{headers:{'A2A-Version':'1.0'}});
         if(!card.supportedInterfaces?.some(i=>i.protocolBinding==='JSONRPC'&&i.protocolVersion==='1.0'&&i.url===fixedOrigin+'/a2a/founder'))throw Error('The agent card does not advertise this sandbox endpoint.');
         onEvent({kind:'discovery',text:'Builder agent discovered the fictional founder agent’s A2A 1.0 JSON-RPC interface.'});
-        await send('inquire');await send('clarify');return {phase};
+        await send('inquire');if(phase==='question')await send('clarify');return {phase};
       }catch(error){phase='failed';throw error;}finally{busy=false;}
     }
     async function decide(approved){

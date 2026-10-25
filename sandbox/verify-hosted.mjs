@@ -1,7 +1,7 @@
 /* Credentials stay in stdin memory; output contains only test results. */
 import {createRequire} from 'node:module';
 import assert from 'node:assert/strict';
-const require=createRequire(import.meta.url),{create}=require('../a2a-sandbox-client.js'),orchestrator=require('../orchestrator-kit.js');
+const require=createRequire(import.meta.url),{create}=require('../a2a-sandbox-client.js'),orchestrator=require('../orchestrator-kit.js'),comparison=require('../brief-experiment-kit.js');
 if(process.stdin.isTTY)process.stdin.setRawMode(true);
 process.stdout.write('Ready for private sandbox verification JSON on stdin (input is hidden).\n');
 const args=await new Promise((resolve,reject)=>{let text='';function read(chunk){text+=chunk.toString();if(text.length>20000){reject(Error('Input too large'));return;}if(text.includes('\n')){process.stdin.off('data',read);process.stdin.pause();if(process.stdin.isTTY)process.stdin.setRawMode(false);try{resolve(JSON.parse(text.trim()));}catch{reject(Error('Invalid verification input'));}}}process.stdin.on('data',read);process.stdin.resume();});
@@ -26,5 +26,8 @@ try{
   let outcome;try{await client.start();outcome=(await client.decide(true)).phase;}catch(error){outcome=error.sandboxReason;}
   assert.equal(outcome,scenario.expected);console.log(scenario.name+': PASS');
  }
+ const comparisonResult=await comparison.compare({settings:{},fetcher,origin,uuid:()=>crypto.randomUUID()});
+ assert.deepEqual(comparisonResult.arms.map(a=>a.outcome),['ready-for-review','ready-for-review']);assert.equal(comparisonResult.processedMessageDifference,1);assert.deepEqual(comparisonResult.arms[0].policies,comparisonResult.arms[1].policies);console.log('Clearer brief: one fewer message with identical permissions: PASS');
+ const limited=await comparison.compare({settings:{maxTaskMinutes:30},fetcher,origin,uuid:()=>crypto.randomUUID()});assert.ok(limited.arms.every(a=>a.reason==='scope_limit'));assert.equal(limited.processedMessageDifference,null);console.log('Both brief variants respect task-time boundary: PASS');
  console.log('Verified '+count+' real HTTPS requests; no private data, external messages or terms accepted.');
 }catch{console.error('Hosted sandbox verification failed. No credentials or response bodies printed.');process.exitCode=1;}

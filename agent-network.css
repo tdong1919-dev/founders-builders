@@ -4,3 +4,6 @@
 
 .agent-transcript{list-style:none;padding:0;display:grid;gap:20px;}
 .agent-transcript p{overflow-wrap:anywhere;}
+
+.comparison-table{overflow-x:auto;max-width:100%;}
+.comparison-table table{min-width:36rem;}

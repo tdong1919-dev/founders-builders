@@ -24,7 +24,7 @@
     {
       "id": "fictional-scope-review",
       "name": "Clarify a fictional task",
-      "description": "Ask one scope question, propose a small task, and pause for a human decision.",
+      "description": "Clarify a fictional task or review a clear brief, then pause for a decision.",
       "tags": [
         "sandbox",
         "fictional",
