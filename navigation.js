@@ -19,7 +19,7 @@
   function scroll() { nav.classList.toggle('scrolled', window.scrollY > 8); }
   scroll(); window.addEventListener('scroll', scroll, { passive: true });
   toggle.addEventListener('click', function () { toggle.setAttribute('aria-expanded', String(links.classList.toggle('open'))); });
-  links.querySelectorAll('a').forEach(function (link) { link.addEventListener('click', close); });
+  links.querySelectorAll('a').forEach(function (link) { if (link.getAttribute && link.getAttribute('href') === 'workspace.html') link.setAttribute('href','cloud-workspace.html'); link.addEventListener('click', close); });
   document.addEventListener('keydown', function (event) {
     if (event.key === 'Escape' && links.classList.contains('open')) { close(); toggle.focus(); }
   });

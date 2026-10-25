@@ -1,0 +1,18 @@
+begin;
+create function pg_temp.check_true(value boolean,label text) returns void language plpgsql as $$begin if value is distinct from true then raise exception 'FAIL: %',label;end if;raise notice 'PASS: %',label;end$$;
+select pg_temp.check_true(not has_table_privilege('anon','public.fb_shared_cloud_state','SELECT'),'anonymous snapshot denied');
+select pg_temp.check_true(not has_table_privilege('authenticated','public.fb_shared_cloud_state','UPDATE'),'authenticated snapshot mutation denied');
+select pg_temp.check_true(not has_table_privilege('authenticated','public.fb_shared_approved_accounts','SELECT'),'approval list not client-readable');
+select pg_temp.check_true(not has_function_privilege('anon','public.fb_shared_load()','EXECUTE'),'anonymous cloud load denied');
+select pg_temp.check_true(not has_function_privilege('authenticated','public.fb_shared_commit(bigint,jsonb)','EXECUTE'),'authenticated CAS denied');
+select pg_temp.check_true(has_function_privilege('service_role','public.fb_shared_load()','EXECUTE'),'trusted service load allowed');
+select pg_temp.check_true((select relrowsecurity from pg_class where oid='public.fb_shared_cloud_state'::regclass),'snapshot RLS enabled');
+select pg_temp.check_true((select relrowsecurity from pg_class where oid='public.fb_shared_approved_accounts'::regclass),'approval list RLS enabled');
+select pg_temp.check_true(public.fb_shared_commit(0,(public.fb_shared_load()->'state')),'initial commit succeeds');
+select pg_temp.check_true(not public.fb_shared_commit(0,(public.fb_shared_load()->'state')),'stale commit cannot overwrite');
+insert into public.fb_shared_approved_accounts(email) values('fixture@example.test');
+select pg_temp.check_true(public.fb_shared_reserve_login('fixture@example.test'),'approved login reservation');
+select pg_temp.check_true(not public.fb_shared_reserve_login('fixture@example.test'),'rapid duplicate login denied');
+select pg_temp.check_true(not public.fb_shared_reserve_login('outsider@example.test'),'unapproved login denied');
+select pg_temp.check_true(public.fb_shared_is_approved('FIXTURE@example.test'),'approval is case normalized');
+rollback;

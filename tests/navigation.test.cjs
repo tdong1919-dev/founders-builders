@@ -2,12 +2,12 @@ const {test}=require('node:test');const assert=require('node:assert/strict');con
 function setup(){
  const handlers={},events={},classes=new Set();let focused=false;
  const links={classList:{remove:k=>classes.delete(k),contains:k=>classes.has(k),toggle:k=>{if(classes.has(k)){classes.delete(k);return false;}classes.add(k);return true;}},querySelectorAll:()=>[link]};
- const link={addEventListener:(name,fn)=>handlers['link-'+name]=fn};
+ let destination='workspace.html';const link={getAttribute:()=>destination,setAttribute:(k,v)=>destination=v,addEventListener:(name,fn)=>handlers['link-'+name]=fn};
  const attrs={},toggle={setAttribute:(k,v)=>attrs[k]=v,addEventListener:(name,fn)=>handlers['toggle-'+name]=fn,focus:()=>focused=true};
  const nav={classList:{toggle(){}},contains:target=>target==='inside'};
  const document={getElementById:id=>({nav,primaryLinks:links,navToggle:toggle}[id]||null),addEventListener:(name,fn)=>handlers[name]=fn};
  vm.runInNewContext(fs.readFileSync(require.resolve('../navigation.js'),'utf8'),{document,window:{scrollY:0,addEventListener:(name,fn)=>events[name]=fn}});
- return {handlers,attrs,classes,focused:()=>focused};
+ return {destination:()=>destination,handlers,attrs,classes,focused:()=>focused};
 }
 test('shared mobile menu updates aria and returns focus when Escape closes it',()=>{
  const s=setup();s.handlers['toggle-click']();assert.equal(s.attrs['aria-expanded'],'true');
@@ -39,3 +39,5 @@ test('direct links reveal collapsed journey steps on initial load and hash chang
  window.location.hash='#%ZZ';assert.doesNotThrow(()=>events.hashchange());
  window.location.hash='#missing';assert.doesNotThrow(()=>events.hashchange());assert.equal(scrolled,2);
 });
+
+test('Workspace navigation opens the real cloud entry point',()=>{assert.equal(setup().destination(),'cloud-workspace.html');});
