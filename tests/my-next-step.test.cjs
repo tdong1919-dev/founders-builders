@@ -135,3 +135,16 @@ test('attention-only empty guidance distinguishes waiting work, search and damag
  s.stored.fb_interest_reviews_v1='broken';s.events.pageshow();assert.match(s.get('nextStepWarning').textContent,/unavailable/);assert.doesNotMatch(s.get('nextStepEmptyTitle').textContent,/Nothing needs/);assert.equal(s.writes.length,0);
  const empty=board();empty.get('attentionOnly').checked=true;empty.get('attentionOnly').listeners.change();assert.equal(empty.get('nextStepStartPaths').hidden,false);
 });
+
+test('one empty-view action restores all saved work without writes or navigation',()=>{
+ const s=board({cs:[contribution('waiting','interest_shared'),contribution('done','completed')],rs:[review('closed','closed')]});
+ assert.equal(s.get('showAllSavedWork').hidden,true);
+ s.get('attentionOnly').checked=true;s.get('nextStepSearch').value='absent';s.get('attentionOnly').listeners.change();assert.equal(s.get('showAllSavedWork').hidden,false);
+ const reads=s.reads.length;s.get('showAllSavedWork').listeners.click();assert.equal(s.get('nextStepSearch').value,'');assert.equal(s.get('attentionOnly').checked,false);assert.equal(s.get('includeFinishedWork').checked,true);assert.equal(s.get('includeFinishedWork').disabled,false);assert.equal(s.get('nextStepCards').children.length,3);assert.equal(s.get('completedWorkCards').children.length,0);assert.equal(s.get('showAllSavedWork').hidden,true);assert.equal(s.get('nextStepSearch').focused,true);assert.equal(s.reads.length,reads);assert.equal(s.writes.length,0);assert.equal(s.location.href,'');
+});
+test('empty-view recovery stays distinct from first use and unreadable storage',()=>{
+ const empty=board();assert.equal(empty.get('showAllSavedWork').hidden,true);
+ const blocked=board({blocked:true});assert.equal(blocked.get('showAllSavedWork').hidden,true);
+ const done=board({cs:[contribution('done','completed')]});assert.equal(done.get('showAllSavedWork').hidden,false);done.get('showAllSavedWork').listeners.click();assert.equal(done.get('nextStepCards').children.length,1);
+ const partial=board({cs:[contribution('ok','interest')]});partial.stored.fb_interest_reviews_v1='broken';partial.get('nextStepSearch').value='absent';partial.events.pageshow();assert.match(partial.get('nextStepEmptyTitle').textContent,/could not be fully loaded/);assert.equal(partial.get('showAllSavedWork').hidden,false);partial.get('showAllSavedWork').listeners.click();assert.equal(partial.get('nextStepCards').children.length,1);assert.match(partial.get('nextStepWarning').textContent,/unavailable/);assert.equal(partial.writes.length,0);
+});

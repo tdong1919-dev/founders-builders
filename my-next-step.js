@@ -20,11 +20,12 @@
     get('nextStepCount').textContent=list.length+' of '+visible.length+' saved '+(visible.length===1?'task':'tasks')+' shown · '+(active.length-waiting)+' ready for your attention · '+waiting+' waiting overall';
     get('nextStepWarning').textContent=warnings.join(' ');
     get('nextStepEmpty').hidden=!!list.length;
+    get('showAllSavedWork').hidden=!!list.length||!all.length;
     const firstVisit=!all.length&&!warnings.length;
     get('nextStepStartPaths').hidden=!firstVisit;
     get('nextStepEmptyTitle').textContent=warnings.length?'Your saved work could not be fully loaded.':all.length?'Your active list is clear.':'Your next step starts with one small task.';
     get('nextStepEmptyText').textContent=warnings.length?'Your saved copies have not been changed. Use the notebook or founder desk links below to review readable work and recovery guidance.':all.length?finishedMessage:'Choose a place to start. Saved contributions and founder reviews will appear here on this device. No account is needed for these local tools; nothing is sent automatically.';
-    if(searching&&all.length&&!list.length){
+    if(searching&&all.length&&!list.length&&!warnings.length){
       get('nextStepEmptyTitle').textContent=completed.length&&!get('includeFinishedWork').checked?'No active tasks match this search.':'No saved tasks match this view.';
       get('nextStepEmptyText').textContent=completed.length&&!get('includeFinishedWork').checked?'Matching completed contributions are in the work-and-credit section below.':'Try another task, project, collaborator or stage, clear the search, or include finished work. Your saved records have not changed.';
     }
@@ -52,6 +53,10 @@
   }
   get('nextStepSearch').addEventListener('input',render);
   get('clearNextStepSearch').addEventListener('click',()=>{get('nextStepSearch').value='';render();get('nextStepSearch').focus();});
+  get('showAllSavedWork').addEventListener('click',()=>{
+    get('nextStepSearch').value='';get('attentionOnly').checked=false;get('includeFinishedWork').checked=true;
+    render();get('nextStepSearch').focus();
+  });
   get('attentionOnly').addEventListener('change',render);
   get('includeFinishedWork').addEventListener('change',render);
   get('refreshNextSteps').addEventListener('click',refresh);

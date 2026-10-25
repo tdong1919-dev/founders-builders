@@ -42,7 +42,7 @@ Regression tests reproduce the original truncation and partial-corruption failur
 
 ## Verification
 
-All 175 frontend tests pass. New coverage checks stage-appropriate actions, finished-work filtering, literal text rendering, one action per card, minimized session pointers, no automatic record writes, blocked storage, malformed records, refresh/history/cross-tab behavior and stale or wrong-tool pointers. Waiting-state tests check explicit stage save/reopen, backup preservation, open-review filtering, follow-up actions and unchanged download/credit gates. Actual notebook/review controller tests verify resuming the right record, current-action focus, opening feedback, prefilled saved proposals, unchanged stages and separate review/credit acknowledgment.
+All 177 frontend tests pass. New coverage checks stage-appropriate actions, finished-work filtering, literal text rendering, one action per card, minimized session pointers, no automatic record writes, blocked storage, malformed records, refresh/history/cross-tab behavior and stale or wrong-tool pointers. Waiting-state tests check explicit stage save/reopen, backup preservation, open-review filtering, follow-up actions and unchanged download/credit gates. Actual notebook/review controller tests verify resuming the right record, current-action focus, opening feedback, prefilled saved proposals, unchanged stages and separate review/credit acknowledgment.
 
 All 45 HTML pages pass local asset/link/anchor and unique-ID checks using `python3 scripts/check-static-pages.py`. Changed JavaScript syntax and diff whitespace checks pass. Desktop/mobile rendering and actual browser focus behavior remain unverified because browser automation is unavailable. No Google runtime test, production deployment or paid service was added. Supabase remains deferred.
 
@@ -95,3 +95,7 @@ Only explicit interest-shared, work-delivered and terms-proposed actions are wai
 ## Focus on attention
 
 Attention only temporarily hides waiting and finished work. The finished-work checkbox is disabled while focused, retaining its previous choice for when focus is turned off. Search and refresh preserve the current focus. Empty guidance explains how to return to waiting work without treating it as a first visit or claiming damaged storage is clear. No filters are persisted and no records, stages or permissions change. Tests cover combined filters, refresh, restoring finished-work choices, empty/search/recovery states and no writes.
+
+## Recover an empty view
+
+When readable saved work exists but no main-list cards are shown, Show all saved work clears search, turns off Attention only and includes finished work. It focuses the search field and does not reread storage, write records or navigate. First-use and fully unavailable storage do not offer this action. A partial-storage warning remains visible when readable work is restored, and search cannot overwrite recovery guidance. Tests cover combined filters, finished-only work, focus, no writes/navigation, and damaged storage.
