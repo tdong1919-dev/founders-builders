@@ -18,7 +18,7 @@ export function createCloudHandler({load,commit,verifySession,reserveLogin,sendC
    if(input.operation==='sendCode'){
     const email=typeof input.params.email==='string'?input.params.email.trim().toLowerCase():'';if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254)return reply({error:'invalid',message:'Enter a valid email address.'},400);
     if(await reserveLogin(email))await sendCode(email);
-    return reply({data:{message:'If this email has approved access, a sign-in email has been sent. Check your inbox and spam folder.'}});
+    return reply({data:{message:'Check your inbox and spam folder. Approved accounts receive a link when email limits allow. Wait at least 90 seconds before trying again.'}});
    }
    const bearer=/^Bearer ([A-Za-z0-9._~-]{16,4096})$/.exec(request.headers.get('authorization')||'')?.[1];if(!bearer)return reply({error:'unauthenticated',message:'Sign in to continue.'},401);
    const key=request.headers.get('idempotency-key');if(!key||!/^[A-Za-z0-9_-]{8,100}$/.test(key))return reply({error:'invalid',message:'A unique request key is required.'},400);
@@ -50,6 +50,6 @@ export function createCloudHandler({load,commit,verifySession,reserveLogin,sendC
     if(await commit(snapshot.revision,state))return reply(result,status);
    }
    return reply({error:'conflict',message:'Shared progress changed. Refresh and retry; nothing was overwritten.'},409);
-  }catch{return reply({error:'unavailable',message:'Cloud service is unavailable. No success was confirmed.'},503);}
+  }catch(error){if(error.code==='email_rate_limited')return reply({error:'email_rate_limited',message:'No sign-in email was sent: the app has reached its email sending limit. Please wait up to an hour before trying once more.'},429);return reply({error:'unavailable',message:'Cloud service is unavailable. No success was confirmed.'},503);}
  };
 }

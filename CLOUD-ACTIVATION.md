@@ -12,7 +12,7 @@ The approved authentication Site URL is `https://founders-builders-ux-review.hel
 
 ## Validation
 
-- 257 Node regression tests, including cloud authorization, scoped agent revocation, response races, callback cleanup, tab-session restoration, renewal, identity checks, browser-history return, and sign-out.
+- 259 Node regression tests, including cloud authorization, scoped agent revocation, response races, callback cleanup, tab-session restoration, renewal, identity checks, browser-history return, and sign-out.
 - 51 HTML pages pass local asset/link/anchor/ID checks.
 - 60 SQL assertions passed against hosted PostgreSQL inside rollback-only test transactions.
 - 10 live anonymous/forged-credential boundary requests passed.
@@ -27,3 +27,5 @@ The owner reported completing the two-real-account journey through contribution 
 The first beta uses an atomic revisioned aggregate with explicit size limits. It is not a claim of production-scale storage. Binary uploads and Supabase Storage buckets are not enabled. Cloud storage here means persistent private collaboration records in PostgreSQL. No GitHub main deployment or merge is part of this activation.
 
 Session implementation follows Supabase’s rotating refresh-token model: https://supabase.com/docs/guides/auth/sessions. Browser-readable tokens remain sensitive to same-origin script access; this tab-scoped beta storage is not an HttpOnly cookie session. The Edge Function continues to verify real JWTs and per-account beta approval on each operation.
+
+Email delivery investigation: the provider rejected the 2026-10-25 22:05 UTC sign-in request with HTTP 429 (`over_email_send_rate_limit`) after two successful sends in the prior hour. Edge version 2 maps this to a safe actionable 429 response; the browser displays that message. Generic approved-address messaging no longer promises a send when a local cooldown prevents it. No extra email was sent while diagnosing. Supabase’s built-in mail service has a project-wide two-email/hour limit (https://supabase.com/docs/guides/auth/rate-limits); reliable wider invitations require a separately configured mail service. No SMTP, paid service, or billing settings were changed.

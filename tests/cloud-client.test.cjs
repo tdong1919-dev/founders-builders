@@ -51,3 +51,5 @@ test('restoring an unverified or rejected saved identity never grants access',as
 test('renewal verifies identity again and rejects a token pair that changes the active account',async()=>{
  const storage=tabStorage();let clock=100000,changed=false;const client=create(config,async url=>url.includes('/token?')?response({access_token:'different_access_token',refresh_token:'different_refresh_token',expires_in:3600}):response(changed?{...confirmed,id:'other-account'}:confirmed),{storage,now:()=>clock});await client.acceptToken('initial_access_token',3600,'initial_refresh_token');clock+=3540001;changed=true;await assert.rejects(client.maintain(),/Session changed/);assert.equal(client.user(),null);assert.equal(storage.entries.size,0);
 });
+
+test('sign-in email displays the safe provider rate-limit message',async()=>{const client=create(config,async()=>new Response(JSON.stringify({error:'email_rate_limited',message:'No sign-in email was sent: email limit reached.'}),{status:429}));await assert.rejects(client.sendEmail('owner@example.test'),/No sign-in email was sent/);});

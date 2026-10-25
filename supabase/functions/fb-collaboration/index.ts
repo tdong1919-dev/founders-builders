@@ -9,7 +9,7 @@ const handler=createCloudHandler({
  origins:['https://founders-builders-ux-review.hello978822.chatgpt.site','https://tdong1919-dev.github.io'],
  load:()=>rpc('fb_shared_load'),commit:(revision,state)=>rpc('fb_shared_commit',{p_revision:revision,p_state:state}),
  reserveLogin:email=>rpc('fb_shared_reserve_login',{p_email:email}),
- sendCode:async email=>{const r=await fetch(url+'/auth/v1/otp?redirect_to='+encodeURIComponent('https://founders-builders-ux-review.hello978822.chatgpt.site/cloud-workspace.html'),{method:'POST',headers:{apikey:publicKey,'Content-Type':'application/json'},body:JSON.stringify({email,create_user:true}),signal:AbortSignal.timeout(10000)});if(!r.ok)throw Error('Email could not be sent');},
+ sendCode:async email=>{const r=await fetch(url+'/auth/v1/otp?redirect_to='+encodeURIComponent('https://founders-builders-ux-review.hello978822.chatgpt.site/cloud-workspace.html'),{method:'POST',headers:{apikey:publicKey,'Content-Type':'application/json'},body:JSON.stringify({email,create_user:true}),signal:AbortSignal.timeout(10000)});if(!r.ok){const error=Error('Email could not be sent');if(r.status===429)Object.assign(error,{code:'email_rate_limited'});throw error;}},
  verifySession:async token=>{try{const r=await fetch(url+'/auth/v1/user',{headers:{apikey:publicKey,Authorization:'Bearer '+token},signal:AbortSignal.timeout(10000)});if(!r.ok)return null;const user=await r.json();return user.id&&user.email_confirmed_at&&await rpc('fb_shared_is_approved',{p_email:user.email})?{id:user.id}:null;}catch{return null;}}
 });
 Deno.serve(handler);
