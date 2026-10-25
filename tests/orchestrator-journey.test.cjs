@@ -2,7 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 const kit=require('../orchestrator-kit.js'),client=require('../a2a-sandbox-client.js');
 async function journey({mode='review-first',time='45',fail=false}={}){
  const {createSandbox}=await import('../sandbox/a2a-handler.mjs'),server=createSandbox({secret:'test-only-full-journey-not-hosted-key',cryptoApi:webcrypto}),nodes={},calls=[],copies=[];
- class E{constructor(){this.value='';this.checked=true;this.textContent='';this.children=[];this.listeners={};}append(e){this.children.push(e);}replaceChildren(){this.children=[];}addEventListener(k,f){this.listeners[k]=f;}focus(){this.focused=true;}}
+ class E{constructor(){this.value='';this.checked=true;this.textContent='';this.children=[];this.listeners={};}append(e){this.children.push(e);}replaceChildren(){this.children=[];}addEventListener(k,f){this.listeners[k]=f;}setAttribute(k,v){this[k]=v;}focus(){this.focused=true;}}
  const get=id=>nodes[id]||(nodes[id]=new E());get('missionMode').value=mode;get('missionMinutes').value=time;get('missionMessages').value='3';
  const fetcher=async(url,options)=>{calls.push({url,options});if(fail)throw Error('Connection unavailable');return server.fetch(new Request(url,options));};
  vm.runInNewContext(fs.readFileSync(require.resolve('../orchestrator.js'),'utf8'),{window:{FBOrchestratorKit:kit,FBA2ASandboxClient:client,fetch:fetcher,location:{origin:'https://sandbox.invalid'},crypto:webcrypto,addEventListener:()=>{}},document:{getElementById:get,createElement:()=>new E()},navigator:{clipboard:{writeText:async text=>copies.push(text)}},AbortController,setTimeout,clearTimeout,Date});
@@ -37,4 +37,13 @@ test('minimal dashboard follows approval, draft and protected recovery without s
  const b=await journey({time:'30'});await b.get('dashboardAction').listeners.click();assert.equal(b.get('dashboardTitle').textContent,'A boundary protected you.');b.get('dashboardAction').listeners.click();assert.equal(b.get('missionSettingsPanel').open,true);assert.equal(b.calls.length,3);assert.equal(b.get('missionMinutes').value,'30');
  b.get('missionMinutes').value='45';b.get('missionMinutes').listeners.change();assert.equal(b.get('dashboardAction').textContent,'Start sample mission');assert.equal(b.get('dashboardRuns').textContent,'1');
  b.get('missionClear').listeners.click();assert.equal(b.get('dashboardRuns').textContent,'0');assert.equal(b.get('dashboardTitle').textContent,'Ready when you are.');
+});
+
+test('perspective switches are read-only and stop cancels pending approval without approving or resending',async()=>{
+ const s=await journey();s.get('viewFounder').listeners.click();assert.equal(s.calls.length,0);assert.equal(s.get('dashboardAction').textContent,'Try sample interest');assert.equal(s.get('viewFounder')['aria-pressed'],'true');
+ await s.get('dashboardAction').listeners.click();assert.equal(s.calls.length,3);assert.equal(s.get('dashboardTitle').textContent,'Waiting for the builder.');assert.equal(s.get('dashboardAttentionLabel').textContent,'awaiting builder');
+ s.get('viewBuilder').listeners.click();assert.equal(s.calls.length,3);assert.equal(s.get('dashboardTitle').textContent,'Review the task.');assert.equal(s.get('dashboardPause').hidden,false);
+ s.get('dashboardPause').listeners.click();assert.equal(s.get('dashboardTitle').textContent,'You stopped this mission.');assert.equal(s.get('missionDecision').hidden,true);assert.equal(s.get('dashboardPause').hidden,true);assert.equal(s.get('dashboardAttention').textContent,'0');
+ await s.get('missionApprove').listeners.click();assert.equal(s.calls.length,3);
+ await s.get('dashboardAction').listeners.click();assert.equal(s.calls.length,6);assert.equal(s.get('dashboardRuns').textContent,'2');assert.equal(s.get('dashboardNotice').textContent,'');
 });

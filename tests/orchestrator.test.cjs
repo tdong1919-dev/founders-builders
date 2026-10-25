@@ -38,7 +38,7 @@ test('report has no invented averages or rankings when there is no evidence',()=
 });
 function screen({mode='review-first',blocked=false}={}){
  const nodes={},starts=[],decisions=[],clips=[];let options;
- class E{constructor(){this.value='';this.checked=true;this.children=[];this.listeners={};this.textContent='';}addEventListener(k,f){this.listeners[k]=f;}replaceChildren(){this.children=[];}append(e){this.children.push(e);}focus(){this.focused=true;}}
+ class E{constructor(){this.value='';this.checked=true;this.children=[];this.listeners={};this.textContent='';}addEventListener(k,f){this.listeners[k]=f;}replaceChildren(){this.children=[];}append(e){this.children.push(e);}setAttribute(k,v){this[k]=v;}focus(){this.focused=true;}}
  const get=id=>nodes[id]||(nodes[id]=new E());get('missionMode').value=mode;get('missionMessages').value='3';get('missionMinutes').value='45';
  const agent={create:o=>{options=o;return {start:()=>new Promise((resolve,reject)=>starts.push({resolve,reject})),decide:async value=>{decisions.push(value);if(blocked){options.onEvent({kind:'blocked',action:'approve',reason:'draft_permission'});const e=Error('Founder does not allow drafting');e.sandboxReason='draft_permission';throw e;}return {phase:value?'prepared':'declined',artifact:value?'Fictional draft':''};}};}};
  vm.runInNewContext(fs.readFileSync(require.resolve('../orchestrator.js'),'utf8'),{window:{FBOrchestratorKit:kit,FBA2ASandboxClient:agent,fetch:()=>{},location:{origin:'https://sandbox.invalid'},crypto:webcrypto,addEventListener:()=>{}},document:{getElementById:get,createElement:()=>new E()},navigator:{clipboard:{writeText:async text=>clips.push(text)}},AbortController,setTimeout,clearTimeout,Date});
