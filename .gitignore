@@ -11,3 +11,9 @@ npm-debug.log*
 *.log
 .env
 .env.local
+
+# Private local collaboration databases and runtime files
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+.local-shared/
