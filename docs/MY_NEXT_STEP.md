@@ -42,7 +42,7 @@ Regression tests reproduce the original truncation and partial-corruption failur
 
 ## Verification
 
-All 173 frontend tests pass. New coverage checks stage-appropriate actions, finished-work filtering, literal text rendering, one action per card, minimized session pointers, no automatic record writes, blocked storage, malformed records, refresh/history/cross-tab behavior and stale or wrong-tool pointers. Waiting-state tests check explicit stage save/reopen, backup preservation, open-review filtering, follow-up actions and unchanged download/credit gates. Actual notebook/review controller tests verify resuming the right record, current-action focus, opening feedback, prefilled saved proposals, unchanged stages and separate review/credit acknowledgment.
+All 175 frontend tests pass. New coverage checks stage-appropriate actions, finished-work filtering, literal text rendering, one action per card, minimized session pointers, no automatic record writes, blocked storage, malformed records, refresh/history/cross-tab behavior and stale or wrong-tool pointers. Waiting-state tests check explicit stage save/reopen, backup preservation, open-review filtering, follow-up actions and unchanged download/credit gates. Actual notebook/review controller tests verify resuming the right record, current-action focus, opening feedback, prefilled saved proposals, unchanged stages and separate review/credit acknowledgment.
 
 All 45 HTML pages pass local asset/link/anchor and unique-ID checks using `python3 scripts/check-static-pages.py`. Changed JavaScript syntax and diff whitespace checks pass. Desktop/mobile rendering and actual browser focus behavior remain unverified because browser automation is unavailable. No Google runtime test, production deployment or paid service was added. Supabase remains deferred.
 
@@ -91,3 +91,7 @@ Tests cover metadata-only matching, multi-word/case/query limits, local filterin
 The board puts actionable tasks first, waiting tasks next, and optional finished work last. It keeps saved order within each group without writing or reordering stored records. Counts show tasks ready for attention and tasks waiting overall, even during search. Waiting cards retain one appropriate review or check-in action. No deadlines or overdue claims are inferred.
 
 Only explicit interest-shared, work-delivered and terms-proposed actions are waiting. A saved proposal or feedback source that needs review returns a contribution to the attention group; an incomplete brief also takes precedence. Feedback shared remains actionable so the founder can close the conversation. Tests cover ordering, stable records, waiting-only counts, search counts, received-note precedence and incomplete briefs.
+
+## Focus on attention
+
+Attention only temporarily hides waiting and finished work. The finished-work checkbox is disabled while focused, retaining its previous choice for when focus is turned off. Search and refresh preserve the current focus. Empty guidance explains how to return to waiting work without treating it as a first visit or claiming damaged storage is clear. No filters are persisted and no records, stages or permissions change. Tests cover combined filters, refresh, restoring finished-work choices, empty/search/recovery states and no writes.

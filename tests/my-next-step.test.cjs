@@ -121,3 +121,17 @@ test('received notes and incomplete briefs need attention even when the recorded
  const s=board({cs:[contribution('waiting','work_delivered')]});assert.match(s.get('nextStepCount').textContent,/0 ready for your attention · 1 waiting overall/);
  s.get('nextStepSearch').value='absent';s.get('nextStepSearch').listeners.input();assert.match(s.get('nextStepCount').textContent,/0 of 1.*1 waiting overall/);assert.equal(s.writes.length,0);
 });
+
+test('attention filter hides waiting and finished work, restores prior choices, and never saves',()=>{
+ const s=board({cs:[contribution('waiting','interest_shared'),contribution('ready','in_progress'),contribution('done','completed')],rs:[review('terms','terms_proposed'),review('closing','feedback_shared')]});
+ s.get('includeFinishedWork').checked=true;s.get('includeFinishedWork').listeners.change();assert.equal(s.get('nextStepCards').children.length,5);
+ s.get('attentionOnly').checked=true;s.get('attentionOnly').listeners.change();assert.equal(s.get('nextStepCards').children.length,2);assert.equal(s.get('includeFinishedWork').disabled,true);assert.equal(s.get('includeFinishedWork').checked,true);assert.equal(s.get('completedWorkSection').hidden,true);assert.equal(s.get('completedWorkCards').children.length,0);
+ s.events.pageshow();assert.equal(s.get('attentionOnly').checked,true);assert.equal(s.get('nextStepCards').children.length,2);
+ s.get('attentionOnly').checked=false;s.get('attentionOnly').listeners.change();assert.equal(s.get('includeFinishedWork').disabled,false);assert.equal(s.get('nextStepCards').children.length,5);assert.equal(s.writes.length,0);assert.equal(s.location.href,'');
+});
+test('attention-only empty guidance distinguishes waiting work, search and damaged storage',()=>{
+ const s=board({cs:[contribution('waiting','work_delivered')]});s.get('attentionOnly').checked=true;s.get('attentionOnly').listeners.change();assert.match(s.get('nextStepEmptyTitle').textContent,/Nothing needs your attention/);assert.match(s.get('nextStepEmptyText').textContent,/Turn off Attention only/);assert.equal(s.get('nextStepStartPaths').hidden,true);
+ s.get('nextStepSearch').value='other';s.get('nextStepSearch').listeners.input();assert.match(s.get('nextStepEmptyTitle').textContent,/No actionable tasks match/);
+ s.stored.fb_interest_reviews_v1='broken';s.events.pageshow();assert.match(s.get('nextStepWarning').textContent,/unavailable/);assert.doesNotMatch(s.get('nextStepEmptyTitle').textContent,/Nothing needs/);assert.equal(s.writes.length,0);
+ const empty=board();empty.get('attentionOnly').checked=true;empty.get('attentionOnly').listeners.change();assert.equal(empty.get('nextStepStartPaths').hidden,false);
+});
