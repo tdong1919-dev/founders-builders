@@ -34,5 +34,5 @@
   ],
   "limits": "Server checks task scope, selected actions, request budget, task minutes, expiry and revocation on every request. No background executor is provided by this page.",
   "discovery": "Global private records cannot be listed with an agent credential. Begin with a task and grant explicitly selected by its owner.",
-  "availability": "Review contract: matchTask and readContribution require the pending cloud deployment approval. The fictional preview issues no real credentials."
+  "availability": "Live invite-only beta. Commands require a verified account or an explicitly issued task-scoped credential. The fictional preview issues no real credentials."
 }
