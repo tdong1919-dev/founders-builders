@@ -42,7 +42,7 @@ export function createSharedService({store,verifySession,origin,now=Date.now}){
    const digest=hash(raw),scope=principal.userId+':'+(principal.grantId||'human');
    const result=store.transact((state,db)=>{
     if(principal.grantId){const g=state.grants[principal.grantId];if(!g||g.ownerId!==principal.userId||g.revokedAt!==null||g.expiresAt<=now()){const e=Error('Agent permission is revoked or expired.');e.code='permission_denied';throw e;}}
-    const readOnly=['list','readTask','activity','exportCredit','agentAudit','report'].includes(input.operation);
+    const readOnly=['list','readTask','matchTask','readContribution','activity','exportCredit','agentAudit','report'].includes(input.operation);
     const saved=readOnly?null:db.prepare('SELECT digest,response FROM requests WHERE scope=? AND key=?').get(scope,key);
     if(saved){if(saved.digest!==digest){const e=Error('Do not reuse a request key for different work.');e.code='conflict';throw e;}return JSON.parse(saved.response);}
     let data;

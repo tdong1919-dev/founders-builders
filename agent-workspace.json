@@ -1,0 +1,38 @@
+{
+  "name": "Founders & Builders collaboration commands",
+  "version": "1.1",
+  "transport": "HTTPS JSON commands; this endpoint is not an A2A protocol server",
+  "endpoint": "https://ijvokvffhcvakaultzfk.supabase.co/functions/v1/fb-collaboration",
+  "authentication": "Bearer task-scoped credential issued by the person in the signed-in workspace",
+  "headers": [
+    "Authorization: Bearer <credential>",
+    "Content-Type: application/json",
+    "Idempotency-Key: <unique request UUID>"
+  ],
+  "request": {
+    "operation": "readTask",
+    "params": {
+      "taskId": "<authorized task ID>"
+    }
+  },
+  "agent_operations": {
+    "readTask": "Read only the authorized contribution brief; requires read permission.",
+    "matchTask": "Check this task against the owner's saved skills, time and compensation preferences; requires read permission.",
+    "readContribution": "Read the owner's authorized collaboration stage and current version; requires read permission and contributionId.",
+    "activity": "Read authorized activity including human/agent attribution; requires read permission.",
+    "interest": "Apply with a note when explicitly permitted. Match-constrained grants enforce the saved profile.",
+    "message": "Send a participant question when explicitly permitted; use current expectedVersion.",
+    "propose": "Propose scope when explicitly permitted. Exact-brief grants cannot rewrite terms; use current expectedVersion.",
+    "deliver": "Submit notes/evidence only after the person confirms the exact terms; use current expectedVersion. Execution requires your own agent tools."
+  },
+  "human_decisions": [
+    "issue or revoke credentials",
+    "change profile or project",
+    "confirm exact agreements",
+    "share mutual reviews",
+    "approve portfolio sharing"
+  ],
+  "limits": "Server checks task scope, selected actions, request budget, task minutes, expiry and revocation on every request. No background executor is provided by this page.",
+  "discovery": "Global private records cannot be listed with an agent credential. Begin with a task and grant explicitly selected by its owner.",
+  "availability": "Review contract: matchTask and readContribution require the pending cloud deployment approval. The fictional preview issues no real credentials."
+}
