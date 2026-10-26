@@ -11,7 +11,7 @@
  function create({state,now=Date.now,id,principal}){
   if(!state||state.format!=='fb-shared-v1'||typeof id!=='function')fail('unavailable','Shared storage is unavailable.');
   if(!principal||typeof principal.userId!=='string'||!principal.userId)fail('unauthenticated','A server-verified account is required.');
-  const user=principal.userId,agent=principal.grantId||null;state.projects??={};state.profiles??={};state.reviews??={};
+  const user=principal.userId,agent=principal.grantId||null;state.projects??={};state.profiles??={};state.reviews??={};state.invitations??={};
   const own=(map,key)=>typeof key==='string'&&Object.hasOwn(map,key)?map[key]:null;
   const taskFor=key=>{const t=own(state.tasks,key);if(!t)fail('not_found','Task unavailable.');return t;};
   const contributionFor=key=>{const c=own(state.contributions,key);if(!c||![c.founderId,c.builderId].includes(user))fail('not_found','Contribution unavailable.');return c;};
@@ -37,9 +37,18 @@
    if(operation==='createTask'){
     human();if(p.projectId){const project=own(state.projects,p.projectId);if(!project||project.ownerId!==user)fail('not_found','Project unavailable.');}const brief=terms(p.brief),task={id:id(),ownerId:user,title:text(p.title,120),brief,minutes:brief.minutes,visibility:p.visibility==='public'?'public':'private',version:1,...(p.projectId?{projectId:p.projectId}:{}),skills:tags(p.skills)};state.tasks[task.id]=task;log('task_created',task.id);return task;
    }
+   if(operation==='invite'){
+    human();const task=taskFor(p.taskId);owner(task);const profile=own(state.profiles,p.builderId);
+    if(task.visibility!=='public'||!profile?.discoverable||profile.userId===user||!fit(task,profile))fail('not_found','Choose an opted-in builder who matches a published project step.');
+    if(Object.values(state.invitations).some(i=>i.taskId===task.id&&i.builderId===p.builderId)||Object.values(state.contributions).some(c=>c.taskId===task.id&&c.builderId===p.builderId))fail('conflict','An invitation or application already exists for this builder and step.');
+    const invitation={id:id(),taskId:task.id,founderId:user,builderId:p.builderId,note:text(p.note,800),status:'pending',version:1,at:now()};state.invitations[invitation.id]=invitation;log('builder_invited',task.id);return invitation;
+   }
+   if(operation==='declineInvitation'){
+    human();const invitation=own(state.invitations,p.invitationId);if(!invitation||invitation.builderId!==user)fail('not_found','Invitation unavailable.');version(invitation,p.expectedVersion);if(invitation.status!=='pending')fail('conflict','This invitation has already been answered.');invitation.status='declined';invitation.version++;log('invitation_declined',invitation.taskId);return invitation;
+   }
    if(operation==='list'){
     if(agent)fail('permission_denied','Agents may access only the task in their grant.');
-    return {tasks:Object.values(state.tasks).filter(t=>t.ownerId===user||t.visibility==='public'||Object.values(state.contributions).some(c=>c.taskId===t.id&&c.builderId===user)).map(t=>t.ownerId===user?t:{id:t.id,title:t.title,ownerId:t.ownerId,minutes:t.minutes,visibility:t.visibility,version:t.version,projectId:t.projectId,skills:t.skills||[]}),projects:Object.values(state.projects).filter(p=>p.ownerId===user||p.visibility==='public'),profile:own(state.profiles,user),reviews:Object.values(state.reviews).filter(r=>[r.authorId,r.recipientId].includes(user)),matches:Object.values(state.tasks).filter(t=>t.ownerId!==user&&t.visibility==='public').map(t=>fit(t,own(state.profiles,user))).filter(Boolean).sort((a,b)=>b.score-a.score),builderMatches:Object.values(state.tasks).filter(t=>t.ownerId===user).flatMap(t=>Object.values(state.profiles).filter(p=>p.discoverable&&p.userId!==user).map(p=>{const match=fit(t,p);return match?{...match,builder:{userId:p.userId,name:p.name,skills:p.skills,goal:p.goal}}:null;}).filter(Boolean)),contributions:Object.values(state.contributions).filter(c=>[c.founderId,c.builderId].includes(user)).map(c=>({...c,next:next(c)})),grants:Object.values(state.grants).filter(g=>g.ownerId===user)};
+    return {invitations:Object.values(state.invitations).filter(i=>[i.founderId,i.builderId].includes(user)),tasks:Object.values(state.tasks).filter(t=>t.ownerId===user||t.visibility==='public'||Object.values(state.contributions).some(c=>c.taskId===t.id&&c.builderId===user)).map(t=>t.ownerId===user?t:{id:t.id,title:t.title,ownerId:t.ownerId,minutes:t.minutes,visibility:t.visibility,version:t.version,projectId:t.projectId,skills:t.skills||[]}),projects:Object.values(state.projects).filter(p=>p.ownerId===user||p.visibility==='public'),profile:own(state.profiles,user),reviews:Object.values(state.reviews).filter(r=>[r.authorId,r.recipientId].includes(user)),matches:Object.values(state.tasks).filter(t=>t.ownerId!==user&&t.visibility==='public').map(t=>fit(t,own(state.profiles,user))).filter(Boolean).sort((a,b)=>b.score-a.score),builderMatches:Object.values(state.tasks).filter(t=>t.ownerId===user).flatMap(t=>Object.values(state.profiles).filter(p=>p.discoverable&&p.userId!==user).map(p=>{const match=fit(t,p);return match?{...match,builder:{userId:p.userId,name:p.name,skills:p.skills,goal:p.goal}}:null;}).filter(Boolean)),contributions:Object.values(state.contributions).filter(c=>[c.founderId,c.builderId].includes(user)).map(c=>({...c,next:next(c)})),grants:Object.values(state.grants).filter(g=>g.ownerId===user)};
    }
    if(operation==='report'){
     human();const collaborations=Object.values(state.contributions).filter(c=>[c.founderId,c.builderId].includes(user)),ids=new Set(collaborations.map(c=>c.id));
@@ -60,7 +69,7 @@
    if(operation==='interest'){
     const task=taskFor(p.taskId);if(task.visibility!=='public'||task.ownerId===user)fail('forbidden','Choose an available task owned by someone else.');
     if(Object.values(state.contributions).some(c=>c.taskId===task.id&&c.builderId===user))fail('conflict','Interest is already recorded for this task.');
-    const note=text(p.note);authorize('interest',task);const c={id:id(),taskId:task.id,founderId:task.ownerId,builderId:user,note,messages:[],stage:'interest',version:1,terms:null,acceptedTermsVersion:null,delivery:null,feedback:null,portfolioAllowed:false};state.contributions[c.id]=c;log('interest_shared',task.id,c.id,{note});return {...c,next:next(c)};
+    const note=text(p.note);authorize('interest',task);const c={id:id(),taskId:task.id,founderId:task.ownerId,builderId:user,note,messages:[],stage:'interest',version:1,terms:null,acceptedTermsVersion:null,delivery:null,feedback:null,portfolioAllowed:false};state.contributions[c.id]=c;for(const invitation of Object.values(state.invitations).filter(i=>i.taskId===task.id&&i.builderId===user&&i.status==='pending')){invitation.status='applied';invitation.version++;}log('interest_shared',task.id,c.id,{note});return {...c,next:next(c)};
    }
    if(operation==='activity'){
     const task=taskFor(p.taskId);authorize('read',task);
