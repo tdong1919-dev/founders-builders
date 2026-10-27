@@ -1,14 +1,18 @@
 /* Project and builder journeys use only server-authorized records. */
 (function(root){
  'use strict';
+ function conversationState(c,userId){
+  const messages=(c.messages||[]).filter(m=>[c.founderId,c.builderId].includes(m.actorId)&&typeof m.text==='string');
+  const last=messages[messages.length-1];return {messages,incoming:!['closed','cancelled'].includes(c.stage)&&Boolean(last&&last.actorId!==userId)};
+ }
  function nextSteps(records,userId,mode,projectId){
   return (records.contributions||[]).filter(c=>mode==='founder'?c.founderId===userId&&(!projectId||(records.tasks||[]).some(t=>t.id===c.taskId&&t.projectId===projectId)):c.builderId===userId).flatMap(c=>{
    if(c.stage==='cancelled')return [];
    const review=c.stage==='closed'&&!(records.reviews||[]).some(r=>r.contributionId===c.id&&r.authorId===userId);
    if(c.stage==='closed'&&!review)return [];
-   const waiting=!review&&c.next?.who!==userId;
-   const label=review?'Leave a review':waiting?({interest:'Waiting for a founder reply',terms:'Waiting for confirmation',agreed:'Waiting for the work',delivered:'Waiting for feedback',feedback:'Waiting to close the loop'}[c.stage]||'Waiting for your collaborator'):c.next?.label||'Review contribution';
-   return [{taskId:c.taskId,contributionId:c.id,title:(records.tasks||[]).find(t=>t.id===c.taskId)?.title||'Contribution',label,waiting,note:c.note||''}];
+   const replyPending=conversationState(c,userId).incoming;const waiting=!review&&c.next?.who!==userId&&!replyPending;
+   const label=review?'Leave a review':replyPending&&c.next?.who!==userId?'Reply to your collaborator':waiting?({interest:'Waiting for a founder reply',terms:'Waiting for confirmation',agreed:'Waiting for the work',delivered:'Waiting for feedback',feedback:'Waiting to close the loop'}[c.stage]||'Waiting for your collaborator'):c.next?.label||'Review contribution';
+   return [{taskId:c.taskId,contributionId:c.id,title:(records.tasks||[]).find(t=>t.id===c.taskId)?.title||'Contribution',label,waiting,note:c.note||'',replyPending}];
   }).sort((a,b)=>Number(a.waiting)-Number(b.waiting));
  }
  function newMatches(records,userId){return (records.matches||[]).filter(m=>!(records.contributions||[]).some(c=>c.taskId===m.taskId&&c.builderId===userId)&&!(records.invitations||[]).some(i=>i.taskId===m.taskId&&i.builderId===userId));}
@@ -77,7 +81,7 @@
    const items=nextSteps(records,client.user().id,mode,projectId),section=node('section');section.className='network-attention';section.append(node('h2','Needs your attention'));
    const ready=items.filter(i=>!i.waiting),waiting=items.filter(i=>i.waiting);
    if(!ready.length)section.append(node('p',waiting.length?'You’re up to date. Your collaborators have the next move.':mode==='builder'&&(records.invitations||[]).some(i=>i.builderId===client.user().id&&i.status==='pending')?'You have an invitation to explore below.':'Nothing waiting on you. Explore a match or define your next project step.'));
-   function row(item){const card=node('article');card.className='network-match';card.append(node('h3',item.title));if(mode==='founder'&&item.note)card.append(node('p','Application: '+item.note));card.append(button(item.label,async()=>{selectTask(item.taskId,item.contributionId);return {viewOnly:true};},item.waiting));return card;}
+   function row(item){const card=node('article');card.className='network-match';card.append(node('h3',item.title));if(item.replyPending)card.append(node('p','Your collaborator sent a message.'));else if(mode==='founder'&&item.note)card.append(node('p','Application: '+item.note));card.append(button(item.label,async()=>{selectTask(item.taskId,item.contributionId);return {viewOnly:true};},item.waiting));return card;}
    for(const item of ready)section.append(row(item));
    if(waiting.length){const details=node('details');details.append(node('summary','Waiting on others · '+waiting.length));for(const item of waiting)details.append(row(item));section.append(details);}host.append(section);
   }
@@ -88,5 +92,5 @@
   $('networkFounder').addEventListener('click',()=>{mode='founder';if(records)render(records);});$('networkBuilder').addEventListener('click',()=>{mode='builder';if(records)render(records);});
   return {render,clear};
  }
- const api={create,nextSteps,newMatches,progressSummary};if(typeof module==='object'&&module.exports)module.exports=api;else root.FBProjectWorkspace=api;
+ const api={create,nextSteps,newMatches,progressSummary,conversationState};if(typeof module==='object'&&module.exports)module.exports=api;else root.FBProjectWorkspace=api;
 })(typeof window==='undefined'?{}:window);

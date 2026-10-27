@@ -41,3 +41,9 @@ Two-account acceptance after deployment:
 4. Complete proposal → confirmation → delivery → feedback → portfolio credit. Check the project progress totals and that each account has the correct next action. Existing private-project isolation must remain intact.
 
 Approved deployment completed: Sites version 19 and `fb-collaboration` version 4 are live at https://founders-builders-ux-review.hello978822.chatgpt.site/cloud-workspace.html. This coordinated release includes PRs #23–25. Ten live HTTPS access-boundary checks passed after the function replacement; published workspace assets match tested source. PRs remain unmerged. The user’s real two-account check remains pending. No migration, paid service, Resend or Sheets change was made.
+
+## Conversations and return attention
+
+A collaborator’s unanswered latest message brings a waiting contribution back into attention with “Reply to your collaborator.” This is a reply-needed cue, not a claimed unread receipt. The lifecycle action stays intact when it already belongs to this person. The conversation opens for an incoming message, shows participant labels and timestamps, and stays readable after closure. Replies and ending a collaboration have separate fields and controls. Messages are rendered as plain text; sign-out clears the private thread.
+
+Validation: 289 Node tests and 52-page static checks pass. A fictional browser check confirmed founder question → builder attention → builder reply → waiting restored → founder conversation, followed by a mobile reply at 390×844 with no horizontal overflow. No database, Edge Function, permission, email, billing or Sheets changes are needed.
