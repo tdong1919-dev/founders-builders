@@ -27,7 +27,7 @@
   for(const item of nextSteps(scoped,userId,'founder',projectId)){
    const c=contributions.find(c=>c.id===item.contributionId);let group;
    if(c.stage==='delivered')group='feedback';else if(!item.waiting)group='attention';else if(c.stage==='agreed')group='moving';else group='waiting';
-   groups[group].push(item);
+   const summary=c.stage==='delivered'?'Delivered: '+(c.delivery?.notes||'Work is ready for your review.'):c.stage==='agreed'?'Agreed outcome: '+(c.terms?.deliverable||'The builder is working on the confirmed scope.'):c.stage==='terms'?'Proposal shared. Waiting for confirmation.':c.stage==='feedback'?'Feedback shared. Waiting to close the loop.':c.stage==='closed'?'Completed. Your collaboration review is still due.':item.note?'Application: '+item.note:'';groups[group].push({...item,summary:summary.length>200?summary.slice(0,197)+'…':summary});
   }
   return {groups,pausedSteps:tasks.filter(t=>t.paused),completed:contributions.filter(c=>c.stage==='closed').length};
  }
@@ -81,7 +81,7 @@
    if(!healthFilter)healthFilter=['feedback','attention','moving','waiting'].find(key=>health.groups[key].length)||'attention';
    const labels={attention:'Needs you',feedback:'Ready for feedback',moving:'Work in progress',waiting:'Waiting on others'},summary=node('div');summary.className='health-groups';for(const [key,label] of Object.entries(labels)){const control=button(label+' · '+health.groups[key].length,async()=>{healthFilter=key;render(records);return {viewOnly:true};},true);control.setAttribute('aria-pressed',String(healthFilter===key));summary.append(control);}section.append(summary);
    const list=node('section');list.setAttribute('aria-label',labels[healthFilter]);list.append(node('h3',labels[healthFilter]));if(!health.groups[healthFilter].length)list.append(node('p','Nothing in this group right now.'));
-   for(const item of health.groups[healthFilter]){const card=node('article');card.className='network-match';card.append(node('h3',item.title));if(item.replyPending)card.append(node('p','Your collaborator sent a message.'));else if(item.note)card.append(node('p','Application: '+item.note));card.append(button(item.label,async()=>{selectTask(item.taskId,item.contributionId);return {viewOnly:true};},item.waiting));list.append(card);}section.append(list);
+   for(const item of health.groups[healthFilter]){const card=node('article');card.className='network-match';card.append(node('h3',item.title));if(item.replyPending)card.append(node('p','Your collaborator sent a message.'));else if(item.summary)card.append(node('p',item.summary));card.append(button(item.label,async()=>{selectTask(item.taskId,item.contributionId);return {viewOnly:true};},item.waiting));list.append(card);}section.append(list);
    section.append(node('p',health.completed+' completed contribution'+(health.completed===1?'':'s')+'. Counts describe saved stages, not deadlines or a prediction of success.'));
    if(health.pausedSteps.length){const paused=node('details');paused.append(node('summary','Paused for new contributors · '+health.pausedSteps.length),node('p','Pausing stops new applications. Existing collaborators can still finish their agreed work.'));for(const task of health.pausedSteps)paused.append(button('View paused step: '+task.title,async()=>{selectTask(task.id);return {viewOnly:true};},true));section.append(paused);}host.append(section);
   }

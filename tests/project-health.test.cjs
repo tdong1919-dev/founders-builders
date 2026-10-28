@@ -2,7 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),{projectH
 const task={id:'t',ownerId:'f',title:'Review the first screen',projectId:'p'},c=(id,stage,who)=>({id,taskId:'t',founderId:'f',builderId:id,stage,next:{who,label:stage==='delivered'?'Give feedback and credit':'Review contribution'},messages:[]});
 test('health groups are exclusive, exclude cancelled work and retain missing post-completion reviews',()=>{
  const records={tasks:[task],contributions:[c('interest','interest','f'),c('terms','terms','terms'),c('agreed','agreed','agreed'),c('delivery','delivered','f'),c('feedback','feedback','feedback'),c('done','closed',null),c('reviewed','closed',null),c('cancelled','cancelled',null)],reviews:[{contributionId:'reviewed',authorId:'f'}]};
- const h=projectHealth(records,'f','p');assert.deepEqual(Object.fromEntries(Object.entries(h.groups).map(([k,v])=>[k,v.map(c=>c.contributionId)])),{attention:['interest','done'],feedback:['delivery'],moving:['agreed'],waiting:['terms','feedback']});assert.equal(h.completed,2);
+ const h=projectHealth(records,'f','p');assert.deepEqual(Object.fromEntries(Object.entries(h.groups).map(([k,v])=>[k,v.map(c=>c.contributionId)])),{attention:['interest','done'],feedback:['delivery'],moving:['agreed'],waiting:['terms','feedback']});assert.equal(h.completed,2);assert.match(h.groups.feedback[0].summary,/^Delivered:/);assert.doesNotMatch(h.groups.feedback[0].summary,/Application:/);
  const all=Object.values(h.groups).flat().map(c=>c.contributionId);assert.equal(new Set(all).size,all.length);
 });
 test('incoming replies move agreed work to attention, while paused intake does not block existing work',()=>{
