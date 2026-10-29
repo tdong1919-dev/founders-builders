@@ -121,7 +121,7 @@ const module={exports:{}};
     human();if(c.builderId!==user||c.stage!=='feedback')fail('forbidden','Only the contributor can close reviewed work.');c.stage='closed';c.version++;log('contribution_closed_privately',task.id,c.id);return {...c,next:next(c)};
    }
    if(operation==='propose'){
-    owner(task);if(!['interest','terms','agreed'].includes(c.stage)||c.delivery)fail('invalid_stage','Terms cannot change after delivery.');const proposed=terms(p.terms);if(agent&&own(state.grants,agent)?.exactTerms&&JSON.stringify(proposed)!==JSON.stringify(task.brief))fail('permission_denied','Your agent can propose only the exact task brief.');authorize('propose',{...task,minutes:proposed.minutes});c.terms={...proposed,version:(c.terms?.version||0)+1};c.acceptedTermsVersion=null;c.stage='terms';log('terms_proposed',task.id,c.id,c.terms);
+    owner(task);if(!['interest','terms','agreed'].includes(c.stage)||c.delivery)fail('invalid_stage','Terms cannot change after delivery.');const proposed=terms(p.terms);if(agent&&own(state.grants,agent)?.exactTerms&&JSON.stringify(proposed)!==JSON.stringify(task.brief))fail('permission_denied','Your agent can propose only the exact task brief.');authorize('propose',{...task,minutes:proposed.minutes});c.terms={...proposed,version:(c.terms?.version||0)+1};c.acceptedTermsVersion=null;delete c.checkin;c.stage='terms';log('terms_proposed',task.id,c.id,c.terms);
    }else if(operation==='accept'){
     human();if(c.builderId!==user||c.stage!=='terms'||p.termsVersion!==c.terms.version)fail('forbidden','Only the contributor can confirm this exact proposal.');c.acceptedTermsVersion=c.terms.version;c.stage='agreed';log('terms_confirmed',task.id,c.id);
    }else if(operation==='deliver'){
