@@ -65,3 +65,13 @@ The selected founder project now shows four current-state groups: Needs you, Rea
 Validation: 298 Node tests and 52-page static checks pass. Tests cover exclusive grouping, missing completion reviews, incoming replies, paused intake, project/owner isolation and exact-applicant handoff without data mutations. Fictional browser walkthrough verified application → attention, proposal → waiting, confirmation → in progress and delivery → ready for feedback. Frontend-only; no schema, Edge Function, auth, email, permission, billing or Sheets changes.
 
 Project-health release: Sites version 22 deployed successfully, and both published health assets match tested source. Mobile at 390×844 had no horizontal overflow and opened the correct feedback action. Supabase remains version 4; PR #28 stays draft and unmerged. Authenticated two-account acceptance remains pending. Check-in dates, explicit blocker reporting and the combined closing screen remain future work.
+
+### Agreed check-ins and closing summary (2026-10-29)
+
+Either participant can propose a future check-in (local datetime input stored as a UTC timestamp) and a short plan after work is agreed. The other person must confirm the exact proposal. Changing the plan resets confirmation; stale writes, past dates, outsiders, and agent confirmation/proposal/completion are rejected. An agreed due check-in appears in attention on workspace refresh. Either person can record an outcome to clear it. This does not change scope, delivery stage, compensation, or portfolio permission. No background reminders or email are sent.
+
+The completed contribution now brings delivered work, founder feedback, current portfolio permission, and both participant-private reviews together. Missing reviews remain explicit; revoked credit cannot be exported. Existing consent controls stay in place. Check-in input drafts follow the same page-memory-only protections as other contribution text.
+
+Validation: 303 automated tests and 52-page static checks pass. New tests cover counterpart confirmation, date validation, concurrency, private access, agent restrictions, due attention, recorded outcomes, UI confirmation and both reviews on the completion screen. Desktop/mobile browser QA could not run: browser inventory returned no available browsers. Real two-account acceptance remains pending.
+
+Release status: source and generated Edge core prepared in a draft PR stacked on project health. Not merged or deployed. The live beta remains Sites version 22 / Edge function version 4. This update needs the Edge function and frontend released together after visual QA. No migrations, paid services, Resend or Sheets changes.

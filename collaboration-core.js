@@ -94,6 +94,18 @@
     human();owner(task);if(c.portfolioAllowed){c.portfolioAllowed=false;c.version++;log('portfolio_permission_revoked',task.id,c.id);}return {...c,next:next(c)};
    }
    version(c,p.expectedVersion);
+   if(operation==='proposeCheckin'){
+    human();if(c.stage!=='agreed')fail('invalid_stage','Agree the work before planning a check-in.');
+    if(!Number.isSafeInteger(p.targetAt)||p.targetAt<=now()||p.targetAt>now()+366*86400000)fail('invalid','Choose a future check-in within one year.');
+    const plan=text(p.plan,800);c.checkin={targetAt:p.targetAt,plan,proposedBy:user,status:'proposed',version:(c.checkin?.version||0)+1};c.version++;log('checkin_proposed',task.id,c.id,c.checkin);return {...c,next:next(c)};
+   }
+   if(operation==='completeCheckin'){
+    human();if(c.stage!=='agreed'||c.checkin?.status!=='confirmed')fail('invalid_stage','Confirm a check-in before recording it.');const note=text(p.note,800);c.checkin={...c.checkin,status:'completed',completedAt:now(),completedBy:user,note};c.version++;log('checkin_completed',task.id,c.id,c.checkin);return {...c,next:next(c)};
+   }
+   if(operation==='confirmCheckin'){
+    human();if(c.stage!=='agreed'||c.checkin?.status!=='proposed'||c.checkin.proposedBy===user||p.checkinVersion!==c.checkin.version)fail('forbidden','Only your collaborator can confirm this exact check-in.');
+    if(c.checkin.targetAt<=now())fail('invalid','This proposed date has passed. Suggest a new check-in.');c.checkin.status='confirmed';c.version++;log('checkin_confirmed',task.id,c.id,c.checkin);return {...c,next:next(c)};
+   }
    if(operation==='message'){
     if(['closed','cancelled'].includes(c.stage))fail('invalid_stage','This conversation is closed.');const message=text(p.text);authorize('message',task);(c.messages||=[]).push({actorId:user,at:now(),text:message});c.version++;log('message_shared',task.id,c.id,{text:message});return {...c,next:next(c)};
    }

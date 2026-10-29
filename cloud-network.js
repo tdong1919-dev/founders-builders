@@ -10,8 +10,8 @@
    if(c.stage==='cancelled')return [];
    const review=c.stage==='closed'&&!(records.reviews||[]).some(r=>r.contributionId===c.id&&r.authorId===userId);
    if(c.stage==='closed'&&!review)return [];
-   const replyPending=conversationState(c,userId).incoming;const waiting=!review&&c.next?.who!==userId&&!replyPending;
-   const label=review?'Leave a review':replyPending&&c.next?.who!==userId?'Reply to your collaborator':waiting?({interest:'Waiting for a founder reply',terms:'Waiting for confirmation',agreed:'Waiting for the work',delivered:'Waiting for feedback',feedback:'Waiting to close the loop'}[c.stage]||'Waiting for your collaborator'):c.next?.label||'Review contribution';
+   const replyPending=conversationState(c,userId).incoming,checkinDue=c.stage==='agreed'&&c.checkin?.status==='confirmed'&&c.checkin.targetAt<=Date.now(),checkinPending=c.stage==='agreed'&&c.checkin?.status==='proposed'&&c.checkin.proposedBy!==userId;const waiting=!review&&c.next?.who!==userId&&!replyPending&&!checkinDue&&!checkinPending;
+   const label=review?'Leave a review':checkinDue?'Check-in due':checkinPending?'Review check-in plan':replyPending&&c.next?.who!==userId?'Reply to your collaborator':waiting?({interest:'Waiting for a founder reply',terms:'Waiting for confirmation',agreed:'Waiting for the work',delivered:'Waiting for feedback',feedback:'Waiting to close the loop'}[c.stage]||'Waiting for your collaborator'):c.next?.label||'Review contribution';
    return [{taskId:c.taskId,contributionId:c.id,title:(records.tasks||[]).find(t=>t.id===c.taskId)?.title||'Contribution',label,waiting,note:c.note||'',replyPending}];
   }).sort((a,b)=>Number(a.waiting)-Number(b.waiting));
  }
