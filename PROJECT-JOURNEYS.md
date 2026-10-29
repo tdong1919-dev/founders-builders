@@ -96,3 +96,13 @@ Browser control still reports an empty inventory. No preview server was started 
 New founders see a short private-by-default project introduction and the sequence overview → contribution → builder matching. Until a project or first step exists, setup guidance replaces empty health totals and generic orchestrator suggestions. Builders without a profile get profile guidance and can still browse available contributions. Existing invitations or collaborations bypass setup gating, so no active handoff is hidden. Builder progress totals are collapsed below attention; matching still uses current skills/time/payment preferences, while learning goals provide context.
 
 Validation: 309 automated tests pass and static checks pass for 52 pages. Added pure-state and controller tests for role-specific guidance, ownership isolation, direct browsing without profile creation, and preserving existing action queues. No server or permission changes. Desktop/mobile visual verification remains pending because browser access is unavailable. This frontend refinement is stacked on PR #29, unmerged and undeployed; live remains Sites 22 / Edge 4.
+
+### Approved beta deployment (2026-10-29)
+
+User explicitly requested deployment. PR #29 check-ins/closing and PR #30 onboarding are now published at https://founders-builders-ux-review.hello978822.chatgpt.site/cloud-workspace.html (fictional walkthrough: /project-preview.html).
+
+- Sites version 23, saved version `appgprj_6add5ba8a1688191b29dd954024ebb46~appgver_2d90a5e920748191a38e0d1e7c61fa77`; deployment `appgdep_6ae3d1e231248191942214ee6a5fadc5` succeeded at 2026-10-29T23:08:24Z.
+- Hosting source commit `5816c865c74a7ac54c441dda14eaac7edaca8307`, built from tested app commit `dd5499cf73d258e7e671d20a1a09a4e57a48e8c8`. Four changed frontend assets verified byte-identical live.
+- Supabase project URL verified as `https://ijvokvffhcvakaultzfk.supabase.co` before deployment. `fb-collaboration` version 5 ACTIVE; source hash `776880fb5240f9a1e7b8c8834297629383c58cdd5e8281cd3469e0b4b47201fb`. Existing internal human/agent authentication retained.
+- All 10 real HTTPS boundary checks pass: anonymous/forged identity, raw private tables, private RPCs and unapproved browser origins denied; email authentication available. No email sent.
+- 309 automated tests and 52-page static validation passed before publication. Desktop/mobile visual QA and live two-account acceptance remain pending. PRs remain draft/unmerged. No migrations, new costs, Resend or Sheets changes; Site audience preserved.
