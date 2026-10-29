@@ -90,3 +90,9 @@ Remaining release walkthrough at desktop and mobile:
 5. Revoke portfolio permission as founder; refresh builder and verify export is unavailable.
 
 Browser control still reports an empty inventory. No preview server was started and no deployment attempted in this pass. Live remains Sites 22 / Edge 4; PR #29 is draft. Release both components together after the visual walkthrough, then perform the real two-account check.
+
+### Clear first step (2026-10-29)
+
+New founders see a short private-by-default project introduction and the sequence overview → contribution → builder matching. Until a project or first step exists, setup guidance replaces empty health totals and generic orchestrator suggestions. Builders without a profile get profile guidance and can still browse available contributions. Existing invitations or collaborations bypass setup gating, so no active handoff is hidden. Builder progress totals are collapsed below attention; matching still uses current skills/time/payment preferences, while learning goals provide context.
+
+Validation: 309 automated tests pass and static checks pass for 52 pages. Added pure-state and controller tests for role-specific guidance, ownership isolation, direct browsing without profile creation, and preserving existing action queues. No server or permission changes. Desktop/mobile visual verification remains pending because browser access is unavailable. This frontend refinement is stacked on PR #29, unmerged and undeployed; live remains Sites 22 / Edge 4.
