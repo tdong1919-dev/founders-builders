@@ -77,3 +77,16 @@ Validation: 303 automated tests and 52-page static checks pass. New tests cover 
 Release status: source and generated Edge core prepared in a draft PR stacked on project health. Not merged or deployed. The live beta remains Sites version 22 / Edge function version 4. This update needs the Edge function and frontend released together after visual QA. No migrations, paid services, Resend or Sheets changes.
 
 Follow-up recovery checks (2026-10-29): changing task terms now clears the old check-in so it cannot silently carry over into a new scope. Expired proposals offer a new time rather than an unusable confirmation button, and both participants can find that recovery from attention. Completion includes a direct link back to project progress or matched contributions. Validation now totals 306 passing tests plus the 52-page static check. Browser inventory was checked again and remains empty; desktop/mobile and authenticated acceptance are still pending. PR #29 remains draft and undeployed.
+
+### Release journey verification (2026-10-29)
+
+Added a full handler-level journey with two simulated verified identities and fresh storage reads: application → terms → check-in proposal → counterpart confirmation → recorded check-in → delivery → feedback → portfolio credit → both reviews → credit revocation. Duplicate proposal retries return the original result without duplicate activity; stale edits fail; an unrelated identity cannot read participant notes or reviews. The test sends no emails and does not use production accounts. All 307 automated tests pass. This supplements, but does not replace, browser and real-account acceptance.
+
+Remaining release walkthrough at desktop and mobile:
+1. Founder proposes a future check-in; builder sees and confirms the same local-time equivalent and plan.
+2. Either side suggests a new time; the other confirms. Refresh each side to verify saved status.
+3. Record the check-in outcome, deliver work, share feedback, and record permitted credit.
+4. Both sides review the completion summary and leave their review. Check the next-contribution link.
+5. Revoke portfolio permission as founder; refresh builder and verify export is unavailable.
+
+Browser control still reports an empty inventory. No preview server was started and no deployment attempted in this pass. Live remains Sites 22 / Edge 4; PR #29 is draft. Release both components together after the visual walkthrough, then perform the real two-account check.

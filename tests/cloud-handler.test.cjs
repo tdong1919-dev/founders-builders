@@ -22,3 +22,34 @@ test('login sends only to approved addresses and rejects unapproved origins with
 test('deployed core bridge matches the tested core exactly',()=>{const fs=require('node:fs');assert.equal(fs.readFileSync(require.resolve('../supabase/functions/fb-collaboration/core.mjs'),'utf8'),'/* Generated from collaboration-core.js. No credentials. */\nconst module={exports:{}};\n'+fs.readFileSync(require.resolve('../collaboration-core.js'),'utf8')+'\nexport default module.exports;\n');});
 
 test('mail provider throttling returns an actionable limit without claiming an email was sent or leaking provider details',async()=>{const s=await setup({emailLimited:true});const result=await s.call('','sendCode',{email:'approved@example.com'});assert.equal(result.status,429);assert.equal(result.error,'email_rate_limited');assert.match(result.message,/No sign-in email was sent/);assert.doesNotMatch(JSON.stringify(result),/provider response/);});
+
+test('two-account check-in to portfolio journey persists through fresh reads and retry-safe commands',async()=>{
+ const s=await setup(),f='human_founder_verified',b='human_builder_verified',o='human_outsider_verified';
+ const act=async(token,operation,params,key)=>{const result=await s.call(token,operation,params,key);assert.equal(result.status,200,operation+': '+JSON.stringify(result));return result.data;};
+ const task=await act(f,'createTask',{title:'Release journey sample',brief,visibility:'public'});
+ let c=await act(b,'interest',{taskId:task.id,note:'Private application note'});
+ c=await act(f,'propose',{contributionId:c.id,expectedVersion:c.version,terms:brief});
+ c=await act(b,'accept',{contributionId:c.id,expectedVersion:c.version,termsVersion:1});
+ const key=randomUUID(),params={contributionId:c.id,expectedVersion:c.version,targetAt:Date.now()+86400000,plan:'Compare the first observations privately'};
+ c=await act(f,'proposeCheckin',params,key);const version=c.version;
+ assert.deepEqual(await act(f,'proposeCheckin',params,key),c);
+ assert.equal(s.state().events.filter(e=>e.type==='checkin_proposed').length,1);
+ const fresh=(await act(b,'list')).contributions.find(x=>x.id===c.id);assert.deepEqual(fresh.checkin,c.checkin);
+ assert.equal((await s.call(o,'readContribution',{contributionId:c.id})).status,404);
+ assert.doesNotMatch(JSON.stringify(await act(o,'list')),/Private application note|Compare the first observations privately/);
+ c=await act(b,'confirmCheckin',{contributionId:c.id,expectedVersion:version,checkinVersion:1});
+ assert.equal((await s.call(f,'proposeCheckin',{...params,targetAt:Date.now()+172800000})).status,409);
+ assert.equal((await act(f,'readContribution',{contributionId:c.id})).checkin.status,'confirmed');
+ c=await act(f,'completeCheckin',{contributionId:c.id,expectedVersion:c.version,note:'Clear scope; proceed with three observations'});
+ assert.equal((await act(b,'readContribution',{contributionId:c.id})).checkin.status,'completed');
+ c=await act(b,'deliver',{contributionId:c.id,expectedVersion:c.version,notes:'Three specific observations',evidence:'https://example.com/sample'});
+ c=await act(f,'feedback',{contributionId:c.id,expectedVersion:c.version,notes:'Clear and useful',creditText:'Contributed a usability review',allowPortfolio:true});
+ c=await act(b,'recordCredit',{contributionId:c.id,expectedVersion:c.version});assert.equal(c.stage,'closed');
+ for(const token of [f,b])await act(token,'review',{contributionId:c.id,rating:5,worked:'Clear communication',improve:'Schedule the next check-in early'});
+ const completed=await act(b,'list');assert.equal(completed.reviews.length,2);assert.equal(completed.contributions[0].delivery.notes,'Three specific observations');
+ assert.equal((await act(b,'exportCredit',{contributionId:c.id})).text,'Contributed a usability review');
+ await act(f,'revokePortfolio',{contributionId:c.id});assert.equal((await s.call(b,'exportCredit',{contributionId:c.id})).status,403);
+ assert.equal((await act(o,'list')).reviews.length,0);
+ assert.equal((await s.call(b,'confirmCheckin',{contributionId:c.id,expectedVersion:c.version,checkinVersion:1})).status,409);
+ assert.equal(s.sent.length,0);
+});
