@@ -1,9 +1,15 @@
 {
   "name": "Founders & Builders",
-  "status": "MCP adapter prepared; remote deployment and external client acceptance pending",
+  "status": "MCP endpoint deployed; external client acceptance pending",
   "connection_page": "https://founders-builders-ux-review.hello978822.chatgpt.site/connect-agent.html",
   "existing_commands": "https://founders-builders-ux-review.hello978822.chatgpt.site/agent-workspace.json",
-  "prepared_mcp": {
+  "a2a": {
+    "available": false,
+    "note": "No A2A Agent Card or protocol conformance is claimed until a task exchange server is implemented and tested."
+  },
+  "privacy": "No private records in discovery metadata. Credential holders cannot globally list projects or profiles.",
+  "billing": "No payments, escrow, payouts, or economic commitments are implemented.",
+  "mcp": {
     "endpoint": "https://ijvokvffhcvakaultzfk.supabase.co/functions/v1/fb-collaboration/mcp",
     "protocol_versions": [
       "2025-11-25",
@@ -12,11 +18,5 @@
     "transport": "stateless Streamable HTTP JSON responses; no SSE",
     "authentication": "Owner-issued task-scoped bearer credential; no OAuth discovery yet",
     "mutation_retries": "Supply a unique requestKey UUID per intended action; reuse for the same retry only"
-  },
-  "a2a": {
-    "available": false,
-    "note": "No A2A Agent Card or protocol conformance is claimed until a task exchange server is implemented and tested."
-  },
-  "privacy": "No private records in discovery metadata. Credential holders cannot globally list projects or profiles.",
-  "billing": "No payments, escrow, payouts, or economic commitments are implemented."
+  }
 }
