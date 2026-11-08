@@ -1,3 +1,4 @@
+import {createA2aHandler} from './a2a.mjs';
 import {createMcpHandler} from './mcp.mjs';
 import {createCloudHandler} from './handler.mjs';
 const url=Deno.env.get('SUPABASE_URL')||'';
@@ -14,4 +15,5 @@ const handler=createCloudHandler({
  verifySession:async token=>{try{const r=await fetch(url+'/auth/v1/user',{headers:{apikey:publicKey,Authorization:'Bearer '+token},signal:AbortSignal.timeout(10000)});if(!r.ok)return null;const user=await r.json();return user.id&&user.email_confirmed_at&&await rpc('fb_shared_is_approved',{p_email:user.email})?{id:user.id}:null;}catch{return null;}}
 });
 const mcp=createMcpHandler({command:handler,origins:['https://founders-builders-ux-review.hello978822.chatgpt.site','https://tdong1919-dev.github.io']});
-Deno.serve(req=>new URL(req.url).pathname.endsWith('/mcp')?mcp(req):handler(req));
+const a2a=createA2aHandler({command:handler,origins:['https://founders-builders-ux-review.hello978822.chatgpt.site','https://tdong1919-dev.github.io']});
+Deno.serve(req=>new URL(req.url).pathname.endsWith('/a2a')||new URL(req.url).pathname.endsWith('/.well-known/agent-card.json')?a2a(req):new URL(req.url).pathname.endsWith('/mcp')?mcp(req):handler(req));

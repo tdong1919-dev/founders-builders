@@ -1,7 +1,7 @@
 import core from './core.mjs';
 const sha=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),x=>x.toString(16).padStart(2,'0')).join('');
 const secret=()=> 'fb_agent_'+btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');
-const readonly=new Set(['agentContext','list','readTask','matchTask','readContribution','activity','exportCredit','report','agentAudit']);
+const readonly=new Set(['a2aGet','agentContext','list','readTask','matchTask','readContribution','activity','exportCredit','report','agentAudit']);
 export function createCloudHandler({load,commit,verifySession,reserveLogin,sendCode,origins,now=Date.now}){
  if(!origins?.length)throw Error('Explicit browser origins required.');
  return async request=>{

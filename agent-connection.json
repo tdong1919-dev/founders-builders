@@ -4,8 +4,16 @@
   "connection_page": "https://founders-builders-ux-review.hello978822.chatgpt.site/connect-agent.html",
   "existing_commands": "https://founders-builders-ux-review.hello978822.chatgpt.site/agent-workspace.json",
   "a2a": {
-    "available": false,
-    "note": "No A2A Agent Card or protocol conformance is claimed until a task exchange server is implemented and tested."
+    "available": true,
+    "stage": "Private owner-handoff pilot; external JIDOKA EA acceptance pending",
+    "card": "https://founders-builders-ux-review.hello978822.chatgpt.site/.well-known/agent-card.json",
+    "protocolVersion": "1.0",
+    "methods": [
+      "SendMessage",
+      "GetTask",
+      "CancelTask"
+    ],
+    "permission": "A new owner-issued grant must explicitly allow coordinate. Existing grants are unchanged."
   },
   "privacy": "No private records in discovery metadata. Credential holders cannot globally list projects or profiles.",
   "billing": "No payments, escrow, payouts, or economic commitments are implemented.",

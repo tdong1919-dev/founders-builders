@@ -3,7 +3,7 @@ const module={exports:{}};
 /* Shared collaboration rules. Trusted identity and transactions belong to the server. */
 (function(root){
  'use strict';
- const agentActions=['read','interest','message','propose','deliver'];
+ const agentActions=['read','interest','message','propose','deliver','coordinate'];
  function fail(code,message){const e=Error(message);e.code=code;throw e;}
  function text(value,max=1500){if(typeof value!=='string'||!value.trim()||value.length>max)fail('invalid','Complete the required details within the allowed length.');return value.trim();}
  function optional(value,max=1500){return value==null||value===''?'':text(value,max);}
@@ -13,17 +13,17 @@ const module={exports:{}};
  function create({state,now=Date.now,id,principal}){
   if(!state||state.format!=='fb-shared-v1'||typeof id!=='function')fail('unavailable','Shared storage is unavailable.');
   if(!principal||typeof principal.userId!=='string'||!principal.userId)fail('unauthenticated','A server-verified account is required.');
-  const user=principal.userId,agent=principal.grantId||null;state.projects??={};state.profiles??={};state.reviews??={};state.invitations??={};
+  const user=principal.userId,agent=principal.grantId||null;state.projects??={};state.profiles??={};state.reviews??={};state.invitations??={};state.agentTasks??={};
   const own=(map,key)=>typeof key==='string'&&Object.hasOwn(map,key)?map[key]:null;
   const taskFor=key=>{const t=own(state.tasks,key);if(!t)fail('not_found','Task unavailable.');return t;};
   const contributionFor=key=>{const c=own(state.contributions,key);if(!c||![c.founderId,c.builderId].includes(user))fail('not_found','Contribution unavailable.');return c;};
   function human(){if(agent)fail('human_required','This decision requires the person’s verified account.');}
-  function authorize(action,task){
+  function authorize(action,task,consume=true){
    if(!agent)return;
    const g=own(state.grants,agent);
    if(!g||g.ownerId!==user||g.revokedAt!==null||g.expiresAt<=now()||!g.actions.includes(action)||g.taskId!==task.id||g.used>=g.maxActions||task.minutes>g.maxTaskMinutes)fail('permission_denied','Agent permission is expired, revoked, exhausted or outside this task.');
    if(g.requireMatch&&action==='interest'&&!fit(task,own(state.profiles,user)))fail('permission_denied','This task does not match your saved skills and limits.');
-   g.used++;log('agent_request_allowed',task.id,null,{action});
+   if(consume){g.used++;log('agent_request_allowed',task.id,null,{action});}
   }
   function version(record,expected){if(!Number.isInteger(expected)||expected!==record.version)fail('conflict','This task changed. Refresh before acting; nothing was overwritten.');}
   function log(type,taskId,contributionId=null,details=null){state.events.push({sequence:++state.sequence,id:id(),at:now(),actorId:user,grantId:agent,type,taskId,contributionId,...(details?{details:JSON.parse(JSON.stringify(details))}:{})});}
@@ -34,6 +34,24 @@ const module={exports:{}};
   }
   function next(c){return {interest:{who:c.founderId,label:'Propose clear terms'},terms:{who:c.builderId,label:'Review exact terms'},agreed:{who:c.builderId,label:'Deliver the agreed work'},delivered:{who:c.founderId,label:'Give feedback and credit'},feedback:{who:c.builderId,label:c.portfolioAllowed?'Record portfolio credit':'Close contribution privately'},closed:{who:null,label:'Contribution complete'},cancelled:{who:null,label:'Closed without completion'}}[c.stage];}
   function run(operation,p={}){
+   if(['a2aSend','a2aGet','a2aCancel','a2aReply'].includes(operation)){
+    const request=p.id?own(state.agentTasks,p.id):null;
+    if(operation!=='a2aSend'||p.id){if(!request||request.ownerId!==user||agent&&request.grantId!==agent)fail('not_found','Agent task unavailable.');}
+    const task=taskFor(request?.taskId||own(state.grants,agent)?.taskId);
+    if(operation==='a2aReply'){
+     human();version(request,p.expectedVersion);if(request.status!=='TASK_STATE_INPUT_REQUIRED')fail('invalid_stage','This agent request is already closed.');const answer=text(p.text);request.answer=answer;request.status='TASK_STATE_COMPLETED';request.updatedAt=now();request.version++;log('agent_task_answered',task.id,null,{agentTaskId:request.id});return request;
+    }
+    if(!agent&&operation!=='a2aCancel')fail('permission_denied','Use an explicitly authorized agent connection.');
+    if(operation==='a2aGet'){authorize('coordinate',task);return request;}
+    if(operation==='a2aCancel'){
+     if(!agent)version(request,p.expectedVersion);authorize('coordinate',task,request.status!=='TASK_STATE_CANCELED');if(request.status==='TASK_STATE_COMPLETED')fail('invalid_stage','A completed request cannot be canceled.');if(request.status!=='TASK_STATE_CANCELED'){request.status='TASK_STATE_CANCELED';request.updatedAt=now();request.version++;log('agent_task_canceled',task.id,null,{agentTaskId:request.id});}return request;
+    }
+    const messageId=text(p.messageId,100),message=text(p.text);const duplicate=Object.values(state.agentTasks).find(r=>r.ownerId===user&&r.grantId===agent&&r.messages.some(m=>m.messageId===messageId));
+    if(duplicate){if(duplicate.messages.find(m=>m.messageId===messageId).text!==message||p.id&&duplicate.id!==p.id)fail('conflict','Message ID was already used for different content.');authorize('coordinate',task,false);return duplicate;}
+    if(request&&request.status!=='TASK_STATE_INPUT_REQUIRED')fail('invalid_stage','This request is closed. Start a new request.');
+    if(request&&request.messages.length>=10)fail('quota','This request has reached its message limit.');authorize('coordinate',task);
+    const r=request||{id:id(),contextId:id(),taskId:task.id,ownerId:user,grantId:agent,status:'TASK_STATE_INPUT_REQUIRED',version:0,messages:[],createdAt:now()};r.messages.push({messageId,text:message,at:now()});r.updatedAt=now();r.version++;state.agentTasks[r.id]=r;log('agent_task_received',task.id,null,{agentTaskId:r.id});return r;
+   }
    if(operation==='agentContext'){
     if(!agent)fail('permission_denied','Connect with an owner-issued agent credential.');const g=own(state.grants,agent),task=g&&taskFor(g.taskId);
     if(!g||g.ownerId!==user||g.revokedAt!==null||g.expiresAt<=now()||g.used>=g.maxActions||task.minutes>g.maxTaskMinutes)fail('permission_denied','Agent permission is expired, revoked, exhausted or outside this task.');
@@ -61,7 +79,7 @@ const module={exports:{}};
    }
    if(operation==='list'){
     if(agent)fail('permission_denied','Agents may access only the task in their grant.');
-    return {invitations:Object.values(state.invitations).filter(i=>[i.founderId,i.builderId].includes(user)),tasks:Object.values(state.tasks).filter(t=>t.ownerId===user||t.visibility==='public'||Object.values(state.contributions).some(c=>c.taskId===t.id&&c.builderId===user)).map(t=>t.ownerId===user?t:{id:t.id,title:t.title,ownerId:t.ownerId,minutes:t.minutes,visibility:t.visibility,version:t.version,projectId:t.projectId,paused:t.paused===true,skills:t.skills||[]}),projects:Object.values(state.projects).filter(p=>p.ownerId===user||p.visibility==='public'),profile:own(state.profiles,user),reviews:Object.values(state.reviews).filter(r=>[r.authorId,r.recipientId].includes(user)),matches:Object.values(state.tasks).filter(t=>t.ownerId!==user&&t.visibility==='public').map(t=>fit(t,own(state.profiles,user))).filter(Boolean).sort((a,b)=>b.score-a.score),builderMatches:Object.values(state.tasks).filter(t=>t.ownerId===user).flatMap(t=>Object.values(state.profiles).filter(p=>p.discoverable&&p.userId!==user).map(p=>{const match=fit(t,p);return match?{...match,builder:{userId:p.userId,name:p.name,skills:p.skills,goal:p.goal}}:null;}).filter(Boolean)),contributions:Object.values(state.contributions).filter(c=>[c.founderId,c.builderId].includes(user)).map(c=>({...c,next:next(c)})),grants:Object.values(state.grants).filter(g=>g.ownerId===user)};
+    return {agentTasks:Object.values(state.agentTasks).filter(r=>r.ownerId===user),invitations:Object.values(state.invitations).filter(i=>[i.founderId,i.builderId].includes(user)),tasks:Object.values(state.tasks).filter(t=>t.ownerId===user||t.visibility==='public'||Object.values(state.contributions).some(c=>c.taskId===t.id&&c.builderId===user)).map(t=>t.ownerId===user?t:{id:t.id,title:t.title,ownerId:t.ownerId,minutes:t.minutes,visibility:t.visibility,version:t.version,projectId:t.projectId,paused:t.paused===true,skills:t.skills||[]}),projects:Object.values(state.projects).filter(p=>p.ownerId===user||p.visibility==='public'),profile:own(state.profiles,user),reviews:Object.values(state.reviews).filter(r=>[r.authorId,r.recipientId].includes(user)),matches:Object.values(state.tasks).filter(t=>t.ownerId!==user&&t.visibility==='public').map(t=>fit(t,own(state.profiles,user))).filter(Boolean).sort((a,b)=>b.score-a.score),builderMatches:Object.values(state.tasks).filter(t=>t.ownerId===user).flatMap(t=>Object.values(state.profiles).filter(p=>p.discoverable&&p.userId!==user).map(p=>{const match=fit(t,p);return match?{...match,builder:{userId:p.userId,name:p.name,skills:p.skills,goal:p.goal}}:null;}).filter(Boolean)),contributions:Object.values(state.contributions).filter(c=>[c.founderId,c.builderId].includes(user)).map(c=>({...c,next:next(c)})),grants:Object.values(state.grants).filter(g=>g.ownerId===user)};
    }
    if(operation==='report'){
     human();const collaborations=Object.values(state.contributions).filter(c=>[c.founderId,c.builderId].includes(user)),ids=new Set(collaborations.map(c=>c.id));
