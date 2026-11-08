@@ -20,6 +20,9 @@ export function createCloudHandler({load,commit,verifySession,reserveLogin,sendC
     if(await reserveLogin(email))await sendCode(email);
     return reply({data:{message:'Check your inbox and spam folder. Approved accounts receive a link when email limits allow. Wait at least 90 seconds before trying again.'}});
    }
+   if(input.operation==='discoverPublic'){
+    try{const snapshot=await load();return reply({data:core.discoverPublic(snapshot.state,input.params)});}catch(e){return reply({error:e.code==='invalid'?'invalid':'unavailable',message:'Public discovery is unavailable or the filters are invalid.'},e.code==='invalid'?400:503);}
+   }
    const bearer=/^Bearer ([A-Za-z0-9._~-]{16,4096})$/.exec(request.headers.get('authorization')||'')?.[1];if(!bearer)return reply({error:'unauthenticated',message:'Sign in to continue.'},401);
    const key=request.headers.get('idempotency-key');if(!key||!/^[A-Za-z0-9_-]{8,100}$/.test(key))return reply({error:'invalid',message:'A unique request key is required.'},400);
    const human=bearer.startsWith('fb_agent_')?null:await verifySession(bearer);if(!human&&!bearer.startsWith('fb_agent_'))return reply({error:'unauthenticated',message:'A verified, approved account is required.'},401);
@@ -33,7 +36,7 @@ export function createCloudHandler({load,commit,verifySession,reserveLogin,sendC
      if(principal.grantId){const grant=state.grants[principal.grantId];if(!grant||grant.ownerId!==principal.userId||grant.revokedAt!==null||grant.expiresAt<=now()){const e=Error('Agent permission is expired or revoked.');e.code='permission_denied';throw e;}}
      const saved=readonly.has(input.operation)?null:state.requests[cacheKey];
      if(saved){if(saved.digest!==digest){const e=Error('Request key was already used for different work.');e.code='conflict';throw e;}return reply(saved.result);}
-     if(!readonly.has(input.operation)&&!['revoke','revokePortfolio','close'].includes(input.operation)&&(Object.keys(state.tasks).length>=2000||Object.keys(state.contributions).length>=5000||JSON.stringify(state).length>2000000)){const e=Error('The controlled beta storage limit was reached. Existing permissions can still be revoked.');e.code='quota';throw e;}
+     if(!readonly.has(input.operation)&&!['revoke','revokePortfolio','close','withdrawOpportunity','withdrawCapability'].includes(input.operation)&&(Object.keys(state.tasks).length>=2000||Object.keys(state.contributions).length>=5000||JSON.stringify(state).length>2000000)){const e=Error('The controlled beta storage limit was reached. Existing permissions can still be revoked.');e.code='quota';throw e;}
      const before=state.sequence;
      let data;if(input.operation==='agentAudit'){if(principal.grantId){const e=Error('Only people can review this audit.');e.code='human_required';throw e;}data=state.securityEvents.filter(e=>e.ownerId===principal.userId).slice(-100).map(({ownerId,...rest})=>rest);}
      else data=core.create({state,principal,now,id:()=>crypto.randomUUID()}).run(input.operation,input.params);

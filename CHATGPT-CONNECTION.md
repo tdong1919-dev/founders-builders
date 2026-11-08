@@ -4,7 +4,7 @@ JIDOKA EA was identified by its owner as a regular ChatGPT chat/project with Git
 
 ## Two connection surfaces
 
-- Site `/mcp`: ChatGPT/Sites public discovery tools. They return the connection guide and Agent Card already public on the website. They cannot read private tasks, submit requests, grant access, or execute work. Sites manages the plugin connection; no Supabase credential goes into these tools.
+- Site `/mcp`: ChatGPT/Sites public discovery tools. They return the connection guide, Agent Card, and explicitly opted-in public opportunity/capability cards. They cannot read private tasks, submit requests, grant access, or execute work. Sites manages the plugin connection; no Supabase credential goes into these tools.
 - Supabase `/functions/v1/fb-collaboration/mcp` and `/a2a`: private owner-issued task-credential endpoints for compatible clients. Their bearer authentication remains separate from ChatGPT's supported native connection flow. Existing keys do not establish a native ChatGPT login.
 
 After Site publication, install/connect the generated Founders & Builders plugin and enable it in the EA chat. Ask EA to use `get_founders_builders_connection` and `get_founders_builders_agent_card`. Tool availability and a successful call from that EA chat are the acceptance check. Do not claim that reading GitHub or receiving a setup packet completed the integration.
@@ -16,3 +16,5 @@ A native private-data connection requires a verified owner-authorization flow co
 No JIDOKA source, database, permission or deployment changes are required for this public discovery phase. The JIDOKA repository was inspected read-only. Sites and Supabase are separate access boundaries; neither connection implicitly authorizes the other.
 
 Official documentation checked 2026-11-08: https://developers.openai.com/plugins/build/auth and https://developers.openai.com/api/docs/actions/getting-started . Regular ChatGPT MCP connections and custom GPT Actions are different configuration paths; EA was confirmed to use the former type of chat, not a custom GPT.
+
+Public card discovery is an explicit additional opt-in, separate from beta profile discoverability and task visibility. See DISCOVERY-AND-LEARNING.md for field boundaries and release status.

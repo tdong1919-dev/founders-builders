@@ -30,11 +30,22 @@
   },
   "chatgpt": {
     "endpoint": "https://founders-builders-ux-review.hello978822.chatgpt.site/mcp",
-    "scope": "Public connection guidance and Agent Card only. No private records or task execution.",
+    "scope": "Public connection guidance, Agent Card, and explicitly opted-in public cards only. No private records or task execution.",
     "tools": [
       "get_founders_builders_connection",
-      "get_founders_builders_agent_card"
+      "get_founders_builders_agent_card",
+      "list_public_opportunities",
+      "list_public_builder_capabilities"
     ],
     "private_access": "The direct Supabase MCP endpoint uses a task credential. A native ChatGPT private-data connection needs a compatible owner-authorization flow; it is not enabled by repository access."
+  },
+  "public_discovery": {
+    "available": false,
+    "stage": "Built and tested; paired backend/frontend publication pending",
+    "tools": [
+      "list_public_opportunities",
+      "list_public_builder_capabilities"
+    ],
+    "scope": "Only explicitly owner-approved public cards. Existing beta visibility does not opt anyone into public discovery. No full briefs, private profile text, contact fields, reviews or conversations."
   }
 }
