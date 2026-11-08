@@ -148,3 +148,13 @@ Built A2A 1.0 JSON-RPC SendMessage/GetTask/CancelTask for a narrow agent-to-own-
 321 automated tests and 53-page static checks pass, including persisted owner handoff, response artifacts, version conflicts, cross-owner/grant denial, revocation, old-grant denial, idempotency, terminal-state restrictions, card consistency and UI next action.
 
 Verified founders-builders project ijvokvffhcvakaultzfk ACTIVE_HEALTHY and existing Edge version 6 before attempted deployment; no JIDOKA queries. Saved prior function source in session memory. Automatic approval review rejected replacing the active production function because the replacement includes auth/authorization/persistence/MCP/A2A routing and build approval did not clearly authorize that live blast radius. No workaround attempted; no deployment occurred. Site remains 26, Edge remains 6. Publication requires explicit approval for the reviewed function replacement and paired frontend. User test grant was not altered.
+
+### Approved A2A pilot publication (2026-11-08)
+
+User explicitly approved replacing the live function and publishing the paired frontend after the automatic review rejection. Reverified founders-builders ID ijvokvffhcvakaultzfk ACTIVE_HEALTHY and existing version 6 before replacement; no JIDOKA access.
+
+Edge `fb-collaboration` version 7 ACTIVE, hash `49e7ef13ba1c1a3d6001e4140d1134882c0e6a7fb20b537e32354136a20f0f7a`. Existing internal verified-human/task-agent authentication and verify_jwt=false retained. New coordinate action is opt-in only; old credentials were neither extended nor revoked. No schema migrations or paid services.
+
+Sites version 27 published: saved version `appgprj_6add5ba8a1688191b29dd954024ebb46~appgver_67567a4bc9008191adf4ed234f3e0fc4`, hosting source `1b6346b873fe85c563afa6741d23d66a9661bb26`, deployment `appgdep_6af0cc45ba988191864c2aadf82bad21` succeeded 2026-11-08T19:23:55Z. Public Site audience preserved. Root /.well-known/agent-card.json serves the exact tested A2A pilot card. Five live release assets match source byte-for-byte.
+
+321 automated tests and 53-page static checks pass. Ten existing live privacy/auth boundary checks pass; A2A card matches server source, anonymous/forged/origin-denied requests and MCP anonymous-denied checks pass. No real coordination question or sign-in email was sent. Real JIDOKA EA host request→human response→artifact/cancellation acceptance and desktop/mobile visual QA remain pending. PR #34 remains draft/unmerged; MCP continues to be available. No Resend or Sheets changes.
