@@ -27,5 +27,14 @@
     "transport": "stateless Streamable HTTP JSON responses; no SSE",
     "authentication": "Owner-issued task-scoped bearer credential; no OAuth discovery yet",
     "mutation_retries": "Supply a unique requestKey UUID per intended action; reuse for the same retry only"
+  },
+  "chatgpt": {
+    "endpoint": "https://founders-builders-ux-review.hello978822.chatgpt.site/mcp",
+    "scope": "Public connection guidance and Agent Card only. No private records or task execution.",
+    "tools": [
+      "get_founders_builders_connection",
+      "get_founders_builders_agent_card"
+    ],
+    "private_access": "The direct Supabase MCP endpoint uses a task credential. A native ChatGPT private-data connection needs a compatible owner-authorization flow; it is not enabled by repository access."
   }
 }

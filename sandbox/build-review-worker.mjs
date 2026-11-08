@@ -15,10 +15,13 @@ if(!assets['/index.html']||!assets['/a2a-sandbox.html'])throw Error('Review page
 if(Object.values(assets).some(a=>a.body.includes('script.google.com/macros/s/')))throw Error('Review must not include a live Sheets endpoint.');
 if(!assets['/secure-config.js']?.body.includes('enabled: false'))throw Error('Keep Supabase disabled in review.');
 const handler=fs.readFileSync(path.join(root,'sandbox/a2a-handler.mjs'),'utf8').replace('export function createSandbox','function createSandbox');
-const source=handler+'\nconst reviewAssets='+JSON.stringify(assets)+';\n'+`
+const discovery=fs.readFileSync(path.join(root,'sandbox/discovery-mcp.mjs'),'utf8').replace('export function createDiscoveryMcp','function createDiscoveryMcp');
+const source=handler+'\n'+discovery+'\nconst reviewAssets='+JSON.stringify(assets)+';\n'+`
 let cachedSecret,cachedSandbox;
+const discoveryMcp=createDiscoveryMcp({connection:JSON.parse(reviewAssets['/agent-connection.json'].body),card:JSON.parse(reviewAssets['/a2a-agent-card.json'].body)});
 export default {async fetch(request,env){
  const url=new URL(request.url);
+ if(url.pathname==='/mcp')return discoveryMcp(request);
  if(url.pathname==='/a2a/founder'){
   if(!cachedSandbox||cachedSecret!==env.FB_A2A_SANDBOX_SECRET){cachedSecret=env.FB_A2A_SANDBOX_SECRET;cachedSandbox=createSandbox({secret:cachedSecret});}
   return cachedSandbox.fetch(request);
