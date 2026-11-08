@@ -34,6 +34,11 @@ const module={exports:{}};
   }
   function next(c){return {interest:{who:c.founderId,label:'Propose clear terms'},terms:{who:c.builderId,label:'Review exact terms'},agreed:{who:c.builderId,label:'Deliver the agreed work'},delivered:{who:c.founderId,label:'Give feedback and credit'},feedback:{who:c.builderId,label:c.portfolioAllowed?'Record portfolio credit':'Close contribution privately'},closed:{who:null,label:'Contribution complete'},cancelled:{who:null,label:'Closed without completion'}}[c.stage];}
   function run(operation,p={}){
+   if(operation==='agentContext'){
+    if(!agent)fail('permission_denied','Connect with an owner-issued agent credential.');const g=own(state.grants,agent),task=g&&taskFor(g.taskId);
+    if(!g||g.ownerId!==user||g.revokedAt!==null||g.expiresAt<=now()||g.used>=g.maxActions||task.minutes>g.maxTaskMinutes)fail('permission_denied','Agent permission is expired, revoked, exhausted or outside this task.');
+    return {taskId:g.taskId,actions:g.actions,remainingRequests:g.maxActions-g.used,expiresAt:g.expiresAt};
+   }
    if(operation==='saveProject'){human();let project=p.projectId?own(state.projects,p.projectId):null;if(p.projectId&&!project)fail('not_found','Project unavailable.');if(project){if(project.ownerId!==user)fail('not_found','Project unavailable.');version(project,p.expectedVersion);}project={id:project?.id||id(),ownerId:user,title:text(p.title,120),overview:text(p.overview),outcome:text(p.outcome),visibility:p.visibility==='public'?'public':'private',version:(project?.version||0)+1};state.projects[project.id]=project;log('project_saved',null);return project;}
    if(operation==='saveProfile'){human();const profile={userId:user,name:text(p.name,80),skills:tags(p.skills),goal:text(p.goal,800),maxMinutes:p.maxMinutes,paidOnly:p.paidOnly===true,discoverable:p.discoverable===true};if(!Number.isInteger(profile.maxMinutes)||profile.maxMinutes<15||profile.maxMinutes>180)fail('invalid','Choose 15–180 minutes per task.');state.profiles[user]=profile;log('builder_profile_saved',null);return profile;}
    if(operation==='createTask'){

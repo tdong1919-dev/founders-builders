@@ -106,3 +106,11 @@ User explicitly requested deployment. PR #29 check-ins/closing and PR #30 onboar
 - Supabase project URL verified as `https://ijvokvffhcvakaultzfk.supabase.co` before deployment. `fb-collaboration` version 5 ACTIVE; source hash `776880fb5240f9a1e7b8c8834297629383c58cdd5e8281cd3469e0b4b47201fb`. Existing internal human/agent authentication retained.
 - All 10 real HTTPS boundary checks pass: anonymous/forged identity, raw private tables, private RPCs and unapproved browser origins denied; email authentication available. No email sent.
 - 309 automated tests and 52-page static validation passed before publication. Desktop/mobile visual QA and live two-account acceptance remain pending. PRs remain draft/unmerged. No migrations, new costs, Resend or Sheets changes; Site audience preserved.
+
+### Agent connection foundation (2026-11-08)
+
+Prepared a task-scoped MCP adapter for the existing Edge handler, an owner connection guide, and public capability metadata. Tool discovery validates an unexpired, unrevoked, unexhausted grant without consuming action budget. Data actions retain server-side task scope, version checks, audit and request-key retry behavior. Tool listing is filtered by grant actions. No human-only decisions are exposed. Existing JSON command API remains supported.
+
+Validation: 312 automated tests and 53-page static checks pass. New adapter tests cover authentication, filtered tools, no-budget discovery, cross-task denial, invalid origins/versions/batches, revocation/exhaustion and idempotent message retries. No real credentials or messages used. Browser QA and external-client acceptance are pending.
+
+Not deployed: Supabase connector is unavailable in this session. Backend must publish all four function files together before advertising the prepared endpoint as live. Existing Site 23 / Edge 5 remains unchanged. This is MCP access, not an A2A task server or an economic payment system. See AGENT-CONNECTION.md for JIDOKA EA acceptance and next A2A milestone.
