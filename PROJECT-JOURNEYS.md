@@ -140,3 +140,11 @@ Owner-supplied short-lived task grant successfully initialized live MCP 2025-11-
 PR #33 makes grant capabilities visible: read-only/action-capable status, allowed actions, requests remaining, time limit, expiry, matching/exact-brief restrictions and revoked/exhausted state. Activity identifies humans/agents with timestamps. Owner/task filtering retained. 315 automated tests and 53-page static checks pass; both published controllers match source exactly.
 
 Sites version 26 published, saved version `appgprj_6add5ba8a1688191b29dd954024ebb46~appgver_577f582b36088191aaa64bd8a1692123`, hosting source `f8f6bed8a6a60aa7b88c41b0e4d1efdf92b0f710`, deployment `appgdep_6af0c976e2988191a76da4ed7c421371` succeeded 2026-11-08T19:11:56Z. Backend remains version 6. PR draft/unmerged; visual QA and an actual JIDOKA EA host connection remain pending. No new costs or database changes.
+
+### A2A owner-handoff pilot prepared (2026-11-08)
+
+Built A2A 1.0 JSON-RPC SendMessage/GetTask/CancelTask for a narrow agent-to-own-owner coordination loop. A new coordinate permission is explicitly opt-in; old grants are unchanged. Persisted agent tasks are private to the owner and original grant. Questions surface in Agent requests; human answers return as artifacts, cancellation is idempotent, and collaboration terms/stages remain untouched. No streaming, files, webhooks, payments or autonomous cross-founder execution. Root well-known card route is prepared but not published.
+
+321 automated tests and 53-page static checks pass, including persisted owner handoff, response artifacts, version conflicts, cross-owner/grant denial, revocation, old-grant denial, idempotency, terminal-state restrictions, card consistency and UI next action.
+
+Verified founders-builders project ijvokvffhcvakaultzfk ACTIVE_HEALTHY and existing Edge version 6 before attempted deployment; no JIDOKA queries. Saved prior function source in session memory. Automatic approval review rejected replacing the active production function because the replacement includes auth/authorization/persistence/MCP/A2A routing and build approval did not clearly authorize that live blast radius. No workaround attempted; no deployment occurred. Site remains 26, Edge remains 6. Publication requires explicit approval for the reviewed function replacement and paired frontend. User test grant was not altered.
