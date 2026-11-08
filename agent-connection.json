@@ -13,7 +13,8 @@
       "GetTask",
       "CancelTask"
     ],
-    "permission": "A new owner-issued grant must explicitly allow coordinate. Existing grants are unchanged."
+    "permission": "A new owner-issued grant must explicitly allow coordinate. Existing grants are unchanged.",
+    "quickstart": "https://founders-builders-ux-review.hello978822.chatgpt.site/agent-quickstart.json"
   },
   "privacy": "No private records in discovery metadata. Credential holders cannot globally list projects or profiles.",
   "billing": "No payments, escrow, payouts, or economic commitments are implemented.",

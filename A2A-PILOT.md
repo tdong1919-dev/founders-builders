@@ -32,3 +32,12 @@ Automated tests cover durable handoff to the correct owner, response artifact, s
 Release identifiers and live checks are recorded in PROJECT-JOURNEYS.md. A real JIDOKA EA host test remains an acceptance step, not a completed claim. No credentials or real private questions are stored in this document.
 
 Specification used: https://a2a-protocol.org/latest/specification/ (A2A 1.0 JSON-RPC and ProtoJSON message/task fields, checked 2026-11-08).
+
+
+## Connection kit for EA
+
+The public `agent-quickstart.json` packet contains endpoint, protocol, permissions, a sample request and next steps, without a credential. Give this to an HTTPS-capable agent and configure its Bearer secret separately. Existing MCP tools do not bridge these A2A methods. Do not claim host compatibility until the real host passes the loop.
+
+`agent-pilot-client.mjs` is a dependency-free external client pinned to the approved project endpoint. Discovery never sends credentials; redirects are rejected, errors are sanitized, and no automatic retries or background polling occur. Caller supplies and retains messageId so uncertain sends can be retried with the same ID.
+
+From a Node environment with fetch support, `node scripts/test-agent-pilot.mjs discover` verifies public metadata without a credential. For `send <message-UUID>`, `get <task-ID>` or `cancel <task-ID>`, inject `FB_AGENT_CREDENTIAL` through your secret manager. Do not pass it in command arguments or put it in a config file. The script sends a fixed connection-check question only when explicitly run with send, and prints task ID/status rather than private questions or answers. It does not automatically poll or contact other users.
