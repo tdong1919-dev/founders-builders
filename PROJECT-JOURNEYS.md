@@ -132,3 +132,11 @@ Remaining: real owner-issued read-only credential handshake from JIDOKA EA, foll
 User could not find the controls because Agent access was collapsed inside the hidden task section. Added Connect my agent beside signed-in account controls, a direct reveal/scroll action, an agent-specific contribution selector, and no-task guidance. Opening does not create a credential or grant permissions. 313 tests and 53-page static checks pass.
 
 Published Sites version 25, saved version `appgprj_6add5ba8a1688191b29dd954024ebb46~appgver_245b642d862c81919fddfd1de00ec337`, hosting source `a909865781d6b64a1825e882a9793091872952db`, deployment `appgdep_6af0c7f2c5288191944e59625c963af6` succeeded 2026-11-08T19:05:29Z. Both live controllers match tested source exactly and workspace HTML includes the entry/panel targets. Backend remains version 6; no database changes or new costs. PR #32 draft/unmerged, browser visual and external EA acceptance pending.
+
+### Agent oversight and authenticated MCP check (2026-11-08)
+
+Owner-supplied short-lived task grant successfully initialized live MCP 2025-11-25, listed permitted tools and read the authorized task. No private content was printed and no collaboration mutation was performed. The tool list included message/propose, so the test grant was action-capable. User requested leaving it active; it was not revoked or extended. No credential value is recorded in files.
+
+PR #33 makes grant capabilities visible: read-only/action-capable status, allowed actions, requests remaining, time limit, expiry, matching/exact-brief restrictions and revoked/exhausted state. Activity identifies humans/agents with timestamps. Owner/task filtering retained. 315 automated tests and 53-page static checks pass; both published controllers match source exactly.
+
+Sites version 26 published, saved version `appgprj_6add5ba8a1688191b29dd954024ebb46~appgver_577f582b36088191aaa64bd8a1692123`, hosting source `f8f6bed8a6a60aa7b88c41b0e4d1efdf92b0f710`, deployment `appgdep_6af0c976e2988191a76da4ed7c421371` succeeded 2026-11-08T19:11:56Z. Backend remains version 6. PR draft/unmerged; visual QA and an actual JIDOKA EA host connection remain pending. No new costs or database changes.
