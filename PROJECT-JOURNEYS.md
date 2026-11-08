@@ -203,3 +203,11 @@ Match explanations now separate current skills, practice goals, missing skills, 
 352 full-suite tests and 53-page static checks pass, with tests for public data boundaries, explicit human consent, ownership, filters, immediate withdrawal, stale tabs, quota-limit withdrawal, goal/gap explanations, recorded timestamps, seven-day boundaries, source-linked learning and no mutation while viewing. Native tools continue to treat public card text as untrusted data. Desktop/mobile visual and real two-account publication acceptance remain pending because local browser use is disabled.
 
 Verified only founders-builders project ijvokvffhcvakaultzfk ACTIVE_HEALTHY and current Edge version 7. JIDOKA untouched. Backend/frontend publication pending; no real owner cards or credentials were created. No migrations, subscriptions, payments, Resend or Sheets changes. See DISCOVERY-AND-LEARNING.md for the contract.
+
+### Discovery release verification and approval gate (2026-11-08, PR #38)
+
+Final suite: 354 tests pass, plus static checks for 53 pages. Added legacy profile compatibility (omitting the new practice-skill field preserves it; explicit empty clears it) and sanitized public-discovery outage checks. Previous stale-publication, quota-withdrawal, private projection, ownership and evidence tests remain passing.
+
+The attempted production replacement of fb-collaboration was rejected by automatic approval review: it immediately replaces the live authentication, authorization, private data, MCP and A2A function, and the current user request authorized building/testing rather than this production deployment. No retry, indirect deployment or workaround was attempted. No paired frontend was published. Live remains Site 31 / Edge 7. JIDOKA untouched; no public owner cards or new grants were created.
+
+The complete reviewed change is in PR #38; publishing the exact function replacement and paired frontend requires explicit user approval. Public discovery stays off until each owner reviews and approves a separate card. No private profile/project data is automatically published. Browser visual and real two-account acceptance remain pending.
