@@ -1,6 +1,6 @@
 # Private A2A coordination pilot
 
-Release status: built and tested, not deployed. Production function replacement was rejected by automatic approval review pending explicit user authorization. Existing Site 26 / Edge 6 is unchanged.
+Release status: backend deployed as Edge version 7 after explicit user approval of the production replacement. Paired frontend release identifiers are recorded in PROJECT-JOURNEYS.md. External JIDOKA EA host acceptance remains pending.
 
 Version: A2A 1.0 JSON-RPC subset. This pilot lets an agent ask its own verified owner a question and poll the response. It does not negotiate with other founders, accept work, execute code, exchange files, or make payments. It is not a claim of full protocol conformance.
 
