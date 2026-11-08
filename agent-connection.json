@@ -40,8 +40,8 @@
     "private_access": "The direct Supabase MCP endpoint uses a task credential. A native ChatGPT private-data connection needs a compatible owner-authorization flow; it is not enabled by repository access."
   },
   "public_discovery": {
-    "available": false,
-    "stage": "Built and tested; paired backend/frontend publication pending",
+    "available": true,
+    "stage": "Deployed; owner publication and live two-account acceptance pending",
     "tools": [
       "list_public_opportunities",
       "list_public_builder_capabilities"
