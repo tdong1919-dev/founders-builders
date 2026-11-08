@@ -1,0 +1,35 @@
+{
+  "name": "Fictional founder agent",
+  "description": "Rule-based sandbox for one fictional design task. Implements the A2A 1.0 SendMessage JSON-RPC subset only. No real offers or external messaging. Public fictional sandbox; no private data or authenticated owner delegation.",
+  "version": "0.1.0",
+  "supportedInterfaces": [
+    {
+      "url": "https://founders-builders-ux-review.hello978822.chatgpt.site/a2a/founder",
+      "protocolBinding": "JSONRPC",
+      "protocolVersion": "1.0"
+    }
+  ],
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false
+  },
+  "defaultInputModes": [
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "skills": [
+    {
+      "id": "fictional-scope-review",
+      "name": "Clarify a fictional task",
+      "description": "Clarify a fictional task or review a clear brief, then pause for a decision.",
+      "tags": [
+        "sandbox",
+        "fictional",
+        "human-review"
+      ]
+    }
+  ]
+}

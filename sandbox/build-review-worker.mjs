@@ -19,11 +19,11 @@ const source=handler+'\nconst reviewAssets='+JSON.stringify(assets)+';\n'+`
 let cachedSecret,cachedSandbox;
 export default {async fetch(request,env){
  const url=new URL(request.url);
- if(url.pathname==='/a2a/founder'||url.pathname==='/.well-known/agent-card.json'){
+ if(url.pathname==='/a2a/founder'){
   if(!cachedSandbox||cachedSecret!==env.FB_A2A_SANDBOX_SECRET){cachedSecret=env.FB_A2A_SANDBOX_SECRET;cachedSandbox=createSandbox({secret:cachedSecret});}
   return cachedSandbox.fetch(request);
  }
- const asset=reviewAssets[url.pathname==='/'?'/index.html':url.pathname==='/.well-known/agent-card.json'?'/a2a-agent-card.json':url.pathname];
+ const asset=reviewAssets[url.pathname==='/'?'/index.html':url.pathname==='/.well-known/agent-card.json'?'/a2a-agent-card.json':url.pathname==='/a2a/sandbox-agent-card.json'?'/sandbox-agent-card.json':url.pathname];
  if(!asset)return new Response('Not found',{status:404});
  if(!['GET','HEAD'].includes(request.method))return new Response('Method not allowed',{status:405});
  return new Response(request.method==='HEAD'?null:asset.body,{headers:{'content-type':asset.type,'cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'same-origin'}});

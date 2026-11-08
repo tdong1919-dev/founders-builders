@@ -31,7 +31,7 @@
     async function start(){
       if(busy||phase!=='new')throw Error('Start a new run before another exchange.');busy=true;
       try{
-        const card=await read('/.well-known/agent-card.json',{headers:{'A2A-Version':'1.0'}});
+        const card=await read('/a2a/sandbox-agent-card.json',{headers:{'A2A-Version':'1.0'}});
         if(!card.supportedInterfaces?.some(i=>i.protocolBinding==='JSONRPC'&&i.protocolVersion==='1.0'&&i.url===fixedOrigin+'/a2a/founder'))throw Error('The agent card does not advertise this sandbox endpoint.');
         onEvent({kind:'discovery',text:'Builder agent discovered the fictional founder agent’s A2A 1.0 JSON-RPC interface.'});
         await send('inquire');if(phase==='question')await send('clarify');return {phase};

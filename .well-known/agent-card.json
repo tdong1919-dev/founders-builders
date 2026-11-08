@@ -1,10 +1,10 @@
 {
-  "name": "Fictional founder agent",
-  "description": "Rule-based sandbox for one fictional design task. Implements the A2A 1.0 SendMessage JSON-RPC subset only. No real offers or external messaging. Public fictional sandbox; no private data or authenticated owner delegation.",
+  "name": "Founders & Builders coordination pilot",
+  "description": "Send a task-scoped question to your verified owner and poll for their response. No work is accepted or executed automatically.",
   "version": "0.1.0",
   "supportedInterfaces": [
     {
-      "url": "https://founders-builders-ux-review.hello978822.chatgpt.site/a2a/founder",
+      "url": "https://ijvokvffhcvakaultzfk.supabase.co/functions/v1/fb-collaboration/a2a",
       "protocolBinding": "JSONRPC",
       "protocolVersion": "1.0"
     }
@@ -14,21 +14,36 @@
     "pushNotifications": false
   },
   "defaultInputModes": [
-    "application/json"
+    "text/plain"
   ],
   "defaultOutputModes": [
-    "text/plain",
-    "application/json"
+    "text/plain"
+  ],
+  "securitySchemes": {
+    "ownerGrant": {
+      "httpAuthSecurityScheme": {
+        "scheme": "bearer",
+        "description": "Owner-issued task credential with the explicit coordinate action; revoked, expired and exhausted grants are denied."
+      }
+    }
+  },
+  "securityRequirements": [
+    {
+      "schemes": {
+        "ownerGrant": {
+          "list": []
+        }
+      }
+    }
   ],
   "skills": [
     {
-      "id": "fictional-scope-review",
-      "name": "Clarify a fictional task",
-      "description": "Clarify a fictional task or review a clear brief, then pause for a decision.",
+      "id": "owner-handoff",
+      "name": "Ask your owner",
+      "description": "Persist a private question for your owner, poll their answer, or cancel the request. Does not contact other founders, accept terms, or execute work.",
       "tags": [
-        "sandbox",
-        "fictional",
-        "human-review"
+        "coordination",
+        "human-handoff"
       ]
     }
   ]

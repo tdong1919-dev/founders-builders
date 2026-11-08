@@ -31,7 +31,7 @@ export function createSandbox({secret,cryptoApi=globalThis.crypto,now=Date.now}=
   const blocked=(id,reason,message)=>error(id,-32602,message,200,reason);
   return {card,async fetch(request){
     const url=new URL(request.url);
-    if(url.pathname==='/.well-known/agent-card.json')return request.method==='GET'?json(card(url.origin)):json({error:'Method not allowed'},405);
+    if((url.pathname==='/.well-known/agent-card.json'||url.pathname==='/a2a/sandbox-agent-card.json'))return request.method==='GET'?json(card(url.origin)):json({error:'Method not allowed'},405);
     if(url.pathname!=='/a2a/founder')return new Response('Not found',{status:404});
     if(request.method!=='POST')return json({error:'Use POST'},405);
     const origin=request.headers.get('origin');if(origin&&origin!==url.origin)return json({error:'Cross-origin requests are not supported'},403);
