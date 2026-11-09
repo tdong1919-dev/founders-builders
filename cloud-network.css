@@ -14,3 +14,5 @@
 .owner-control-center h2{font-size:1.45rem}
 
 .network-section,#projectOverview,#builderProfile{overflow-wrap:anywhere}
+
+.owner-control-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.agent-mission time{display:block;margin:12px 0;color:#666d60}.agent-mission details{margin-top:16px}.agent-mission summary{cursor:pointer}.agent-mission p{overflow-wrap:anywhere}@media(max-width:600px){.owner-control-tabs{grid-template-columns:1fr}.agent-mission>.btn{width:100%}}
