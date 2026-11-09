@@ -17,10 +17,10 @@ test('navigation closes after following a link or clicking outside',()=>{
  const s=setup();s.handlers['toggle-click']();s.handlers['link-click']();assert.equal(s.attrs['aria-expanded'],'false');
  s.handlers['toggle-click']();s.handlers.click({target:'outside'});assert.equal(s.classes.has('open'),false);
 });
-test('every branded page keeps the same four primary destinations',()=>{
+test('every full-navigation branded page keeps the same four primary destinations',()=>{
  const root=path.resolve(__dirname,'..');let count=0;
  for(const name of fs.readdirSync(root).filter(n=>n.endsWith('.html'))){
-  const html=fs.readFileSync(path.join(root,name),'utf8');if(!html.includes('brand-system.css'))continue;count++;
+  const html=fs.readFileSync(path.join(root,name),'utf8');if(!html.includes('brand-system.css'))continue;if(name==='quick-tour.html'){assert.match(html,/<a href="index.html">Back to home<\/a>/);assert.match(html,/id="tourRestart"/);continue;}count++;
   const nav=html.match(/<nav class="nav__links"[^>]*>([\s\S]*?)<\/nav>/);assert.ok(nav, name);
   assert.deepEqual([...nav[1].matchAll(/href="([^"]+)"/g)].map(m=>m[1]),['projects.html','profiles.html','community.html','workspace.html'],name);
   assert.ok(html.includes('navigation.js'),name);assert.ok(html.includes('aria-controls="primaryLinks"'),name);
