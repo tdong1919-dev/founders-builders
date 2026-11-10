@@ -17,3 +17,6 @@ npm-debug.log*
 *.sqlite-wal
 *.sqlite-shm
 .local-shared/
+
+# Supabase CLI local runtime metadata
+supabase/.temp/
