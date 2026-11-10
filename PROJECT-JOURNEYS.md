@@ -351,3 +351,5 @@ Added two native GET filters to public discovery: shared skills plus maximum con
 Projects and People now surface approved public discovery near the start, while keeping their existing community feed intact. Public card input/schema validation tightened, with unknown compensation/time data failing closed. No new backend operation, database, Auth, permission, data storage, analytics or paid service.
 
 Fixed listing review invalidation for selection/checkbox change events as well as typing. Detached, invalid or already-used confirmation buttons cannot submit. Existing drafts and explicit confirmation remain intact.
+
+417 regression tests and all 66 page checks pass; built filter forwarding, safe empty state and exact changed assets verified. Published Sites version 50, saved version appgprj_6add5ba8a1688191b29dd954024ebb46~appgver_c19a6cd820d88191a04edf21cf677c38, hosting source c1c88cceb426a1d1e483de9bebec04c105679667. Deployment appgdep_6af3571a560481918ecf803f56ebece6 succeeded with MCP retained. PR #54 draft/unmerged on #53. Browser visual and real-device verification remain pending under the previously confirmed Work browser restriction.
