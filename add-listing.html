@@ -8,9 +8,9 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="profiles.css" />
 
-<link rel="stylesheet" href="brand-system.css"><link rel="stylesheet" href="platform-brand.css"><link rel="icon" type="image/svg+xml" href="assets/brand/fb-connection-mark.svg"></head>
+<link rel="stylesheet" href="brand-system.css"><link rel="stylesheet" href="experience.css"><link rel="stylesheet" href="platform-brand.css"><link rel="icon" type="image/svg+xml" href="assets/brand/fb-connection-mark.svg"><link rel="canonical" href="https://founders-builders-ux-review.hello978822.chatgpt.site/add-listing.html"><meta name="robots" content="noindex,follow"><meta property="og:type" content="website"><meta property="og:site_name" content="Founders &amp; Builders"><meta property="og:title" content="List a product or service — Founders &amp; Builders"><meta property="og:description" content="List your product or service in the Founders &amp; Builders marketplace."><meta property="og:url" content="https://founders-builders-ux-review.hello978822.chatgpt.site/add-listing.html"><meta property="og:image" content="https://founders-builders-ux-review.hello978822.chatgpt.site/social-card.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Nothing great is ever built overnight. Or alone. Founders &amp; Builders."><meta name="twitter:card" content="summary"></head>
 <body class="brand-cohesive">
-  <header class="nav scrolled" id="nav"><div class="nav__inner"><a href="index.html" class="brand"><svg class="icon brand__mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg><span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span></a><nav class="nav__links" id="primaryLinks" aria-label="Primary"><a href="projects.html">Build together</a><a href="profiles.html">People</a><a href="community.html" aria-current="page">Community</a><a href="workspace.html">Workspace</a></nav><a href="create-profile.html" class="btn btn--sm">Join the community</a><button class="nav__toggle" id="navToggle" type="button" aria-label="Toggle navigation" aria-controls="primaryLinks" aria-expanded="false"><span></span><span></span><span></span></button></div></header>
+  <header class="nav scrolled" id="nav"><div class="nav__inner"><a href="index.html" class="brand"><svg class="icon brand__mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg><span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span></a><nav class="nav__links" id="primaryLinks" aria-label="Primary"><a href="projects.html">Projects</a><a href="profiles.html">People</a><a href="community.html" aria-current="page">Community</a><a href="cloud-workspace.html">Workspace</a></nav><a href="beta-access.html" class="btn btn--sm">Request access</a><button class="nav__toggle" id="navToggle" type="button" aria-label="Toggle navigation" aria-controls="primaryLinks" aria-expanded="false"><span></span><span></span><span></span></button></div></header>
 
   <main>
     <section class="hub-head">
@@ -26,7 +26,7 @@
     </section>
 
     <section class="container narrow">
-      <form class="profile-form" id="listingForm" novalidate>
+      <form class="profile-form" id="listingForm" novalidate data-simple-form="name,email,description,pricing">
         <!-- Honeypot (hidden from humans) -->
         <div class="hp" aria-hidden="true">
           <label>Company website<input type="text" name="company_website" tabindex="-1" autocomplete="off" /></label>
@@ -92,10 +92,10 @@
         </fieldset>
 
         <div class="form-footer">
-          <button type="submit" class="btn btn--lg" id="submitBtn">Publish listing</button>
+          <button type="submit" class="btn btn--lg" id="submitBtn" disabled>Review listing</button>
           <p class="form-status" id="formStatus" role="status" aria-live="polite"></p>
         </div>
-      </form>
+      <noscript><p>This submission needs JavaScript for review and sending. Nothing is sent while JavaScript is off. You can still browse the public community.</p></noscript></form>
     </section>
   </main>
 
@@ -106,12 +106,12 @@
         <span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span>
       </div>
       <p class="footer__copy">© <span id="year"></span> Founders &amp; Builders. Community-built.</p>
-      <p class="footer__powered"><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg> Powered by Jidoka Group</p>
+      <p class="footer__powered">Founders &amp; Builders · Private beta</p>
     </div>
-  </footer>
+  <nav class="experience-links" aria-label="Help and platform information"><a href="questions.html">Questions</a><a href="for-founders.html">For founders</a><a href="for-builders.html">For builders</a><a href="privacy.html">Privacy</a><a href="terms.html">Beta terms</a><a href="earlier-tools.html">Earlier tools</a></nav></footer>
 
   <script src="config.js"></script>
   <script src="script.js"></script>
   <script src="marketplace.js"></script>
-<script src="navigation.js"></script></body>
+<script src="navigation.js"></script><script src="site-experience.js" defer></script></body>
 </html>

@@ -22,7 +22,7 @@ test('every full-navigation branded page keeps the same four primary destination
  for(const name of fs.readdirSync(root).filter(n=>n.endsWith('.html'))){
   const html=fs.readFileSync(path.join(root,name),'utf8');if(!html.includes('brand-system.css'))continue;if(name==='quick-tour.html'){assert.match(html,/<a href="index.html">Back to home<\/a>/);assert.match(html,/id="tourFounder"/);continue;}count++;
   const nav=html.match(/<nav class="nav__links"[^>]*>([\s\S]*?)<\/nav>/);assert.ok(nav, name);
-  assert.deepEqual([...nav[1].matchAll(/href="([^"]+)"/g)].map(m=>m[1]),['projects.html','profiles.html','community.html','workspace.html'],name);
+  assert.deepEqual([...nav[1].matchAll(/href="([^"]+)"/g)].map(m=>m[1]),['projects.html','profiles.html','community.html','cloud-workspace.html'],name);
   assert.ok(html.includes('navigation.js'),name);assert.ok(html.includes('aria-controls="primaryLinks"'),name);
  }
  assert.ok(count>=40);

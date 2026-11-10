@@ -40,6 +40,8 @@ def main():
                 target = (path.parent / unquote(url.path)).resolve()
             else:
                 target = path
+            if url.path in ('/opportunities/', '/builders/'):
+                continue  # Tested server-rendered public discovery routes.
             if not target.exists():
                 errors.append(f'{path.name}: missing local target {link}')
             elif url.fragment and target in pages and unquote(url.fragment) not in pages[target].ids:

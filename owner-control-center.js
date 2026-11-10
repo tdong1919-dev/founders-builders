@@ -31,6 +31,10 @@
    return [{taskId,title:task.title,goal:task.brief?.deliverable||work.find(c=>c.terms?.deliverable)?.terms.deliverable||task.title,status,detail,action,access,active,latest,paused:task.paused===true,otherSteps:Math.max(0,todo.length-1)}];
   }).sort((a,b)=>Number(b.status==='Needs you')-Number(a.status==='Needs you'));
  }
+ function progressMetrics(records,userId){
+  const work=(records.contributions||[]).filter(c=>[c.founderId,c.builderId].includes(userId)),ids=new Set(work.map(c=>c.id));
+  return {invitations:(records.invitations||[]).filter(i=>[i.founderId,i.builderId].includes(userId)).length,applications:work.length,conversations:work.filter(c=>(c.messages||[]).some(m=>[c.founderId,c.builderId].includes(m.actorId))).length,agreed:work.filter(c=>c.acceptedTermsVersion!=null).length,delivered:work.filter(c=>c.delivery).length,completed:work.filter(c=>c.stage==='closed').length,reviews:(records.reviews||[]).filter(r=>r.recipientId===userId&&ids.has(r.contributionId)).length};
+ }
  function create({document,user,execute,run,nextSteps,openContribution,openAgent,learningInsights,preview=false}){
   const host=document.getElementById('ownerControlCenter');let data=null,tab='attention',ticket=0,activityTask=null;
   const node=(tag,text)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;return el;};
@@ -59,6 +63,7 @@
     function grantRow(g,target){const row=node('article');row.className='network-match';row.append(node('h3',title(g.taskId)),node('p',g.status+' · '+(g.actions.every(a=>a==='read')?'Read only':'Can take permitted actions')),node('p','Allowed: '+g.actions.map(a=>actions[a]||a).join(', ')),node('p',g.remaining+' of '+g.maxActions+' requests remaining · '+g.maxTaskMinutes+' minute task limit'),node('p','Expires: '+new Date(g.expiresAt).toLocaleString()));if(g.status==='Active')row.append(button('Revoke access',()=>execute('revoke',{grantId:g.id})));target.append(row);}
     for(const g of model.active)grantRow(g,panel);const inactive=model.grants.filter(g=>g.status!=='Active');if(inactive.length){const past=node('details');past.append(node('summary','Past connections · '+inactive.length));for(const g of inactive)grantRow(g,past);panel.append(past);}panel.append(button('Manage task permissions',async()=>{openAgent();return {viewOnly:true};}));return;
    }
+   const metrics=progressMetrics(data,owner.id),numbers=node('section');numbers.setAttribute('aria-label','Your recorded progress');numbers.append(node('h3','Your recorded progress'));for(const [key,label] of [['invitations','Invitations'],['applications','Applications'],['conversations','Conversations'],['agreed','Agreements confirmed'],['delivered','Work delivered'],['completed','Completed contributions'],['reviews','Reviews received']])numbers.append(node('p',label+' · '+metrics[key]));numbers.append(node('p','Account records only. These totals overlap; they are not a sequential conversion rate. No private text is sent to analytics.'));panel.append(numbers);
    const learning=learningInsights?.(data,owner.id);if(learning&&(learning.active||learning.completed||learning.receivedReviews))panel.append(node('h3','Learning from your work'),node('p',learning.completed+' completed contributions · '+learning.inactiveHandoffs+' handoffs with no recorded update for 7+ days.'),button('Review evidence and suggestions',async()=>{document.getElementById('networkSuggestions')?.scrollIntoView?.({behavior:'smooth',block:'start'});return {viewOnly:true};}));
    panel.append(node('p','Load activity for one contribution and your account’s recent blocked attempts. Refresh saved progress to update access and attention.'));
    const allowed=(data.tasks||[]).filter(t=>t.ownerId===owner.id||(data.contributions||[]).some(c=>c.taskId===t.id&&[c.founderId,c.builderId].includes(owner.id)));if(!allowed.some(t=>t.id===activityTask))activityTask=allowed[0]?.id||null;
@@ -69,5 +74,5 @@
   }
   return {render,clear};
  }
- const api={create,summarize,missionSummary};if(typeof module==='object'&&module.exports)module.exports=api;else root.FBOwnerControl=api;
+ const api={create,summarize,missionSummary,progressMetrics};if(typeof module==='object'&&module.exports)module.exports=api;else root.FBOwnerControl=api;
 })(typeof window==='undefined'?{}:window);

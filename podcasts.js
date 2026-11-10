@@ -236,7 +236,7 @@
 
       if (!hasBackend) {
         setTimeout(function () {
-          say("Demo mode — your podcast listing looks great! Connect the Google Sheet backend to publish it for real.", "ok");
+          say("Preview only. Nothing was published or sent.", "ok");
           btn.disabled = false;
           btn.textContent = "List your podcast";
         }, 600);
@@ -259,9 +259,9 @@
     });
 
     function onSuccess() {
-      form.reset();
-      say("Your show is listed! Redirecting you to the Podcast Hub…", "ok");
-      setTimeout(function () { window.location.href = "podcasts.html"; }, 1600);
+      btn.disabled = true; btn.textContent = "Request sent — check the directory";
+      say("Submission sent. Publication is not confirmed; check the directory before sharing.", "ok");
+
     }
 
     function collect() {

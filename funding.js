@@ -367,9 +367,8 @@
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(data)
       }).then(function () {
-        formEl.reset();
         say(labels.ok, "ok");
-        setTimeout(function () { window.location.href = redirectTo; }, 1600);
+        btn.disabled = true; btn.textContent = "Request sent — check the directory";
       }).catch(function () {
         say(labels.err, "err");
         btn.disabled = false;
@@ -400,8 +399,8 @@
       missing: "Please fill in your company name and contact email.",
       submitting: "Posting…",
       submit: "Post your raise",
-      demoOk: "Demo mode — your raise looks great! Connect the Google Sheet backend to publish it for real.",
-      ok: "Your raise is live! Redirecting you to the Funding Hub…",
+      demoOk: "Preview only. Nothing was published or sent.",
+      ok: "Submission sent. Publication is not confirmed; check the directory before sharing.",
       err: "Something went wrong posting your raise. Please try again."
     });
   }
@@ -412,8 +411,8 @@
       missing: "Please fill in your name and contact email.",
       submitting: "Submitting…",
       submit: "List me as an investor",
-      demoOk: "Demo mode — your investor profile looks great! Connect the Google Sheet backend to publish it for real.",
-      ok: "You're listed! Redirecting you to the Funding Hub…",
+      demoOk: "Preview only. Nothing was published or sent.",
+      ok: "Submission sent. Publication is not confirmed; check the directory before sharing.",
       err: "Something went wrong sending your info. Please try again."
     });
   }

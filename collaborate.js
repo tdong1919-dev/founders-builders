@@ -239,7 +239,7 @@
 
       if (!hasBackend) {
         setTimeout(function () {
-          say("Demo mode — your collab looks great! Connect the Google Sheet backend to publish it for real.", "ok");
+          say("Preview only. Nothing was published or sent.", "ok");
           btn.disabled = false;
           btn.textContent = "Post the collab";
         }, 600);
@@ -262,6 +262,7 @@
     });
 
     function onSuccess() {
+      btn.disabled = true; btn.textContent = "Request sent — check the directory";
       // An opaque no-cors response cannot confirm server acceptance or publication.
       // Keep the draft visible and prevent an accidental duplicate submission.
       say("Submission request sent. Publication could not be confirmed. Check the collaboration board before resubmitting; your draft is still visible here.", "ok");

@@ -93,7 +93,7 @@
 
       if (!hasBackend) {
         setTimeout(function () {
-          say("Demo mode - source request captured locally for review flow testing.", "ok");
+          say("Preview only. Nothing was sent or saved.", "ok");
           btn.disabled = false;
           btn.textContent = "Submit event source";
         }, 500);
@@ -106,9 +106,8 @@
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(data)
       }).then(function () {
-        form.reset();
-        say("Event source submitted for review. Redirecting to the calendar...", "ok");
-        setTimeout(function () { window.location.href = "calendar.html"; }, 1600);
+        say("Request sent. Acceptance could not be confirmed. Keep these details and check with the organizer before resubmitting.", "ok");
+
       }).catch(function () {
         say("Something went wrong submitting this source. Please try again.", "err");
         btn.disabled = false;

@@ -3,10 +3,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 const root=process.cwd(),manifest=JSON.parse(fs.readFileSync(path.join(root,'.openai/hosting.json'),'utf8'));
 if(!manifest.project_id||manifest.static)throw Error('Worker manifest must preserve project_id and omit static.');
-const assets={};const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.svg':'image/svg+xml'};
+const assets={};const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.svg':'image/svg+xml','.xml':'application/xml; charset=utf-8','.txt':'text/plain; charset=utf-8','.png':'image/png'};
 for(const name of fs.readdirSync(path.join(root,'public')).sort()){
  const full=path.join(root,'public',name);if(!fs.statSync(full).isFile())continue;
  const type=types[path.extname(name)];if(!type)throw Error('Unsupported review asset: '+name);
+ if(path.extname(name)==='.png'){assets['/'+name]={type,bodyBase64:fs.readFileSync(full).toString('base64')};continue;}
  let body=fs.readFileSync(full,'utf8');
  if(path.extname(name)==='.html')body=body.replace(/Private UX review/g,'Public UX sandbox');
  assets['/'+name]={type,body};
@@ -21,11 +22,14 @@ if(Object.values(assets).some(a=>a.body?.includes('script.google.com/macros/s/')
 if(!assets['/secure-config.js']?.body.includes('enabled: false'))throw Error('Keep Supabase disabled in review.');
 const handler=fs.readFileSync(path.join(root,'sandbox/a2a-handler.mjs'),'utf8').replace('export function createSandbox','function createSandbox');
 const discovery=fs.readFileSync(path.join(root,'sandbox/discovery-mcp.mjs'),'utf8').replace('export function createDiscoveryMcp','function createDiscoveryMcp');
-const source=handler+'\n'+discovery+'\nconst reviewAssets='+JSON.stringify(assets)+';\n'+`
+const directory=fs.readFileSync(path.join(root,'sandbox/public-directory.mjs'),'utf8').replace('export function createPublicDirectory','function createPublicDirectory');
+const source=directory+'\n'+handler+'\n'+discovery+'\nconst reviewAssets='+JSON.stringify(assets)+';\n'+`
 let cachedSecret,cachedSandbox;
 const discoveryMcp=createDiscoveryMcp({connection:JSON.parse(reviewAssets['/agent-connection.json'].body),card:JSON.parse(reviewAssets['/a2a-agent-card.json'].body)});
 export default {async fetch(request,env){
  const url=new URL(request.url);
+ if(url.pathname.startsWith('/opportunities/')||url.pathname.startsWith('/builders/'))return createPublicDirectory()(request);
+ if(url.pathname==='/journey-concept.html')return Response.redirect(new URL('/'+url.search,request.url).href+url.hash,301);
  if(url.pathname==='/mcp')return discoveryMcp(request);
  if(url.pathname==='/a2a/founder'){
   if(!cachedSandbox||cachedSecret!==env.FB_A2A_SANDBOX_SECRET){cachedSecret=env.FB_A2A_SANDBOX_SECRET;cachedSandbox=createSandbox({secret:cachedSecret});}
