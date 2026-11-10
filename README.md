@@ -123,6 +123,8 @@ deploy once no matter how many hubs get added.
 4. Copy the **Web app URL** (ends in `/exec`).
 5. Paste it into [`config.js`](config.js) as `PROFILES_API`, commit, and push.
 
+**Public/private boundary:** this endpoint serves allowlisted public directories and one-way intake for reports, event-source requests and concierge questions. Private reads and anonymous account/admin writes are denied. Owner keys and account emails are not authentication. Review [the boundary and deployment checks](docs/APPS_SCRIPT_PUBLIC_BOUNDARY.md) before updating a deployment; the local tests do not establish live security. Supabase/private shared accounts remain deferred.
+
 **When `apps-script/Code.gs` changes** (e.g. a new hub is added), update the existing
 deployment rather than creating a new one — the URL in `config.js` stays valid:
 **Deploy → Manage deployments → Edit (pencil) → Version: New → Deploy**.
@@ -194,3 +196,9 @@ python3 -m http.server 8000
 - [x] **Network intelligence layer** — explainable graph of people, companies, skills, needs, capital, events, resources, and relationships
 
 Contributions and feedback welcome — **the door is open. Let's build this together.**
+
+## Shared collaboration foundation (Supabase activation deferred)
+
+[Try the fictional shared contribution walkthrough](shared-workspace.html). It connects interest, versioned terms, delivery, feedback and explicit portfolio permission. The public preview uses page memory only. The private service has durable local test storage, participant authorization, task-scoped agent grants, revocation, conflict handling, activity records and owner-scoped reports. It is not deployed as a live multi-user backend.
+
+Run `node server/run-local.mjs` for the loopback-only persistent test with fictional identities. See [architecture and activation boundaries](docs/SHARED_COLLABORATION_BACKEND.md) and [test results](docs/SHARED_COLLABORATION_TEST_RESULTS.md). Existing Sheets hubs remain separate and unchanged.

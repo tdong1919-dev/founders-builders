@@ -1,0 +1,6 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const vm=require('node:vm');
+test('an opaque Sheets response never claims confirmed publication or discards the founder draft',async()=>{
+ let submit,request,resets=0;const elements=[{name:'title',value:'A scoped task'},{name:'email',value:'founder@example.com'},{name:'description',value:'A public brief'}];const form={elements,addEventListener:(k,f)=>submit=f,reset:()=>resets++},status={},button={};const nodes={collabForm:form,formStatus:status,submitBtn:button};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../collaborate.js'),'utf8'),{window:{FB_CONFIG:{PROFILES_API:'https://example.com/exec'}},document:{getElementById:id=>nodes[id]||null},fetch:(url,options)=>{request=options;return Promise.resolve({type:'opaque'});}});
+ submit({preventDefault(){}});await new Promise(resolve=>setImmediate(resolve));assert.match(status.textContent,/Publication could not be confirmed/);assert.doesNotMatch(status.textContent,/is live/);assert.equal(resets,0);assert.equal(button.disabled,true);assert.equal(elements[2].value,'A public brief');assert.equal(JSON.parse(request.body).type,'collab');assert.equal(request.mode,'no-cors');
+});

@@ -2,6 +2,7 @@
 (function () {
   "use strict";
 
+  var lastProfileTrigger = null;
   var API = (window.FB_CONFIG && window.FB_CONFIG.PROFILES_API || "").trim();
   var hasBackend = /^https?:\/\//.test(API);
 
@@ -97,7 +98,7 @@
     grid.innerHTML = skeletons(6);
 
     fetchProfiles(function (err, profiles, isDemo) {
-      all = profiles || [];
+      all = (profiles || []).map(function(p){ return Object.assign({},p,{_sample:isDemo}); });
       if (meta) {
         meta.textContent = (isDemo ? "Showing sample profiles — connect your sheet to go live. " : "")
           + all.length + (all.length === 1 ? " member" : " members");
@@ -124,6 +125,7 @@
       if (empty) empty.hidden = true;
       grid.innerHTML = list.map(cardHTML).join("");
       Array.prototype.forEach.call(grid.querySelectorAll("[data-id]"), function (el) {
+        el.addEventListener("keydown", function (e) { if(e.key === "Enter" || e.key === " ") { e.preventDefault(); el.click(); } });
         el.addEventListener("click", function () {
           var p = all.filter(function (x) { return String(x.id) === el.getAttribute("data-id"); })[0];
           if (p) openModal(p);
@@ -166,7 +168,7 @@
     }).join("");
     return (
       '<article class="pcard" data-id="' + esc(p.id) + '" tabindex="0" role="button">' +
-        '<div class="pcard__top">' +
+        (p._sample ? '<p class="experience-note">Fictional sample · not a real member</p>' : '') + '<div class="pcard__top">' +
           '<div class="avatar">' + esc(initials(p.name).toUpperCase()) + "</div>" +
           '<div>' +
             '<h3 class="pcard__name">' + esc(p.name) + "</h3>" +
@@ -217,6 +219,7 @@
     var modal = document.getElementById("profileModal");
     var body = document.getElementById("modalBody");
     if (!modal || !body) return;
+    lastProfileTrigger = document.activeElement;
     var skillTags = tags(p.skills).map(function (t) { return '<span class="tag">' + esc(t) + "</span>"; }).join("");
     body.innerHTML =
       '<div class="modal__head">' +
@@ -239,21 +242,23 @@
       detailBlock("What I can help with", p.offers || p.canHelp) +
       detailBlock("Products &amp; services", p.products) +
       linkRow(p) +
-      (p.email ? '<a class="btn btn--lg modal__contact" href="mailto:' + esc(p.email) + '">Get in touch</a>' : "") +
+      (!p._sample && p.email ? '<a class="btn btn--lg modal__contact" href="mailto:' + esc(p.email) + '">Get in touch</a>' : "") +
       '<a class="mini-btn modal__report" href="report-listing.html?type=profile&id=' + encodeURIComponent(p.id || "") + '&title=' + encodeURIComponent(p.name || "Profile") + '">Report listing</a>';
     modal.hidden = false;
     document.body.style.overflow = "hidden";
+    var first = modal.querySelector("button, a[href]"); if(first) first.focus();
   }
 
   (function modalWiring() {
     var modal = document.getElementById("profileModal");
     if (!modal) return;
-    function close() { modal.hidden = true; document.body.style.overflow = ""; }
+    function close() { modal.hidden = true; document.body.style.overflow = ""; if(lastProfileTrigger) lastProfileTrigger.focus(); }
     modal.addEventListener("click", function (e) {
       if (e.target.hasAttribute("data-close")) close();
     });
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && !modal.hidden) close();
+      if(e.key === "Tab" && !modal.hidden) { var items=Array.prototype.filter.call(modal.querySelectorAll('button,a[href],input,select,textarea,[tabindex]'),function(el){return !el.disabled && el.tabIndex>=0;}),first=items[0],last=items[items.length-1]; if(e.shiftKey && document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey && document.activeElement===last){e.preventDefault();first.focus();} }
     });
   })();
 
@@ -281,11 +286,11 @@
       }
 
       btn.disabled = true;
-      btn.textContent = "Publishing…";
+      btn.textContent = "Sending submission…";
 
       if (!hasBackend) {
         setTimeout(function () {
-          say("Demo mode — your profile looks great! Connect the Google Sheet backend to publish it for real.", "ok");
+          say("Preview only. Nothing was published or sent.", "ok");
           btn.disabled = false;
           btn.textContent = "Publish my profile";
         }, 600);
@@ -310,9 +315,9 @@
     });
 
     function onSuccess() {
-      form.reset();
-      say("Your profile is live! Redirecting you to the directory…", "ok");
-      setTimeout(function () { window.location.href = "profiles.html"; }, 1600);
+      btn.disabled = true; btn.textContent = "Request sent — check the directory";
+      say("Submission sent. Publication is not confirmed; check the directory before sharing.", "ok");
+
     }
 
     function collect() {

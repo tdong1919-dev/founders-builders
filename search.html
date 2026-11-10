@@ -3,44 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Universal Search — Founders &amp; Builders</title>
+  <title>Search the network — Founders &amp; Builders</title>
   <meta name="description" content="Search members, businesses, marketplace listings, jobs, mentors, help requests, funding, events, collaborations, podcasts, and resources in one place." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="profiles.css" />
   <link rel="stylesheet" href="platform.css" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%80%3C/text%3E%3C/svg%3E" />
-</head>
-<body data-platform-page="search">
-  <header class="nav scrolled" id="nav">
-    <div class="nav__inner">
-      <a href="index.html" class="brand">
-        <svg class="icon brand__mark" viewBox="0 0 24 24"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg>
-        <span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span>
-      </a>
-      <nav class="nav__links" aria-label="Primary">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="search.html" aria-current="page">Search</a>
-        <a href="concierge.html">Ask F&amp;B</a>
-        <a href="chapters.html">Chapters</a>
-        <a href="network.html">Network</a>
-      </nav>
-      <a href="dashboard.html" class="btn btn--sm">Open dashboard</a>
-      <button class="nav__toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
-  </header>
+
+<link rel="stylesheet" href="brand-system.css"><link rel="stylesheet" href="experience.css"><link rel="stylesheet" href="platform-brand.css"><link rel="icon" type="image/svg+xml" href="assets/brand/fb-connection-mark.svg"><link rel="canonical" href="https://founders-builders-ux-review.hello978822.chatgpt.site/search.html"><meta name="robots" content="noindex,follow"><meta property="og:type" content="website"><meta property="og:site_name" content="Founders &amp; Builders"><meta property="og:title" content="Search the network — Founders &amp; Builders"><meta property="og:description" content="Search members, businesses, marketplace listings, jobs, mentors, help requests, funding, events, collaborations, podcasts, and resources in one place."><meta property="og:url" content="https://founders-builders-ux-review.hello978822.chatgpt.site/search.html"><meta property="og:image" content="https://founders-builders-ux-review.hello978822.chatgpt.site/social-card.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Nothing great is ever built overnight. Or alone. Founders &amp; Builders."><meta name="twitter:card" content="summary"></head>
+<body data-platform-page="search" class="brand-cohesive">
+  <header class="nav scrolled" id="nav"><div class="nav__inner"><a href="index.html" class="brand"><svg class="icon brand__mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg><span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span></a><nav class="nav__links" id="primaryLinks" aria-label="Primary"><a href="projects.html">Projects</a><a href="profiles.html">People</a><a href="community.html" aria-current="page">Community</a><a href="cloud-workspace.html">Workspace</a></nav><a href="beta-access.html" class="btn btn--sm">Request access</a><button class="nav__toggle" id="navToggle" type="button" aria-label="Toggle navigation" aria-controls="primaryLinks" aria-expanded="false"><span></span><span></span><span></span></button></div></header>
 
   <main>
     <section class="platform-hero">
       <div class="container">
         <a class="back-link" href="dashboard.html">Back to dashboard</a>
-        <span class="kicker">Universal Search</span>
-        <h1 class="platform-hero__title">Search the whole ecosystem.</h1>
-        <p class="platform-hero__sub">One query can find people, businesses, jobs, help requests, mentors, events, capital signals, resources, podcasts, collaborators, and marketplace offers.</p>
+        <span class="kicker">Search the network</span>
+        <h1 class="platform-hero__title">Find your next connection.</h1>
+        <p class="platform-hero__sub">Search public community records for people, projects, resources, and opportunities. Look for something you can contribute to or learn from, then start a conversation.</p>
       </div>
     </section>
 
@@ -48,7 +27,7 @@
       <section class="platform-section">
         <form id="universalSearchForm">
           <div class="search-bar">
-            <input id="universalSearchInput" type="search" placeholder="Try: AI founders in DC looking for marketing help" aria-label="Universal search" />
+            <input id="universalSearchInput" type="search" placeholder="Try: design, research, or prototype" aria-label="Universal search" />
             <button class="btn" type="submit">Search</button>
           </div>
           <div class="filter-strip">
@@ -63,24 +42,24 @@
         <div class="platform-section__head">
           <div>
             <h2 class="platform-section__title">Results</h2>
-            <p class="platform-section__desc">Results are scored locally from the current records; no fabricated matches are created.</p>
+            <p class="platform-section__desc">Explore the context in each public record, then choose a useful person or opportunity to follow up with.</p>
           </div>
           <a class="mini-btn" href="report-listing.html">Report an issue</a>
         </div>
         <div class="results-list" id="searchResults"></div>
       </section>
     </section>
-  </main>
+  <aside class="experience-banner"><h2>Search by a few useful keywords.</h2><p>Try a skill, project topic or location. Results use public community records; this is not a private inbox or an AI conversation.</p></aside></main>
 
   <footer class="footer">
     <div class="container footer__inner">
       <div class="brand"><span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span></div>
       <p class="footer__copy">&copy; <span id="year"></span> Founders &amp; Builders. Community-built.</p>
     </div>
-  </footer>
+  <nav class="experience-links" aria-label="Help and platform information"><a href="questions.html">Questions</a><a href="for-founders.html">For founders</a><a href="for-builders.html">For builders</a><a href="privacy.html">Privacy</a><a href="terms.html">Beta terms</a><a href="earlier-tools.html">Earlier tools</a></nav></footer>
 
   <script src="config.js"></script>
   <script src="script.js"></script>
-  <script src="platform.js"></script>
-</body>
+  <script src="platform.js?v=0449034b5ac8"></script>
+<script src="navigation.js"></script><script src="site-experience.js" defer></script></body>
 </html>

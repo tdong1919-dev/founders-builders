@@ -1,0 +1,7 @@
+/* Perspective only. All three sections remain visible; no work or approvals are performed. */
+(function(){
+ 'use strict';const $=id=>document.getElementById(id);
+ const copy={founder:['You bring the project. A builder helps move it forward.','You’re building a customer-feedback tool. Alex can review the onboarding prototype.','You propose the scope. Alex confirms it before starting.','You receive practical improvements and a new connection. Alex gains experience and approved credit.'],builder:['You bring your skills. A founder gives them a useful place to grow.','You’re Alex, building design and research experience. A founder needs fresh eyes on an onboarding prototype.','You review the scope and confirm it before starting. Then you share your three suggestions.','You gain experience, feedback, and approved credit. The founder gets useful improvements and a new connection.']};
+ function select(role){for(const [i,id] of ['tourPerspective','tourFit','tourWork','tourOutcome'].entries())$(id).textContent=copy[role][i];for(const name of ['founder','builder']){const button=$(name==='founder'?'tourFounder':'tourBuilder');button.setAttribute('aria-pressed',String(role===name));button.className=role===name?'btn':'btn btn--secondary';}}
+ $('tourFounder').addEventListener('click',()=>select('founder'));$('tourBuilder').addEventListener('click',()=>select('builder'));select('founder');
+})();

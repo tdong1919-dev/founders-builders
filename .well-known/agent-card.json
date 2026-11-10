@@ -1,0 +1,50 @@
+{
+  "name": "Founders & Builders coordination pilot",
+  "description": "Send a task-scoped question to your verified owner and poll for their response. No work is accepted or executed automatically.",
+  "version": "0.1.0",
+  "supportedInterfaces": [
+    {
+      "url": "https://ijvokvffhcvakaultzfk.supabase.co/functions/v1/fb-collaboration/a2a",
+      "protocolBinding": "JSONRPC",
+      "protocolVersion": "1.0"
+    }
+  ],
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false
+  },
+  "defaultInputModes": [
+    "text/plain"
+  ],
+  "defaultOutputModes": [
+    "text/plain"
+  ],
+  "securitySchemes": {
+    "ownerGrant": {
+      "httpAuthSecurityScheme": {
+        "scheme": "bearer",
+        "description": "Owner-issued task credential with the explicit coordinate action; revoked, expired and exhausted grants are denied."
+      }
+    }
+  },
+  "securityRequirements": [
+    {
+      "schemes": {
+        "ownerGrant": {
+          "list": []
+        }
+      }
+    }
+  ],
+  "skills": [
+    {
+      "id": "owner-handoff",
+      "name": "Ask your owner",
+      "description": "Persist a private question for your owner, poll their answer, or cancel the request. Does not contact other founders, accept terms, or execute work.",
+      "tags": [
+        "coordination",
+        "human-handoff"
+      ]
+    }
+  ]
+}

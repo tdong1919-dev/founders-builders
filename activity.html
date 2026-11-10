@@ -5,34 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Opportunities Feed — Founders &amp; Builders</title>
   <meta name="description" content="An action-oriented Founders & Builders activity feed for help requests, jobs, events, collaborations, funding signals, resources, and new members." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="profiles.css" />
   <link rel="stylesheet" href="platform.css" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%80%3C/text%3E%3C/svg%3E" />
-</head>
-<body data-platform-page="activity">
-  <header class="nav scrolled" id="nav">
-    <div class="nav__inner">
-      <a href="index.html" class="brand">
-        <svg class="icon brand__mark" viewBox="0 0 24 24"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg>
-        <span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span>
-      </a>
-      <nav class="nav__links" aria-label="Primary">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="search.html">Search</a>
-        <a href="activity.html" aria-current="page">Activity</a>
-        <a href="help.html">Help</a>
-        <a href="jobs.html">Jobs</a>
-      </nav>
-      <a href="add-help.html" class="btn btn--sm">Post an ask</a>
-      <button class="nav__toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
-  </header>
+
+<link rel="stylesheet" href="brand-system.css"><link rel="stylesheet" href="experience.css"><link rel="stylesheet" href="platform-brand.css"><link rel="icon" type="image/svg+xml" href="assets/brand/fb-connection-mark.svg"><link rel="canonical" href="https://founders-builders-ux-review.hello978822.chatgpt.site/activity.html"><meta name="robots" content="noindex,follow"><meta property="og:type" content="website"><meta property="og:site_name" content="Founders &amp; Builders"><meta property="og:title" content="Opportunities Feed — Founders &amp; Builders"><meta property="og:description" content="An action-oriented Founders &amp; Builders activity feed for help requests, jobs, events, collaborations, funding signals, resources, and new members."><meta property="og:url" content="https://founders-builders-ux-review.hello978822.chatgpt.site/activity.html"><meta property="og:image" content="https://founders-builders-ux-review.hello978822.chatgpt.site/social-card.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Nothing great is ever built overnight. Or alone. Founders &amp; Builders."><meta name="twitter:card" content="summary"></head>
+<body data-platform-page="activity" class="brand-cohesive">
+  <header class="nav scrolled" id="nav"><div class="nav__inner"><a href="index.html" class="brand"><svg class="icon brand__mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg><span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span></a><nav class="nav__links" id="primaryLinks" aria-label="Primary"><a href="projects.html">Projects</a><a href="profiles.html">People</a><a href="community.html" aria-current="page">Community</a><a href="cloud-workspace.html">Workspace</a></nav><a href="beta-access.html" class="btn btn--sm">Request access</a><button class="nav__toggle" id="navToggle" type="button" aria-label="Toggle navigation" aria-controls="primaryLinks" aria-expanded="false"><span></span><span></span><span></span></button></div></header>
 
   <main>
     <section class="platform-hero">
@@ -41,7 +20,7 @@
           <a class="back-link" href="dashboard.html">Back to dashboard</a>
           <span class="kicker">Action feed</span>
           <h1 class="platform-hero__title">Activity that leads somewhere.</h1>
-          <p class="platform-hero__sub">No follower counts, no endless posting, no engagement bait. This feed surfaces asks, opportunities, events, resources, collaborators, and capital signals that members can act on.</p>
+          <p class="platform-hero__sub">Find a question you can answer, a project you can help, or an event where you can learn alongside others. Each community record is a starting point for a useful contribution.</p>
         </div>
         <div class="platform-rail">
           <div class="platform-rail__row"><span class="platform-rail__label">Every item</span><strong class="platform-rail__value">Has a next step</strong></div>
@@ -61,17 +40,17 @@
         <div class="activity-feed" id="activityFeed"></div>
       </section>
     </section>
-  </main>
+  <aside class="experience-banner"><h2>Follow the next action.</h2><p>Open the original ask, project or event before contacting anyone. Activity is based on available community records, not a live feed of private collaborations.</p></aside></main>
 
   <footer class="footer">
     <div class="container footer__inner">
       <div class="brand"><span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span></div>
       <p class="footer__copy">&copy; <span id="year"></span> Founders &amp; Builders. Community-built.</p>
     </div>
-  </footer>
+  <nav class="experience-links" aria-label="Help and platform information"><a href="questions.html">Questions</a><a href="for-founders.html">For founders</a><a href="for-builders.html">For builders</a><a href="privacy.html">Privacy</a><a href="terms.html">Beta terms</a><a href="earlier-tools.html">Earlier tools</a></nav></footer>
 
   <script src="config.js"></script>
   <script src="script.js"></script>
-  <script src="platform.js"></script>
-</body>
+  <script src="platform.js?v=0449034b5ac8"></script>
+<script src="navigation.js"></script><script src="site-experience.js" defer></script></body>
 </html>

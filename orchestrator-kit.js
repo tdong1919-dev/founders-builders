@@ -1,0 +1,69 @@
+/* Session-only orchestration evidence. No personal messages, credentials or storage. */
+(function(root){
+  'use strict';
+  const reasons=['message_limit','scope_limit','clarification_permission','draft_permission','policy_change','old_run','invalid_policy','protocol_rejected'];
+  function normalize(input={}){
+    return {builder:{mode:input.mode==='delegated'?'delegated':'review-first',allowClarification:input.allowClarification!==false,allowDraft:input.allowDraft!==false,maxMessages:[1,2,3].includes(Number(input.maxMessages))?Number(input.maxMessages):3,maxTaskMinutes:[30,45,60].includes(Number(input.maxTaskMinutes))?Number(input.maxTaskMinutes):45},founder:{allowClarification:input.founderClarification!==false,allowDraft:input.founderDraft!==false}};
+  }
+  function plan(policy){
+    const b=policy.builder,f=policy.founder,warnings=[];
+    if(!b.allowClarification||!f.allowClarification)warnings.push('The follow-up question will stop because one side does not allow clarification.');
+    if(b.maxTaskMinutes<45)warnings.push('This fictional task needs 45 minutes, beyond the selected task-time limit.');
+    if(b.maxMessages<2)warnings.push('The message budget does not cover the inquiry and clarification needed for a proposal.');
+    else if(b.maxMessages<3)warnings.push('The budget can reach a proposal, but does not cover a draft or a server-recorded decline. You can always stop locally.');
+    if(!b.allowDraft||!f.allowDraft)warnings.push('Introduction drafting is not allowed by one side. A human click cannot override that restriction.');
+    return {title:'Review one onboarding screen',deliverable:'Three written observations on one sample onboarding screen',minutes:45,summary:b.mode==='delegated'?'Your agent may inquire, clarify and attempt a fictional draft within both sides’ permissions. No fresh decision click is required for that draft.':'Your agent may inquire and clarify, then pauses for your decision before attempting a fictional draft.',warnings,limitSummary:b.maxMessages+' outgoing messages maximum; '+b.maxTaskMinutes+' minutes maximum task time. No real contact, accepted terms, payment or private access.'};
+  }
+  function recovery(reason,policy){
+    const choices={scope_limit:{label:'Review the task-time limit',target:'missionMinutes'},message_limit:{label:'Review the message budget',target:'missionMessages'},clarification_permission:{label:'Review clarification permissions',target:policy?.builder.allowClarification===false?'missionClarification':'founderClarification'},draft_permission:{label:'Review drafting permissions',target:policy?.builder.allowDraft===false?'missionDraft':'founderDraft'}};
+    return choices[reason]||{label:'Review this mission before retrying',target:'missionMode'};
+  }
+  function begin(id,policies,at){return {id,policies:normalize({mode:policies.builder.mode,allowClarification:policies.builder.allowClarification,allowDraft:policies.builder.allowDraft,maxMessages:policies.builder.maxMessages,maxTaskMinutes:policies.builder.maxTaskMinutes,founderClarification:policies.founder.allowClarification,founderDraft:policies.founder.allowDraft}),startedAt:at,endedAt:null,outcome:'running',events:[]};}
+  function record(run,event,at){
+    if(!['running','waiting'].includes(run.outcome)||run.events.length>=20)return;
+    if(event.kind==='discovery')run.events.push({type:'discovery',at});
+    else if(event.kind==='exchange'&&['inquire','clarify','approve','decline'].includes(event.action))run.events.push({type:'exchange',action:event.action,at,state:['TASK_STATE_INPUT_REQUIRED','TASK_STATE_COMPLETED','TASK_STATE_CANCELED'].includes(event.state)?event.state:'unknown',elapsedMs:Number.isFinite(event.elapsedMs)?Math.max(0,Math.min(120000,Math.round(event.elapsedMs))):null});
+    else if(event.kind==='blocked')run.events.push({type:'blocked',action:['inquire','clarify','approve','decline'].includes(event.action)?event.action:'unknown',reason:reasons.includes(event.reason)?event.reason:'protocol_rejected',at});
+  }
+  function report(runs){
+    const result={format:'fb-orchestrator-session-report-v1',scope:'Fictional runs in this page session only; not ecosystem analytics or verified collaboration success.',runs:runs.length,drafts:0,declined:0,blocked:0,failed:0,cleared:0,waiting:0,running:0,byMode:{'review-first':{runs:0,drafts:0,blocked:0},delegated:{runs:0,drafts:0,blocked:0}},exchanges:0,measuredRequests:0,meanMessageResponseMs:null,friction:{},feedback:{founder:[],builder:[]}};
+    let duration=0;
+    for(const run of runs){
+      const mode=result.byMode[run.policies.builder.mode];mode.runs++;if(run.outcome==='prepared')mode.drafts++;if(run.outcome==='blocked')mode.blocked++;if(run.outcome==='running')result.running++;
+      if(run.outcome==='prepared')result.drafts++;if(run.outcome==='declined')result.declined++;if(run.outcome==='blocked')result.blocked++;if(run.outcome==='failed')result.failed++;if(run.outcome==='cleared')result.cleared++;if(run.outcome==='waiting')result.waiting++;
+      for(const e of run.events){if(e.type==='exchange'){result.exchanges++;if(e.elapsedMs!==null){duration+=e.elapsedMs;result.measuredRequests++;}}if(e.type==='blocked')result.friction[e.reason]=(result.friction[e.reason]||0)+1;}
+    }
+    if(result.measuredRequests)result.meanMessageResponseMs=Math.round(duration/result.measuredRequests);
+    result.feedback.founder.push('State scope, time, support, compensation and credit up front; the fictional task still has unresolved terms.');
+    result.feedback.builder.push('Keep the mission specific and ask about unresolved terms before committing. A prepared draft is not a successful collaboration.');
+    if(result.friction.scope_limit)result.feedback.builder.push('A task exceeded your time limit. Seek a smaller task or explicitly revise your mission; never expand limits automatically.');
+    if(result.friction.message_limit){result.feedback.builder.push('The message budget was reached. Combine related scope questions or explicitly change the budget for a new run.');result.feedback.founder.push('A complete task brief can reduce clarification exchanges.');}
+    if(result.friction.clarification_permission||result.friction.draft_permission){result.feedback.builder.push('Respect the other side’s contact and drafting preferences. A refusal is not agent failure.');result.feedback.founder.push('Make your allowed contact and introduction preferences visible in discovery.');}
+    result.ownerRecommendations=[];
+    if(result.blocked)result.ownerRecommendations.push('Review the recorded policy-block reasons before changing the flow. Permission blocks may be the intended outcome.');
+    if(result.failed)result.ownerRecommendations.push('Investigate request failures and sign-in/availability before interpreting mission outcomes.');
+    if(result.waiting)result.ownerRecommendations.push('Some runs await a human decision. Do not treat approval pauses as failures or remove them to increase throughput.');
+    result.ownerRecommendations.push('No real collaboration outcomes or cross-ecosystem comparison data are available. Do not infer impact, rank people, or broaden permissions from draft counts.');
+    return result;
+  }
+  function dashboard(runs,policy,fresh=false,perspective='builder',stopped=false){
+    const latest=runs[runs.length-1],r=report(runs),mode=policy.builder.mode;
+    const states={
+      running:['Your agent is on it.','Checking the task against both people’s boundaries.','View activity','activity'],
+      waiting:['Review the task.','Your agent clarified the scope. Review it before preparing a fictional introduction.','Review task','review'],
+      prepared:['Your draft is ready.','Read the fictional introduction. Nothing has been sent or agreed.','Read draft','result'],
+      declined:['You closed the loop.','The exchange ended without an introduction. You can try another sample run.','Try again','start'],
+      blocked:['A boundary protected you.','This run stopped at a permission or budget limit. Review the reason before trying again.','Review boundary','recover'],
+      failed:['The connection needs attention.','The request did not finish. Review the error and retry when ready.','Review issue','recover'],
+      cleared:['The mission is stopped.','No further action will happen in this page. Start a fresh run when you’re ready.','Start again','start']
+    };
+    let state=latest&&!fresh?states[latest.outcome]:null;
+    if(stopped)state=['You stopped this mission.','No more requests will be sent by this page. A new run starts from the beginning.','Start a new mission','start'];
+    if(perspective==='founder'&&state&&latest?.outcome==='waiting'&&!fresh&&!stopped)state=['Waiting for the builder.','The scope is ready. The builder reviews the proposed introduction before it is drafted.','View builder review','review'];
+    if(perspective==='founder'&&state&&latest?.outcome==='prepared'&&!fresh&&!stopped)state=['A sample introduction is ready.','The builder prepared a fictional introduction. No real contact or agreement has happened.','Read introduction','result'];
+
+    return {title:state?.[0]||'Ready when you are.',summary:state?.[1]||(perspective==='founder'?'See how a builder’s agent checks your task and asks about scope.':mode==='delegated'?'Your agent may prepare a fictional draft within both people’s limits.':'Your agent will clarify the task, then ask before preparing a draft.'),label:state?.[2]||(perspective==='founder'?'Try sample interest':'Start sample mission'),action:state?.[3]||'start',runs:r.runs,drafts:r.drafts,attention:r.waiting,boundaries:(mode==='delegated'?'Hands-free sample drafting':'Ask before drafting')+' · '+policy.builder.maxTaskMinutes+' min · '+policy.builder.maxMessages+' messages max',activity:latest?'Latest mission: '+(states[latest.outcome]?.[0]||'In progress')+' '+r.exchanges+' processed messages in this session.':'No activity yet. Start a sample mission to see your agents work together.'};
+  }
+  function exportReport(runs){return JSON.stringify(report(runs),null,2);}
+  const api={normalize,plan,recovery,begin,record,report,dashboard,exportReport};if(typeof module==='object'&&module.exports)module.exports=api;else root.FBOrchestratorKit=api;
+})(typeof window==='undefined'?{}:window);

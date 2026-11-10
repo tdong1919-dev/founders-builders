@@ -1,0 +1,50 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; form-action 'none'; base-uri 'none'"><title>A2A sandbox | Founders &amp; Builders</title><meta name="description" content="Watch two rule-based test agents exchange A2A messages and pause for your decision."><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="brand-system.css?v=68d53a6cef04"><link rel="stylesheet" href="agent-network.css"><link rel="stylesheet" href="experience.css"><link rel="stylesheet" href="platform-brand.css"><link rel="icon" type="image/svg+xml" href="assets/brand/fb-connection-mark.svg"><link rel="canonical" href="https://founders-builders-ux-review.hello978822.chatgpt.site/a2a-sandbox.html"><meta name="robots" content="noindex,follow"><meta property="og:type" content="website"><meta property="og:site_name" content="Founders &amp; Builders"><meta property="og:title" content="A2A sandbox | Founders &amp; Builders"><meta property="og:description" content="Watch two rule-based test agents exchange A2A messages and pause for your decision."><meta property="og:url" content="https://founders-builders-ux-review.hello978822.chatgpt.site/a2a-sandbox.html"><meta property="og:image" content="https://founders-builders-ux-review.hello978822.chatgpt.site/social-card.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Nothing great is ever built overnight. Or alone. Founders &amp; Builders."><meta name="twitter:card" content="summary"></head><body class="learning-guide brand-cohesive"><header class="nav scrolled" id="nav"><div class="nav__inner"><a href="index.html" class="brand"><svg class="icon brand__mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg><span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span></a><nav class="nav__links" id="primaryLinks" aria-label="Primary"><a href="projects.html" aria-current="page">Projects</a><a href="profiles.html">People</a><a href="community.html">Community</a><a href="cloud-workspace.html">Workspace</a></nav><a href="beta-access.html" class="btn btn--sm">Request access</a><button class="nav__toggle" id="navToggle" type="button" aria-label="Toggle navigation" aria-controls="primaryLinks" aria-expanded="false"><span></span><span></span><span></span></button></div></header>
+<main><aside class="experience-banner"><strong>Fictional example or earlier concept. Nothing here is evidence of live work.</strong> <a href="cloud-workspace.html">Open your workspace →</a> · <a href="earlier-tools.html">Find earlier saved work</a></aside><section class="section community-intro"><div class="container"><p class="kicker">A conversation you control</p><h1 class="hero__title">Watch two test agents work together.</h1><p class="lead">A builder agent asks about a small task. A founder agent clarifies the scope. You decide whether they should prepare an introduction.</p><p>This sandbox uses actual HTTP messages and an A2A 1.0 JSON-RPC message subset. Both agents follow fixed rules with fictional data. There is no language model, real founder contact, private project access or payment.</p><a href="agent-network.html" class="living-text-link">Back to task discovery →</a><p><a class="living-text-link" href="orchestrator.html">Try mission settings and the orchestrator feedback loop →</a></p></div></section>
+<section class="section section--alt"><div class="container"><h2>One fictional design task</h2><p>Review one sample onboarding screen. Your test agent will ask about time, support, compensation and credit, then pause before preparing a draft.</p><div class="contribution-actions"><button id="a2aStart" class="btn" type="button">Start test-agent conversation</button><button id="a2aReset" class="btn btn--secondary" type="button">Clear this run</button></div><p id="a2aStatus" role="status" aria-live="polite">Ready for a fictional exchange. No personal details are needed.</p><ol id="a2aTranscript" class="agent-transcript" aria-label="Agent conversation"></ol><section id="a2aApproval" class="contribution-panel" hidden><p class="kicker">Your decision</p><h2>Prepare a fictional introduction?</h2><p>The agents have clarified the task. Choosing Prepare only creates a draft in this sandbox. It does not contact a real person, accept the task, agree compensation, or grant portfolio permission.</p><div class="contribution-actions"><button id="a2aApprove" class="btn" type="button">Prepare fictional introduction</button><button id="a2aDecline" class="btn btn--secondary" type="button">Stop exchange</button></div></section><pre id="a2aArtifact" class="agent-preview" tabindex="0" aria-label="Fictional introduction result"></pre><noscript><p>JavaScript is required for the test-agent conversation.</p></noscript></div></section>
+<section class="section"><div class="container"><details class="contribution-reflection"><summary>What is real, and what is still a sandbox?</summary><p>The builder agent runs in your browser and calls a server-hosted founder agent. Discovery and SendMessage requests cross HTTP; the transcript shows the responses. The agents are deterministic software, not AI models.</p><p>This is a limited A2A message implementation, not a certified general-purpose A2A service. It has no streaming, task polling, external-agent onboarding, or durable task store. Signed continuation snapshots expire after ten minutes. Clearing or reloading removes this browser’s run; it does not revoke a previously copied snapshot. Replays can repeat only this fictional, side-effect-free exchange.</p><p>The decision buttons demonstrate a human approval pause. They are not proof of a person’s identity or a production consent system. This public sandbox does not verify a visitor’s identity. Real delegation will need authenticated owners, scoped permissions, audit history and abuse controls.</p><a href="/.well-known/agent-card.json">View the founder agent card →</a></details></div></section></main><footer class="footer">
+    <div class="container">
+      <div class="footer__top">
+        <div class="footer__brand">
+          <div class="brand">
+            <svg class="icon brand__mark" viewBox="0 0 24 24"><path d="M12 2c2.5 2 4 5.5 4 9.5-1.5 1-2.5 2.5-4 5.5-1.5-3-2.5-4.5-4-5.5 0-4 1.5-7.5 4-9.5z"/><path d="M8 15l-3 3 1-4M16 15l3 3-1-4"/><circle cx="12" cy="10" r="1.6"/></svg>
+            <span class="brand__name">Founders <span class="amp">&amp;</span> Builders</span>
+          </div>
+          <p>A living network for people turning ideas, skills, and curiosity into shared work.</p>
+        </div>
+        <div class="footer__col">
+          <h4>Platform</h4>
+          <ul>
+            <li><a href="profiles.html">Members</a></li>
+            <li><a href="business.html">Businesses</a></li>
+            <li><a href="marketplace.html">Marketplace</a></li>
+            <li><a href="jobs.html">Opportunities</a></li>
+            <li><a href="mentors.html">Mentors</a></li>
+            <li><a href="calendar.html">Events</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h4>Community</h4>
+          <ul>
+            <li><a href="about.html#mission">About</a></li>
+            <li><a href="chapters.html">Chapters</a></li>
+            <li><a href="guidelines.html">Community Guidelines</a></li>
+            <li><span>Partnerships</span></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="resources.html">Resource Library</a></li>
+            <li><a href="help.html">Help Board</a></li>
+            <li><a href="privacy.html">Privacy</a></li>
+            <li><a href="terms.html">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__tag">Built for the people building what comes next.</p>
+        <p class="footer__copy">© <span id="year"></span> Founders &amp; Builders. Community-built.</p>
+        <p class="footer__powered">Founders &amp; Builders · Private beta</p>
+      </div>
+    </div>
+  <nav class="experience-links" aria-label="Help and platform information"><a href="questions.html">Questions</a><a href="for-founders.html">For founders</a><a href="for-builders.html">For builders</a><a href="privacy.html">Privacy</a><a href="terms.html">Beta terms</a><a href="earlier-tools.html">Earlier tools</a></nav></footer><script src="a2a-sandbox-client.js"></script><script src="a2a-sandbox.js"></script><script src="navigation.js"></script><script src="site-experience.js" defer></script></body></html>

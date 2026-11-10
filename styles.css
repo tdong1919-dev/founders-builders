@@ -46,7 +46,7 @@
   --content-w: 1120px;
 
   /* ---------- Type (single restrained family) ---------- */
-  --font: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font: Arial, Helvetica, sans-serif;
   --display: var(--font);
   --font-stat: var(--font);
 }

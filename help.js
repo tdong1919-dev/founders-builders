@@ -227,7 +227,7 @@
 
       if (!hasBackend) {
         setTimeout(function () {
-          say("Demo mode — your ask looks great! Connect the Google Sheet backend to publish it for real.", "ok");
+          say("Preview only. Nothing was published or sent.", "ok");
           btn.disabled = false;
           btn.textContent = "Post to the help board";
         }, 600);
@@ -250,9 +250,9 @@
     });
 
     function onSuccess() {
-      form.reset();
-      say("Your ask is live! Redirecting you to the help board…", "ok");
-      setTimeout(function () { window.location.href = "help.html"; }, 1600);
+      btn.disabled = true; btn.textContent = "Request sent — check the directory";
+      say("Submission sent. Publication is not confirmed; check the directory before sharing.", "ok");
+
     }
 
     function collect() {

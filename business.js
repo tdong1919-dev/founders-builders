@@ -258,11 +258,11 @@
       }
 
       btn.disabled = true;
-      btn.textContent = "Publishing…";
+      btn.textContent = "Sending submission…";
 
       if (!hasBackend) {
         setTimeout(function () {
-          say("Demo mode — your listing looks great! Connect the Google Sheet backend to publish it for real.", "ok");
+          say("Preview only. Nothing was published or sent.", "ok");
           btn.disabled = false;
           btn.textContent = "Publish listing";
         }, 600);
@@ -285,9 +285,9 @@
     });
 
     function onSuccess() {
-      form.reset();
-      say("Your listing is live! Redirecting you to the directory…", "ok");
-      setTimeout(function () { window.location.href = "business.html"; }, 1600);
+      btn.disabled = true; btn.textContent = "Request sent — check the directory";
+      say("Submission sent. Publication is not confirmed; check the directory before sharing.", "ok");
+
     }
 
     function collect() {

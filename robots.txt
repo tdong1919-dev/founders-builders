@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Indexing is controlled per page; private access is enforced by authentication.
+Sitemap: https://founders-builders-ux-review.hello978822.chatgpt.site/sitemap.xml

@@ -1,0 +1,7 @@
+/* One-time same-tab draft handoff. This never submits the public form. */
+(function(){
+  'use strict';
+  if(new URLSearchParams(window.location.search).get('task-draft')!=='1')return;
+  const form=document.getElementById('collabForm'),notice=document.getElementById('taskListingNotice');if(!form||!notice)return;
+  try{const raw=sessionStorage.getItem('fb_task_listing_draft_v1');if(!raw){notice.textContent='No task draft is available in this tab. Return to the task builder to prepare one.';return;}const r=JSON.parse(raw);if(!r||r.format!=='fb-small-task-v1'||typeof r.title!=='string'||typeof r.description!=='string'||!r.title.trim()||!r.description.trim()||r.title.length>160||r.description.length>15000)throw Error();if(form.elements.namedItem('title').value||form.elements.namedItem('description').value){notice.textContent='Your existing form was kept. Copy your task brief into it when ready.';return;}form.elements.namedItem('title').value=r.title;form.elements.namedItem('description').value=r.description;form.elements.namedItem('category').value='Project';sessionStorage.removeItem('fb_task_listing_draft_v1');notice.textContent='Task draft added. Review every public detail and add your contact information before choosing to post. Nothing has been submitted.';}catch(e){notice.textContent='The task draft could not be loaded. Return to the task builder or complete this form directly.';}
+})();

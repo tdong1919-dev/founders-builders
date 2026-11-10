@@ -1,0 +1,71 @@
+/* Fictional browser walkthrough; shared service transport is opt-in on loopback only. */
+(function(){
+ 'use strict';const $=id=>document.getElementById(id),core=window.FBSharedCollaboration;
+ const sampleBrief={deliverable:'Three observations on one sample onboarding screen',acceptance:'Each observation explains the confusing step and one suggestion',outside:'No production code or private founder data',minutes:45,support:'A 15-minute founder check-in',compensation:'unpaid',compensationDetails:'Voluntary fictional exercise. No payment promised.',ownership:'Contributor keeps original notes; founder may use the agreed feedback',feedbackTiming:'Written feedback within three days',credit:'Only the exact approved credit text may be exported'};
+ let state=core.initial(),role='builder',listing=null,busy=false,records=null,notice='';
+ const uuid=()=>window.crypto.randomUUID(),local=new URLSearchParams(location.search).get('transport')==='local';
+ const drafts=new Map();let draftScope='';
+ const actors={founder:'sample-founder',builder:'sample-builder'},clients={};
+ const human=()=>({userId:actors[role]});
+ function node(tag,value){const e=document.createElement(tag);if(value!==undefined)e.textContent=value;return e;}
+ function button(label,action,secondary=false){const b=node('button',label);b.type='button';b.className=secondary?'btn btn--secondary':'btn';b.addEventListener('click',()=>perform(action));return b;}
+ async function execute(operation,params={}){
+  if(!local){const copy=structuredClone(state);const result=core.create({state:copy,principal:human(),id:uuid}).run(operation,params);state=copy;return result;}
+  if(!['127.0.0.1','localhost'].includes(location.hostname))throw Error('Persistent test transport is available only on the local test server.');
+  if(!clients[role]){
+   const response=await fetch('/api/demo-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({account:role}),credentials:'omit',cache:'no-store'});if(!response.ok)throw Error('The local test service is unavailable.');const session=await response.json();
+   clients[role]=window.FBSharedClient.create({fetcher:fetch.bind(window),token:async()=>session.token,uuid});
+  }
+  return (await clients[role].execute(operation,params)).data;
+ }
+ async function perform(action){if(busy)return;busy=true;document.querySelectorAll('main button').forEach(b=>b.disabled=true);try{await action();notice='Saved '+(local?'in the local test database.':'in this fictional page session only.');await refresh();}catch(e){notice=e.message;try{await refresh();}catch{} }finally{busy=false;render();}}
+ function field(parent,label,value,multiline=true){const l=node('label',label),i=node(multiline?'textarea':'input');const key=draftScope+':'+label;i.value=drafts.has(key)?drafts.get(key):(value||'');i.addEventListener('input',()=>drafts.set(key,i.value));i.maxLength=1500;i.className='shared-input';l.className='shared-label';l.append(i);parent.append(l);return i;}
+ function check(parent,label){const l=node('label'),i=node('input');i.type='checkbox';l.className='shared-check';l.append(i,document.createTextNode(label));parent.append(l);return i;}
+ function termsView(parent,t){const dl=node('dl');for(const [label,key] of [['Deliverable','deliverable'],['Done means','acceptance'],['Outside scope','outside'],['Minutes','minutes'],['Support','support'],['Compensation','compensationDetails'],['Ownership','ownership'],['Feedback','feedbackTiming'],['Credit','credit']]){dl.append(node('dt',label),node('dd',String(t[key])));}parent.append(dl);}
+ function proposalEditor(parent,c){const details=node('details'),summary=node('summary','Review and edit the task terms');details.append(summary);const inputs={};for(const [label,key] of [['Deliverable','deliverable'],['Done means','acceptance'],['Outside scope','outside'],['Support','support'],['Compensation details','compensationDetails'],['Ownership','ownership'],['Feedback timing','feedbackTiming'],['Credit terms','credit']])inputs[key]=field(details,label,(c.terms||listing.brief)[key]);const minutes=field(details,'Time limit in minutes',String((c.terms||listing.brief).minutes),false);minutes.type='number';minutes.min=15;minutes.max=180;const compLabel=node('label','Compensation'),comp=node('select');comp.className='shared-input';for(const [value,label] of [['unpaid','Unpaid voluntary'],['paid','Paid — agree directly']]){const option=node('option',label);option.value=value;comp.append(option);}comp.value=(c.terms||listing.brief).compensation;compLabel.append(comp);details.append(compLabel);parent.append(details,node('p','Review the exact scope and terms before proposing. The platform does not process or guarantee compensation.'));parent.append(button('Propose these terms',async()=>{const t={minutes:Number(minutes.value),compensation:comp.value};for(const key of Object.keys(inputs))t[key]=inputs[key].value;await execute('propose',{contributionId:c.id,expectedVersion:c.version,terms:t});}));}
+ function render(){
+  $('viewSharedBuilder').disabled=busy;$('viewSharedFounder').disabled=busy;
+  $('viewSharedBuilder').setAttribute('aria-pressed',String(role==='builder'));$('viewSharedFounder').setAttribute('aria-pressed',String(role==='founder'));
+  $('sharedMode').textContent=local?'Persistent local test · simulated accounts':'Fictional walkthrough · resets on refresh';$('sharedStatus').textContent=notice;
+  const panel=$('sharedAction');panel.replaceChildren();if(!records||!listing){panel.append(node('p','Loading the fictional workspace…'));return;}
+  $('sharedTitle').textContent=listing.title;const c=records.contributions.find(c=>c.taskId===listing.id),mine=actors[role];draftScope=role+':'+listing.id+':'+(c?.stage||'new');
+  const step=c?({interest:1,terms:1,agreed:2,delivered:3,feedback:4,closed:5}[c.stage]):0;$('sharedProgress').textContent=c?.stage==='cancelled'?'Closed · no completion recorded':['Interest','Agreement','Delivery','Feedback','Credit'].map((s,i)=>(i<step?'✓ ':i===step?'→ ':'')+s).join(' · ');
+  $('sharedSummary').textContent=c?(c.next.who===null?'No action needed · ':c.next.who===mine?'Your next step: ':'Other person’s next step: ')+c.next.label:'A 45-minute task with a founder check-in and written feedback.';
+  if(!c&&role==='builder'){
+   panel.append(node('h2','Start with a small contribution.'));const note=field(panel,'What would you like to contribute?','I can review one sample screen and share three useful observations.');panel.append(button('Share sample interest',()=>execute('interest',{taskId:listing.id,note:note.value})));
+  }else if(!c){panel.append(node('h2','Your task is ready for interest.'),node('p','Switch to the contributor view to try the other side of this fictional journey.'));}
+  else if(c.stage==='interest'&&role==='founder'){panel.append(node('h2','Someone wants to contribute.'),node('p',c.note));proposalEditor(panel,c);}
+  else if(c.stage==='terms'&&role==='builder'){
+   panel.append(node('h2','Review the exact task terms.'));const details=node('details');details.append(node('summary','Read proposed terms · version '+c.terms.version));termsView(details,c.terms);panel.append(details);const confirmed=check(panel,'I reviewed this exact proposal and agree to this sample task.');panel.append(button('Confirm sample terms',async()=>{if(!confirmed.checked)throw Error('Read and confirm the proposed terms first.');await execute('accept',{contributionId:c.id,expectedVersion:c.version,termsVersion:c.terms.version});}));
+  }else if(c.stage==='agreed'&&role==='builder'){
+   panel.append(node('h2','Share what you worked on.'));const notes=field(panel,'Delivery notes','I reviewed the sample screen and noted three confusing steps.');const evidence=field(panel,'Optional HTTPS evidence link','',false);panel.append(button('Deliver sample work',()=>execute('deliver',{contributionId:c.id,expectedVersion:c.version,notes:notes.value,evidence:evidence.value})));
+  }else if(c.stage==='delivered'&&role==='founder'){
+   panel.append(node('h2','Close the loop with useful feedback.'),node('p',c.delivery.notes));const notes=field(panel,'What helped, and what could improve?','The observations were clear. Next time, prioritize the biggest point of confusion.');const credit=field(panel,'Exact credit text the contributor may use','Reviewed one sample onboarding screen and contributed three usability observations.');const allow=check(panel,'Allow the contributor to use this exact credit text in their portfolio.');panel.append(button('Share sample feedback',()=>execute('feedback',{contributionId:c.id,expectedVersion:c.version,notes:notes.value,creditText:credit.value,allowPortfolio:allow.checked})));
+  }else if(c.stage==='feedback'&&role==='builder'){
+   panel.append(node('h2','Your feedback is ready.'),node('p',c.feedback.notes),node('p',c.portfolioAllowed?'Approved portfolio text: '+c.feedback.creditText:'No portfolio sharing permission yet. You can finish privately.'));
+   panel.append(button(c.portfolioAllowed?'Record permitted credit':'Finish privately',()=>execute(c.portfolioAllowed?'recordCredit':'closePrivate',{contributionId:c.id,expectedVersion:c.version})));
+  }else if(c.stage==='cancelled'){panel.append(node('h2','This contribution is closed.'),node('p',c.endReason),node('p','No completion or portfolio credit was recorded.'));
+  }else if(c.stage==='closed'){
+   panel.append(node('h2','You completed the contribution.'),node('p','The work, feedback and decisions remain in the private activity history.'));
+   if(role==='builder'&&c.portfolioAllowed)panel.append(button('Prepare permitted portfolio text',async()=>{let result;try{result=await execute('exportCredit',{contributionId:c.id});}catch(e){if(e.code!=='forbidden')throw e;await execute('recordCredit',{contributionId:c.id,expectedVersion:c.version});result=await execute('exportCredit',{contributionId:c.id});}$('sharedPortfolio').textContent=result.text+'\n\n'+result.scope;}));
+  }else panel.append(node('h2',role==='founder'?'Waiting for the contributor.':'Waiting for the founder.'),node('p','You have taken your step. Switch sample accounts to continue this walkthrough.'));
+  if(c&&!['closed','cancelled'].includes(c.stage)){
+   const question=node('details');question.append(node('summary','Ask a question'));const message=field(question,'Your question','');question.append(button('Share sample question',()=>execute('message',{contributionId:c.id,expectedVersion:c.version,text:message.value}),true));panel.append(question);
+   const close=node('details');close.append(node('summary','Close without completing'));const reason=field(close,'Closing note','');close.append(button('Close sample contribution',()=>execute('close',{contributionId:c.id,expectedVersion:c.version,reason:reason.value}),true));panel.append(close);
+  }
+  if(c&&role==='founder'&&c.feedback){const manage=node('details');manage.append(node('summary','Portfolio permission'));manage.append(node('p','Changing permission affects future exports. Text already copied elsewhere cannot be recalled.'));if(c.portfolioAllowed)manage.append(button('Revoke future portfolio export',async()=>{$('sharedPortfolio').textContent='';await execute('revokePortfolio',{contributionId:c.id});},true));else{const allow=check(manage,'I allow this exact credit text: '+c.feedback.creditText);manage.append(button('Allow this credit text',async()=>{if(!allow.checked)throw Error('Review and confirm the exact credit text.');await execute('allowPortfolio',{contributionId:c.id,expectedVersion:c.version,confirm:true});},true));}panel.append(manage);}
+  if(c)renderPermissions(c);else $('sharedPermissions').replaceChildren(node('p','Share interest first to test a task-scoped agent grant.'));
+  $('sharedRefresh').disabled=busy;$('sharedLoadReport').disabled=busy;
+ }
+ async function refresh(){records=await execute('list');listing=records.tasks[0]||null;if(listing){const task=await execute('readTask',{taskId:listing.id});listing=task;const c=records.contributions.find(c=>c.taskId===listing.id);if(!c?.portfolioAllowed)$('sharedPortfolio').textContent='';$('sharedActivity').replaceChildren();if(c||role==='founder'){const events=await execute('activity',{taskId:listing.id});for(const e of events){const li=node('li',e.type.replaceAll('_',' ')+' · '+(e.actorId===actors.founder?'founder':'contributor')+(e.type==='message_shared'?': '+e.details.text:''));$('sharedActivity').append(li);}}}}
+ function renderPermissions(c){const p=$('sharedPermissions');p.replaceChildren();const grants=records.grants.filter(g=>g.taskId===listing.id);p.append(node('p','Agents cannot confirm terms, approve feedback, or grant portfolio permission. Every request checks its grant again.'));
+  const enabled=check(p,'Allow read-only access to this task for 5 minutes (3 requests maximum).');p.append(button('Create sample agent grant',async()=>{if(!enabled.checked)throw Error('Choose the explicit permission first.');const g=await execute('grant',{taskId:listing.id,actions:['read'],maxActions:3,maxTaskMinutes:45,expiresInMinutes:5});notice='Task-scoped sample grant created. No credential is displayed or saved in browser storage.';return g;},true));
+  for(const g of grants){const expired=g.expiresAt<=Date.now(),row=node('p',g.revokedAt!==null?'Revoked':expired?'Expired':'Read only · '+g.used+'/'+g.maxActions+' requests');if(g.revokedAt===null&&!expired)row.append(button('Revoke agent access',()=>execute('revoke',{grantId:g.id}),true));p.append(row);}
+ }
+ async function switchRole(next){if(busy)return;role=next;$('sharedPortfolio').textContent='';$('sharedReport').textContent='';notice='';await perform(async()=>{});}
+ $('viewSharedBuilder').addEventListener('click',()=>switchRole('builder'));$('viewSharedFounder').addEventListener('click',()=>switchRole('founder'));$('sharedRefresh').addEventListener('click',()=>perform(async()=>{}));
+ $('sharedLoadReport').addEventListener('click',()=>perform(async()=>{$('sharedReport').textContent=JSON.stringify(await execute('report'),null,2);}));
+ window.addEventListener('pagehide',()=>Object.values(clients).forEach(c=>c.close()));
+ if(!local){const seed=core.create({state,principal:{userId:actors.founder},id:uuid});seed.run('createTask',{title:'Review one sample onboarding screen',brief:sampleBrief,visibility:'public'});}
+ perform(async()=>{});
+})();

@@ -1,0 +1,29 @@
+/* Workspace surfaces use the same design tokens as the home page. */
+.workspace-page{background:var(--bg);color:var(--text);font-family:var(--font)}
+.workspace-page>main{max-width:1120px;margin:auto;padding:56px 24px 88px}
+.workspace-page main h1{margin:18px 0 20px;font-size:clamp(34px,5vw,54px);line-height:1.1;letter-spacing:-.03em;font-weight:700}
+.workspace-page main h2{font-size:24px;letter-spacing:-.025em;margin:0 0 18px}
+.workspace-page main h3{font-size:19px;letter-spacing:-.015em;margin:18px 0 12px}
+.workspace-page main>p{max-width:760px;color:var(--text-secondary)}
+.workspace-page main section{background:var(--white);border:1px solid var(--border);padding:32px;border-radius:var(--radius-panel);margin:24px 0}
+.workspace-page main article{background:var(--white);border:1px solid var(--border);padding:22px;border-radius:var(--radius-card);margin:16px 0}
+.workspace-page main label{display:block;margin:18px 0;font-size:14px;font-weight:500}
+.workspace-page main input,.workspace-page main textarea,.workspace-page main select,.workspace-page main button{font:inherit;padding:12px 14px;border:1px solid var(--border-2);border-radius:var(--radius-input)}
+.workspace-page main input,.workspace-page main textarea,.workspace-page main select{display:block;width:100%;box-sizing:border-box;margin-top:7px;background:var(--white);color:var(--text)}
+.workspace-page main textarea{min-height:110px;resize:vertical}
+.workspace-page main button{cursor:pointer;margin:6px 10px 6px 0;background:var(--brand);color:var(--white);border:1px solid var(--brand);font-weight:600;font-size:14px;min-height:44px}
+.workspace-page main button:hover{background:var(--brand-hover)}
+.workspace-page main button:disabled{opacity:.6;cursor:wait}
+.workspace-page main a{color:var(--brand);text-decoration:underline;text-underline-offset:3px}
+.workspace-page main p{line-height:1.7}.preserve{white-space:pre-wrap}
+#status{background:var(--brand-soft);padding:18px;border:1px solid var(--brand-soft-2);border-radius:var(--radius-card);font-size:14px}
+[hidden]{display:none!important}
+.workspace-page input[type=checkbox]{display:inline-block;width:auto;margin:0 8px 0 0;vertical-align:middle;accent-color:var(--brand)}
+#detailMetadata,#milestoneProgress,#discoveryResults,#milestoneResultStatus{color:var(--text-secondary);font-size:14px}
+.workspace-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;align-items:end}
+.workspace-page .workspace-filters label{margin:0}.workspace-page .workspace-filters button{margin:0}
+.preview-notice{padding:24px;border:1px solid var(--gold);background:var(--gold-soft);border-radius:var(--radius-card);margin-bottom:34px;font-size:14px}
+.preview-notice p{margin:10px 0}.preview-notice nav{line-height:2}
+@media(max-width:640px){.workspace-page>main{padding:36px 18px 64px}.workspace-page main section{padding:22px}.workspace-page main article{padding:18px}.workspace-page main button{width:100%;margin-right:0}}
+
+.workspace-compose{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:18px 0;margin:26px 0}.workspace-compose>summary{cursor:pointer;color:var(--brand);font-weight:600;font-size:16px}.workspace-compose[open]>summary{margin-bottom:20px}

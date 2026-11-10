@@ -12,7 +12,7 @@
       id: "dc",
       label: "Washington, DC",
       short: "DC",
-      status: "Launch chapter",
+      status: "Community records",
       aliases: ["washington", "dc", "d.c.", "dmv", "northern virginia", "nova", "maryland"],
       focus: "Policy, govtech, services, capital, and founder operators."
     },
@@ -20,7 +20,7 @@
       id: "atlanta",
       label: "Atlanta, GA",
       short: "Atlanta",
-      status: "Launch chapter",
+      status: "Community records",
       aliases: ["atlanta", "atl", "georgia"],
       focus: "Media, fintech, logistics, healthcare, and startup services."
     },
@@ -28,7 +28,7 @@
       id: "boise",
       label: "Boise, ID",
       short: "Boise",
-      status: "Launch chapter",
+      status: "Community records",
       aliases: ["boise", "idaho"],
       focus: "Product builders, local businesses, remote teams, and operators."
     },
@@ -36,9 +36,9 @@
       id: "madison",
       label: "Madison",
       short: "Madison",
-      status: "Launch chapter",
+      status: "Community records",
       aliases: ["madison"],
-      focus: "Early builders, students, local companies, and practical community support."
+      focus: "People growing their skills, local companies, and practical community support."
     }
   ];
 
@@ -1812,12 +1812,7 @@
           html += '<section class="platform-section"><div class="platform-section__head"><div><h2 class="platform-section__title">' + esc(metaFor(type).plural) + '</h2><p class="platform-section__desc">Relevant records from the current F&B index.</p></div></div><div class="platform-grid platform-grid--two">' + list.map(cardHTML).join("") + "</div></section>";
         });
         output.innerHTML = any ? html : html + emptyHTML("No current F&B records match that request yet. Try a broader ask or add seed templates for this chapter.");
-        postRecord("conciergeRequest", {
-          question: query,
-          email: (getIdentity() || {}).email || "",
-          status: "Open",
-          matchedTypes: Object.keys(groups).join(", ")
-        });
+        // Search terms stay in this page; do not submit questions or identity as analytics.
       });
     }
   }
