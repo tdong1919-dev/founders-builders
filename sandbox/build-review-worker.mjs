@@ -11,8 +11,13 @@ for(const name of fs.readdirSync(path.join(root,'public')).sort()){
  if(path.extname(name)==='.html')body=body.replace(/Private UX review/g,'Public UX sandbox');
  assets['/'+name]={type,body};
 }
+// Explicitly reviewed brand downloads; do not recurse into arbitrary directories.
+for(const name of ['fb-connection-mark.svg','fb-connection-mark-ink.svg','fb-connection-mark-white.svg','README.txt','founders-builders-brand-kit.zip']){
+ const relative='assets/brand/'+name,full=path.join(root,'public',relative);if(!fs.existsSync(full))continue;
+ const binary=name.endsWith('.zip');assets['/'+relative]=binary?{type:'application/zip',bodyBase64:fs.readFileSync(full).toString('base64')}:{type:name.endsWith('.svg')?'image/svg+xml':'text/plain; charset=utf-8',body:fs.readFileSync(full,'utf8')};
+}
 if(!assets['/index.html']||!assets['/a2a-sandbox.html'])throw Error('Review pages missing.');
-if(Object.values(assets).some(a=>a.body.includes('script.google.com/macros/s/')))throw Error('Review must not include a live Sheets endpoint.');
+if(Object.values(assets).some(a=>a.body?.includes('script.google.com/macros/s/')))throw Error('Review must not include a live Sheets endpoint.');
 if(!assets['/secure-config.js']?.body.includes('enabled: false'))throw Error('Keep Supabase disabled in review.');
 const handler=fs.readFileSync(path.join(root,'sandbox/a2a-handler.mjs'),'utf8').replace('export function createSandbox','function createSandbox');
 const discovery=fs.readFileSync(path.join(root,'sandbox/discovery-mcp.mjs'),'utf8').replace('export function createDiscoveryMcp','function createDiscoveryMcp');
@@ -29,7 +34,7 @@ export default {async fetch(request,env){
  const asset=reviewAssets[url.pathname==='/'?'/index.html':url.pathname==='/.well-known/agent-card.json'?'/a2a-agent-card.json':url.pathname==='/a2a/sandbox-agent-card.json'?'/sandbox-agent-card.json':url.pathname];
  if(!asset)return new Response('Not found',{status:404});
  if(!['GET','HEAD'].includes(request.method))return new Response('Method not allowed',{status:405});
- return new Response(request.method==='HEAD'?null:asset.body,{headers:{'content-type':asset.type,'cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'same-origin'}});
+ return new Response(request.method==='HEAD'?null:asset.bodyBase64?Uint8Array.from(atob(asset.bodyBase64),c=>c.charCodeAt(0)):asset.body,{headers:{'content-type':asset.type,'cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'same-origin'}});
 }};
 `;
 fs.rmSync(path.join(root,'dist'),{recursive:true,force:true});fs.mkdirSync(path.join(root,'dist/server'),{recursive:true});fs.mkdirSync(path.join(root,'dist/.openai'),{recursive:true});
