@@ -17,7 +17,9 @@
   form.querySelectorAll('fieldset').forEach(group=>{if(!group.querySelector('input,textarea,select'))group.hidden=true;});
   const status=d.createElement('p');status.className='experience-note';status.textContent='Review what will be public before submitting. This listing does not create a signed-in account.';form.prepend(status);
   let approved=false,review;
-  form.addEventListener('input',()=>{approved=false;if(review)review.remove();review=null;});
+  function invalidateReview(){approved=false;if(review)review.remove();review=null;}
+  form.addEventListener('input',invalidateReview);
+  form.addEventListener('change',invalidateReview);
   form.addEventListener('submit',e=>{
    if(approved){approved=false;return;}e.preventDefault();e.stopImmediatePropagation();
    if(!form.checkValidity()){form.reportValidity();return;}
@@ -25,7 +27,7 @@
    const h=d.createElement('h2');h.textContent='Review before submitting';review.append(h);
    for(const c of form.querySelectorAll('input,textarea,select')){if(!c.name||c.closest('.hp')||c.type==='hidden'||c.type==='checkbox'&&!c.checked||!c.value.trim())continue;const p=d.createElement('p');const label=c.closest('label')?.querySelector('.field__label')?.textContent||c.name;p.textContent=label.replace('*','').trim()+': '+c.value;review.append(p);}
    const note=d.createElement('p');note.textContent='Only include details you have permission to publish. Contact information in public community listings may be visible to visitors. Submission does not guarantee publication.';review.append(note);
-   const confirm=d.createElement('button');confirm.type='button';confirm.className='btn';confirm.textContent='Submit this reviewed listing';confirm.addEventListener('click',()=>{confirm.disabled=true;approved=true;form.requestSubmit();});review.append(confirm);form.append(review);review.scrollIntoView({block:'start',behavior:'auto'});confirm.focus();
+   const confirm=d.createElement('button');confirm.type='button';confirm.className='btn';confirm.textContent='Submit this reviewed listing';confirm.addEventListener('click',()=>{if(!review||!form.contains(review)||confirm.disabled)return;if(!form.checkValidity()){form.reportValidity();return;}confirm.disabled=true;approved=true;form.requestSubmit();});review.append(confirm);form.append(review);review.scrollIntoView({block:'start',behavior:'auto'});confirm.focus();
   },true);
   const readySubmit=form.querySelector('[type=submit]');if(readySubmit)readySubmit.disabled=false;
  });
