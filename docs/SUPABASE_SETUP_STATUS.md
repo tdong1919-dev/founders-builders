@@ -50,10 +50,10 @@ Local bootstrap is exclusively for disposable PostgreSQL: **never run `local-boo
 ```sh
 psql "$LOCAL_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 \
   -f supabase/tests/local-bootstrap.sql \
-  -f supabase/migrations/20261017_secure_projects.sql \
-  -f supabase/migrations/20261018_secure_project_hardening.sql \
-  -f supabase/migrations/20261019_membership_revocation.sql \
-  -f supabase/migrations/20261020_milestone_assignments.sql \
+  -f supabase/migrations/20261025114545_secure_projects.sql \
+  -f supabase/migrations/20261025114547_secure_project_hardening.sql \
+  -f supabase/migrations/20261025114552_membership_revocation.sql \
+  -f supabase/migrations/20261025114555_milestone_assignments.sql \
   -f supabase/tests/security.sql
 node --test tests/*.test.cjs
 ```
@@ -75,7 +75,7 @@ Supabase references: [RLS](https://supabase.com/docs/guides/database/postgres/ro
 
 The Supabase creation form was rechecked and still displays the same outstanding-invoice block. The connected Supabase MCP endpoint resolves to the unrelated Front End Quiz project (`hgnkpyfxghglsxqprphy`); no database reads or changes were made there.
 
-`20261019_membership_revocation.sql` adds owner-only member removal, a private audit table, and synchronized milestone writes. Removing a member also closes the accepted application and denies subsequent private brief, member list, workspace list and milestone operations. This cannot retract data already received by that user. The rollback-only security suite now checks revocation, repeat removal, outsider denial, post-removal reads/writes and audit ACLs.
+`20261025114552_membership_revocation.sql` adds owner-only member removal, a private audit table, and synchronized milestone writes. Removing a member also closes the accepted application and denies subsequent private brief, member list, workspace list and milestone operations. This cannot retract data already received by that user. The rollback-only security suite now checks revocation, repeat removal, outsider denial, post-removal reads/writes and audit ACLs.
 
 The preview was verified to show the pending-setup message and no private submission forms. Hosted schema/auth tests, signup/email configuration, repository integration and activation remain blocked.
 
@@ -109,7 +109,7 @@ All 28 local JavaScript tests passed. No schema, table grants, external dependen
 
 ## Continuation: owner-controlled milestone assignment
 
-`20261020_milestone_assignments.sql` adds `fb_assign_milestone`, executable by authenticated users but authorized only for the project owner. Targets must be the owner or an existing accepted member. Assignment never inserts membership or grants access. Assignment/removal lock the project row, and removal clears assignments and records revocation in the same transaction. Changes are recorded in an API-inaccessible assignment audit table. Repeating the same assignment does not duplicate audit entries.
+`20261025114555_milestone_assignments.sql` adds `fb_assign_milestone`, executable by authenticated users but authorized only for the project owner. Targets must be the owner or an existing accepted member. Assignment never inserts membership or grants access. Assignment/removal lock the project row, and removal clears assignments and records revocation in the same transaction. Changes are recorded in an API-inaccessible assignment audit table. Repeating the same assignment does not duplicate audit entries.
 
 Owners get an assignment selector; collaborators see their current assignment and can use Assigned to me. Membership still controls completion. Private member/assignment caches are cleared with the rest of the workspace on session loss.
 
