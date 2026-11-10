@@ -18,13 +18,15 @@ Discovery now describes the missing task connection instead of presenting it as 
 
 A manual retry can check the feed again without a page reload. It disables itself and filters while one request is pending, clears the old cards, keeps filter values and re-enables filtering after a valid live response. Duplicate/late callbacks cannot override the settled or newer request. Malformed responses remain unavailable, while a valid empty array is correctly shown as zero listings. Demo records are never substituted for real opportunities. No API contract or endpoint configuration changed.
 
-## Deployment blocker
+## Deployment blocker and local fix
 
-Do not simply deploy the entire repository Apps Script to enable `collab`. Its `doGet` selects entities from a supplied `type` and returns their rows, without enforcing `entity.public`. Several repository entities are marked `public: false`, including administrative records. The flag alone is not access control. This is a finding about the repository handler, not evidence that the currently configured older deployment exposes those private types; no private endpoints were queried.
+The diagnosis found that the repository read handler did not enforce `entity.public`, even though several entities were marked private. No private endpoint was queried; this was not evidence that the older configured deployment exposed those types.
 
-Before a backend release, restrict the public read surface to explicitly public types and public-safe fields, and authorize any private administrative read/write routes separately. A public-collaboration-only adapter is another option. Keep existing public profile and submission contracts compatible. Review the write surface too before exposing new entity types. Private founder ideas and project records should remain outside anonymous Sheets routes and wait for verified Supabase authentication/RLS if needed.
+A separate backend patch now adds explicit public field/type allowlists, server-side visibility filtering, blocked private reads/admin writes, restricted one-way intake, server-owned metadata and callback validation. It remains unmerged and undeployed. See [Apps Script boundary details](APPS_SCRIPT_PUBLIC_BOUNDARY.md) for the policy, compatibility tests and remaining staging checks.
 
-After a reviewed public-only implementation is ready, the account owner can update the intended Apps Script deployment and verify `collab` returns `{ok:true,records:[...]}` containing only intentionally public listings. Then test one owner-approved listing through discovery and manual contact without substituting fictional data. No backend release, permission change or public submission was performed in this task.
+The account owner should not broadly redeploy until that patch is reviewed and verified against an isolated test sheet. Legacy public rows with blank status and intentionally public contact emails also need publication review. Private founder ideas and shared project records remain outside the anonymous route; authenticated Supabase access/RLS stays deferred.
+
+After review/staging, update the intended deployment and confirm `collab` returns `{ok:true,records:[...]}` with only intentionally public listings. Then test one owner-approved listing through discovery and manual contact. No backend release, permission change or public submission has occurred.
 
 ## Verification and cost
 

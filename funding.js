@@ -360,6 +360,7 @@
         return;
       }
 
+      if (type === "investor") data.investorType = data.type || "";
       data.type = type;
       fetch(API, {
         method: "POST",
@@ -367,8 +368,9 @@
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(data)
       }).then(function () {
-        say(labels.ok, "ok");
-        btn.disabled = true; btn.textContent = "Request sent — check the directory";
+        say("Request sent. Publication has not been confirmed. Your draft remains here; check the Funding Hub before sending it again.", "notice");
+        btn.disabled = true;
+        btn.textContent = "Request sent · check listing";
       }).catch(function () {
         say(labels.err, "err");
         btn.disabled = false;

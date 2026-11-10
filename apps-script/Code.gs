@@ -1,7 +1,9 @@
 /**
  * Founders & Builders — platform backend
  * Google Apps Script Web App that uses a Google Sheet as the datastore.
- * One deployment serves every hub (Profiles, Businesses, …), routed by
+ * Anonymous access serves public directories and one-way intake only. Private
+ * accounts and administrative operations require a separate authenticated backend.
+ * Public requests are routed by
  * a `type` query/body param. Omitting `type` defaults to "profile" so
  * existing calls from the Member Profiles hub keep working unchanged.
  *
@@ -331,10 +333,71 @@ var ENTITIES = {
   }
 };
 
+// Explicit anonymous surfaces: a new entity or column is private until allowed here.
+var PUBLIC_FORM_FIELDS = {
+  profile: 'name building business stage products skills industry location email website linkedin github x portfolio bio goals lookingFor canHelp mentor investor podcast speaker volunteer needs offers'.split(' '),
+  business: 'name category logo description website industry team products services hiring email linkedin x instagram'.split(' '),
+  listing: 'name category description pricing image demo website email'.split(' '),
+  job: 'title company category location remote compensation description applyLink email'.split(' '),
+  mentor: 'name title company industry expertise stages experience availability officeHours bio email linkedin website'.split(' '),
+  help: 'name title category urgency description email linkedin'.split(' '),
+  raise: 'company founder stage industry amountSeeking raisedSoFar useOfFunds description email website linkedin disclaimerAccepted'.split(' '),
+  investor: 'name firm type checkSize stages industries thesis email website linkedin disclaimerAccepted'.split(' '),
+  event: 'title host category city date time location description rsvpLink email sourcePlatform sourceName sourceUrl sourceEventId externalUpdatedAt'.split(' '),
+  collab: 'title name category format city description email linkedin'.split(' '),
+  podcast: 'showName host topics format lookingFor city description listenLink email linkedin'.split(' '),
+  resource: 'title category description link submittedBy email'.split(' ')
+};
+// These forms may append a private request, but can never read requests or admin notes.
+var PRIVATE_INTAKE_FIELDS = {
+  report: 'targetType targetId targetTitle reason details reporterEmail'.split(' '),
+  eventSource: 'sourceName organizerEmail contactName platform authMethod chapter sourceUrl feedUrl importMode cadence fitNotes permissionConfirmed attributionAccepted reviewAccepted'.split(' '),
+  conciergeRequest: 'question email context matchedTypes'.split(' ')
+};
+var PUBLIC_READ_METADATA = ['id', 'timestamp', 'chapter', 'moderationStatus', 'verified', 'expiresAt', 'lastUpdated'];
+var PUBLIC_STATUSES = ['', 'active', 'approved', 'public', 'published', 'open'];
+
+function requestError_(message) { var err = new Error(message); err.publicMessage = message; return err; }
+function hasOwn_(object, key) { return Object.prototype.hasOwnProperty.call(object, key); }
 function entityFor_(type) {
-  var entity = ENTITIES[type || 'profile'];
-  if (!entity) throw new Error('Unknown type: ' + type);
-  return entity;
+  var key = type || 'profile';
+  if (typeof key !== 'string' || !hasOwn_(ENTITIES, key)) throw requestError_('Unsupported record type.');
+  return ENTITIES[key];
+}
+function validCallback_(e) {
+  var callback = e && e.parameter && e.parameter.callback;
+  return callback == null || callback === '' || (typeof callback === 'string' && /^[A-Za-z_$][A-Za-z0-9_$]{0,127}$/.test(callback));
+}
+function isPublicRow_(record) {
+  var visibility = String(record.visibility == null ? '' : record.visibility).trim().toLowerCase();
+  if (visibility && visibility !== 'public') return false;
+  if (record.isPublic != null && record.isPublic !== '' && ['true', 'yes', '1'].indexOf(String(record.isPublic).trim().toLowerCase()) === -1) return false;
+  return !['status', 'moderationStatus'].some(function (key) {
+    return PUBLIC_STATUSES.indexOf(String(record[key] == null ? '' : record[key]).trim().toLowerCase()) === -1;
+  });
+}
+function publicFields_(type) {
+  return PUBLIC_READ_METADATA.concat(PUBLIC_FORM_FIELDS[type].filter(function (key) { return key !== 'disclaimerAccepted'; }), ['chapter']);
+}
+function submission_(type, raw, fields) {
+  var data = {};
+  fields.forEach(function (key) {
+    var value = hasOwn_(raw, key) ? raw[key] : undefined;
+    // Keep routing `type` separate from an investor's classification.
+    if (type === 'investor' && key === 'type') value = raw.investorType != null ? raw.investorType : raw.type === 'investor' ? '' : raw.type;
+    if (value == null) return;
+    if (['string', 'number', 'boolean'].indexOf(typeof value) === -1 || String(value).length > 20000) throw requestError_('Invalid submission field.');
+    data[key] = String(value).trim();
+  });
+  ['email', 'organizerEmail', 'reporterEmail'].forEach(function (key) {
+    if (data[key] && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data[key])) throw requestError_('Enter a valid email address.');
+  });
+  return data;
+}
+function sheetText_(value) {
+  var text = String(value == null ? '' : value);
+  // Public submissions are literal text, never executable spreadsheet formulas.
+  return /^[=+\-@]/.test(text) ? "'" + text : text;
 }
 
 function headersFor_(entity) {
@@ -411,89 +474,81 @@ function deleteEventSourceSecret(sourceId, secretType) {
   return { ok: true, key: eventSourceSecretKey_(sourceId, secretType) };
 }
 
-/** Read: returns all records for the requested type as JSON (supports ?callback= for JSONP). */
+/** Anonymous read: public entities, visible rows and explicitly allowed fields only. */
 function doGet(e) {
   var out;
   try {
-    var entity = entityFor_(e && e.parameter && e.parameter.type);
+    if (!validCallback_(e)) throw requestError_('Invalid callback.');
+    var type = e && e.parameter && e.parameter.type || 'profile';
+    var entity = entityFor_(type);
+    if (entity.public === false || !hasOwn_(PUBLIC_FORM_FIELDS, type)) throw requestError_('Private records require authenticated access.');
     var sheet = getSheet_(entity);
     var values = sheet.getDataRange().getValues();
     var header = values.shift() || headersFor_(entity);
-    var records = values
-      .filter(function (row) { return String(row[0]).length > 0; })
-      .map(function (row) {
-        var obj = {};
-        header.forEach(function (key, i) { obj[key] = row[i]; });
-        return obj;
-      })
-      .reverse(); // newest first
+    var allowed = publicFields_(type);
+    var records = values.filter(function (row) { return row[0] != null && String(row[0]).length > 0; }).map(function (row) {
+      var raw = Object.create(null);
+      header.forEach(function (key, i) { raw[key] = row[i]; });
+      if (!isPublicRow_(raw)) return null;
+      var record = {};
+      allowed.forEach(function (key) { if (hasOwn_(raw, key)) record[key] = raw[key]; });
+      return record;
+    }).filter(function (record) { return record !== null; }).reverse();
     out = { ok: true, count: records.length, profiles: records, records: records };
   } catch (err) {
-    out = { ok: false, error: String(err) };
+    out = { ok: false, error: err && err.publicMessage || 'Unable to read public records.' };
   }
   return respond_(out, e);
 }
 
-/** Write: appends a new record row for the requested type. */
+/** Anonymous append: public listings or explicitly allowed one-way private intake. */
 function doPost(e) {
   var out;
   try {
-    var data = {};
+    if (!validCallback_(e)) throw requestError_('Invalid callback.');
+    var raw = {};
     if (e && e.postData && e.postData.contents) {
-      data = JSON.parse(e.postData.contents);
-    } else if (e && e.parameter) {
-      data = e.parameter;
-    }
-
-    var type = data.type || (e && e.parameter && e.parameter.type);
+      if (e.postData.contents.length > 100000) throw requestError_('Submission is too large.');
+      try { raw = JSON.parse(e.postData.contents); } catch (parseError) { throw requestError_('Invalid submission.'); }
+    } else if (e && e.parameter) raw = e.parameter;
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw requestError_('Invalid submission.');
+    var type = e && e.parameter && e.parameter.type || raw.type || 'profile';
     var entity = entityFor_(type);
-
-    // Honeypot: bots fill hidden fields. Silently accept, don't store.
-    if (data.company_website) {
-      return respond_({ ok: true }, e);
-    }
-
+    var publicType = entity.public !== false && hasOwn_(PUBLIC_FORM_FIELDS, type);
+    var fields = publicType ? PUBLIC_FORM_FIELDS[type].concat(['chapter']) : hasOwn_(PRIVATE_INTAKE_FIELDS, type) ? PRIVATE_INTAKE_FIELDS[type] : null;
+    if (!fields) throw requestError_('Private operations require authenticated access.');
+    if (publicType && !isPublicRow_(raw)) throw requestError_('This endpoint accepts public listings only.');
+    if (raw.company_website) return respond_({ ok: true }, e);
+    var data = submission_(type, raw, fields);
     var missing = entity.required.filter(function (key) { return !data[key]; });
-    if (missing.length) {
-      return respond_({ ok: false, error: 'Required: ' + missing.join(', ') }, e);
-    }
-
-    // Enum validation: only checks fields that are both present in the
-    // submission and have a fixed set of allowed values. Empty/omitted
-    // optional fields are always fine.
-    var invalid = Object.keys(entity.enums || {}).filter(function (key) {
-      return data[key] && entity.enums[key].indexOf(data[key]) === -1;
-    });
-    if (invalid.length) {
-      return respond_({ ok: false, error: 'Invalid value for: ' + invalid.join(', ') }, e);
-    }
-
+    if (missing.length) return respond_({ ok: false, error: 'Required: ' + missing.join(', ') }, e);
+    var invalid = Object.keys(entity.enums || {}).filter(function (key) { return data[key] && entity.enums[key].indexOf(data[key]) === -1; });
+    if (invalid.length) return respond_({ ok: false, error: 'Invalid value for: ' + invalid.join(', ') }, e);
+    if (type === 'eventSource' && ['permissionConfirmed', 'attributionAccepted', 'reviewAccepted'].some(function (key) { return ['yes', 'true', '1', 'on'].indexOf(String(data[key]).toLowerCase()) === -1; })) throw requestError_('Confirm the event-source permissions.');
     var sheet = getSheet_(entity);
     var header = headerFor_(sheet, entity);
     var id = Utilities.getUuid().slice(0, 8);
     var now = new Date().toISOString();
     var row = header.map(function (key) {
       if (key === 'id') return id;
-      if (key === 'timestamp') return now;
-      if (key === 'lastUpdated') return data[key] || now;
-      if (data[key] != null) return data[key];
-      if (entity.defaults && entity.defaults[key] != null) return entity.defaults[key];
-      if (entity.public !== false && key === 'moderationStatus') return 'Active';
-      if (entity.public !== false && key === 'reportCount') return '0';
-      return '';
+      if (key === 'timestamp' || (publicType && key === 'lastUpdated')) return now;
+      if (publicType && key === 'moderationStatus') return 'Active';
+      if (publicType && key === 'reportCount') return '0';
+      if (entity.defaults && hasOwn_(entity.defaults, key)) return entity.defaults[key];
+      return fields.indexOf(key) !== -1 && data[key] != null ? sheetText_(data[key]) : '';
     });
     sheet.appendRow(row);
-
     out = { ok: true, id: id };
   } catch (err) {
-    out = { ok: false, error: String(err) };
+    out = { ok: false, error: err && err.publicMessage || 'Unable to save this submission.' };
   }
   return respond_(out, e);
 }
 
 /** Serialize as JSON or JSONP depending on ?callback=. */
 function respond_(obj, e) {
-  var json = JSON.stringify(obj);
+  if (!validCallback_(e)) return ContentService.createTextOutput(JSON.stringify({ ok: false, error: 'Invalid callback.' })).setMimeType(ContentService.MimeType.JSON);
+  var json = JSON.stringify(obj).replace(/[<\u2028\u2029]/g, function (c) { return '\\u' + ('0000' + c.charCodeAt(0).toString(16)).slice(-4); });
   var callback = e && e.parameter && e.parameter.callback;
   if (callback) {
     return ContentService
