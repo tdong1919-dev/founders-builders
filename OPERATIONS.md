@@ -1,0 +1,41 @@
+# Founders & Builders beta operations
+
+Operator: JIDOKA Group. Accountable reviewer: Crystal. Support/privacy: support@getjidoka.com. These operating details and the 7-day acknowledgment / 30-day deletion target / 90-day pending-request retention were approved on November 10, 2026. Founders & Builders uses only Supabase project ijvokvffhcvakaultzfk; no JIDOKA product database is involved.
+
+## Access and reports
+
+Keep approval-based access. Email-link delivery is limited to approved addresses: at least 90 seconds between requests and at most three per address/hour. Public beta requests do not approve accounts, create users, or subscribe anyone. Inbox intake has global/network caps and a 1,000-request ceiling. Never promise an email was sent for an unapproved address.
+
+Crystal reviews private concerns in `body->'concerns'` of `public.fb_shared_cloud_state` through the owner-only Supabase dashboard. Select only required fields, keep details private, record status/reviewer outcome, and contact the reporter through the approved support workflow. No automatic removal, payment recovery or automated reports email is claimed. Account suspension: set the approved-account row `active=false` and revoke that person's agent grants; both are needed. Recheck denied access. Block new outreach is participant-controlled, applies both directions, and leaves delivery/feedback/closing available. It does not hide previously shared content.
+
+## Deletion and retention
+
+Authenticate requests through the account email; do not accept user IDs or credentials as proof. Acknowledge within 7 days; aim to complete within 30 days, explaining exceptions. First deactivate approved access, disable updates, revoke agent grants, withdraw public cards and portfolio exports. Then export data if requested and review participant-shared messages/agreements for necessary retention. Remove/anonymize personal profile/project/notification/report content consistently, including cached request results and event details, before deleting the Auth user. Deleting the Auth row alone is not a complete application deletion. Verify absence from public discovery and failed access. Record only minimal completion evidence. Do not promise deletion of copies previously downloaded by participants.
+
+Pending access requests: 90 days. Hashed network rate-limit records: 7 days. Terminal notification outbox: 30 days, pending: expire after 7 days. Report/security retention requires case-by-case necessity review; account records remain while the account is active. A daily database job enforces pending-request/network retention and records private aggregate metrics. Its first scheduled execution must still be monitored.
+
+## Notifications
+
+Default off, collaboration only, never marketing. Actual sending requires three Supabase Edge secrets: `FB_RESEND_API_KEY` (sending-only key for the verified sender domain), `FB_NOTIFICATION_FROM` (verified sender), and `FB_NOTIFICATIONS_ENABLED=true`. Do not paste these into chat or commit them. Without these, UI says not connected and opt-in is refused. Resend SMTP sign-in settings remain separate.
+
+The dispatcher is `POST /functions/v1/fb-collaboration/notifications/dispatch`, protected with a dedicated random capability stored in Supabase Vault. A 15-minute database schedule reads that secret by reference; no service-role key is used in the cron command or frontend. The Edge handler verifies only its hash through a service-only RPC. The capability can trigger bounded generic delivery but cannot read collaborations or change preferences. Verify a consented delivery test before enabling. Provider secrets must still be configured.
+
+Worker claims via compare-and-swap, rechecks consent/approval before provider handoff, uses a stable provider idempotency key/body for ambiguous retries, and stops retries before 24 hours. Delivery caps: one message/recipient/day, 10 attempted sends/day, 200/month for this feature. These caps do not measure other apps' use of a shared Resend account. No automatic paid upgrade. Emails contain generic workspace navigation only. Signed unsubscribe confirms on GET and disables on POST; it also supports provider one-click POST headers. A message already handed to the provider cannot be recalled.
+
+## Backup, recovery and rollback
+
+Before each backend migration/function release, export the application tables, approval list, beta inbox, schema/migration history and current Edge sources into an encrypted owner-controlled backup outside the repository and public assets. Never include runtime keys in source backups. Restrict backup access, record creation time/retention, and verify encryption. Supabase Free is not a substitute for a verified operator backup. A fresh private-data backup/restore drill has not been performed by this change.
+
+Restore first into isolated local Postgres, with outgoing email and scheduling disabled. Validate row counts, revisions, format, grants and participant isolation with test identities. Never overwrite production solely to test a restore. Reapply migrations in recorded order, restore aggregate revision consistently, rotate/revoke restored credentials and withdraw stale public cards before exposing it. Require a reviewed operator restore decision.
+
+Frontend rollback: use the last known good Sites saved version. Previous baseline was Sites version54, source 5186a0384d1be1b6ea9d0d7910dfd5961f6512cd. Backend baseline was fb-collaboration v9; its source was compared before modification. Reverting frontend does not revert SQL or persisted data; don't re-enable disabled legacy APIs or Sheets routes as a rollback shortcut.
+
+## Monitoring and cost
+
+Daily during beta: Supabase health, auth failures/429s, Edge error rate, database size, aggregate size and pending concerns; Resend delivery failures/bounces and daily/monthly account totals; Sites deployment errors. Inspect metadata/counts first, never copy private payloads into logs. In-app Refresh saved progress is manual, not a push-notification monitor. No external analytics or paid monitoring dependency was added.
+
+Stop new approvals and outbound notification dispatch when provider usage approaches free allowances or abuse/error rates rise. Keep revocation, unsubscribe and support available. No paid project branch, compute upgrade or paid password protection may be enabled without separate approval. Verify actual account plans and quotas in provider dashboards; do not assume the shared email account has unused quota.
+
+## Verified changes this release
+
+The F&B organization was verified on the Free plan. Three expired, known founder/builder test grants were explicitly revoked by ID after matching their ownership and expiry; no credential history was deleted. All legacy client-executable SECURITY DEFINER API grants were removed (verified count zero). The daily `fb-beta-retention-and-metrics` job is installed; its first scheduled run still needs monitoring. Leaked-password protection remains a provider advisory; the application uses approved, verified-email sign-in, not a password form. No paid upgrade was authorized.

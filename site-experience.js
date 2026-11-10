@@ -8,6 +8,10 @@
  const api={routes,prompts,publicOutcome,expandParents};if(typeof module==='object'&&module.exports){module.exports=api;return;}root.FBSiteExperience=api;
  const d=root.document;if(!d)return;
  d.addEventListener('invalid',e=>expandParents(e.target),true);
+
+ const legacyPages=['create-profile.html','add-business.html','add-listing.html','add-job.html','become-mentor.html','add-help.html','add-raise.html','add-investor.html','add-event.html','add-event-source.html','add-collab.html','add-podcast.html','add-resource.html','report-listing.html','concierge.html'];
+ const legacyUnavailable=root.FB_CONFIG?.LEGACY_SUBMISSIONS_ENABLED===false&&legacyPages.includes(root.location.pathname.split('/').pop());
+ if(legacyUnavailable){d.addEventListener('submit',e=>{e.preventDefault();e.stopImmediatePropagation();},true);d.querySelectorAll('form').forEach(form=>{const p=d.createElement('p');p.className='experience-note';p.textContent='Legacy submissions are unavailable while the Google integration is verified. Use your cloud workspace, or contact support@getjidoka.com for help.';form.prepend(p);form.querySelectorAll('[type=submit]').forEach(b=>{b.disabled=true;b.textContent='Submission unavailable';});});}
  const taskForm=d.getElementById('cloudTaskForm');
  if(taskForm){const details=d.createElement('details'),summary=d.createElement('summary');details.className='experience-details';summary.textContent='Scope, support and terms · complete before saving';details.append(summary);const essentials=['task_project','task_title','task_deliverable','task_minutes'];for(const label of [...taskForm.children]){if(label.tagName!=='LABEL')continue;const control=label.querySelector('input,textarea,select');if(control&&!essentials.includes(control.id))details.append(label);}const submit=taskForm.querySelector('[type=submit]');taskForm.insertBefore(details,submit);}
  d.querySelectorAll('[data-simple-form]').forEach(form=>{
@@ -29,7 +33,7 @@
    const note=d.createElement('p');note.textContent='Only include details you have permission to publish. Contact information in public community listings may be visible to visitors. Submission does not guarantee publication.';review.append(note);
    const confirm=d.createElement('button');confirm.type='button';confirm.className='btn';confirm.textContent='Submit this reviewed listing';confirm.addEventListener('click',()=>{if(!review||!form.contains(review)||confirm.disabled)return;if(!form.checkValidity()){form.reportValidity();return;}confirm.disabled=true;approved=true;form.requestSubmit();});review.append(confirm);form.append(review);review.scrollIntoView({block:'start',behavior:'auto'});confirm.focus();
   },true);
-  const readySubmit=form.querySelector('[type=submit]');if(readySubmit)readySubmit.disabled=false;
+  const readySubmit=form.querySelector('[type=submit]');if(readySubmit&&!legacyUnavailable)readySubmit.disabled=false;
  });
  d.querySelectorAll('[data-prompt]').forEach(button=>button.addEventListener('click',()=>{const target=d.getElementById(button.dataset.target);if(!target||target.value.trim())return;target.value=prompts[button.dataset.prompt]||'';target.dispatchEvent(new Event('input',{bubbles:true}));expandParents(target);target.focus();}));
  // Required steps stay available while completed optional explanations remain secondary.
