@@ -353,3 +353,9 @@ Projects and People now surface approved public discovery near the start, while 
 Fixed listing review invalidation for selection/checkbox change events as well as typing. Detached, invalid or already-used confirmation buttons cannot submit. Existing drafts and explicit confirmation remain intact.
 
 417 regression tests and all 66 page checks pass; built filter forwarding, safe empty state and exact changed assets verified. Published Sites version 50, saved version appgprj_6add5ba8a1688191b29dd954024ebb46~appgver_c19a6cd820d88191a04edf21cf677c38, hosting source c1c88cceb426a1d1e483de9bebec04c105679667. Deployment appgdep_6af3571a560481918ecf803f56ebece6 succeeded with MCP retained. PR #54 draft/unmerged on #53. Browser visual and real-device verification remain pending under the previously confirmed Work browser restriction.
+
+### Contribution arrival in the workspace (2026-11-10)
+
+Owner-approved public contribution cards now carry only their already-public task/card identifiers in the native workspace link. A verified account's existing authorized task list determines whether the intended task can open. No automatic interest, acceptance, grant, private read or permission expansion occurs. Paused contributions retain their existing application stop; unavailable tasks show an explicit notice instead of revealing an unrelated task panel. Arrival identity/context is cleared on sign-out and rechecked for a restored session. Invalid identifiers are ignored.
+
+Signed-out visitors see a public return link and clear instructions for email links opening in another tab/browser. Cross-browser sign-in does not automatically transfer context; reopening the public contribution supplies it again. No new cookie, browser storage, authentication redirect, backend operation or database change. Real and fictional project controllers remain identical behind their separate clients.
