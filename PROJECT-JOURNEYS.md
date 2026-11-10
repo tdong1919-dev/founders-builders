@@ -283,3 +283,11 @@ Pulse frames run only while visible and active, coalesce with scroll work, freez
 Final verification: 384 regression tests and 57-page static checks pass, including graph topology, pulse travel/arrival, pause/offscreen behavior, reduced motion, fixed-destination single navigation, timer fallback, modified links, bfcache recovery and continuous-transition text contrast.
 
 Published as Sites version 40, saved version appgprj_6add5ba8a1688191b29dd954024ebb46~appgver_f0312e278f708191beb0b36e5cf7381a, hosting source a2a7ac919bee1bcc865206bef5471070aa5cc971. Deployment appgdep_6af273f21eb88191be3a459f6f085c57 succeeded with MCP retained. Live JS/CSS and arrival stylesheet match tested source; live pulse layer, begin anchor and beta entry stylesheet verified. Ten live anonymous/auth privacy-boundary checks pass. Browser/mobile visual/performance acceptance remains pending. PR #48 draft/unmerged, stacked on #47. No backend changes.
+
+### Phone feedback: visible spark, neon skill signals, tighter entry (2026-11-09)
+
+Moved the initial seed and ambient aura to SVG x=640, into the open space to the right of the contextual card, and progressively recentered them as the graph expands. Mobile contextual cards are capped at 48vw; entry no longer forces a full viewport, eliminating the long empty ivory gap in the supplied phone screenshot. Tightened entry spacing and decorative orbit size.
+
+Finale heading now reads The first step / is to, with begin only in the dot. Larger heading and a slow four-second text glow; pause and reduced-motion rules retained. Introduced five illustrative skill-signal accents (cyan, violet, mint, rose, gold). Pulses carry source color along actual graph edges into receiver halos, layered against each receiving node's own color. Neon accents are confined to decorative network signals; copy, overall palette and auth behavior unchanged. Not live skill data or activity.
+
+386 tests and 57-page static checks pass, including new origin/recentering, signal-color propagation, single begin label and content-height mobile entry checks. Browser visual/performance acceptance remains pending; supplied user screenshots establish the original layout issue. No backend, JIDOKA, Sheets, Resend or cost changes.
