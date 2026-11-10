@@ -1,4 +1,4 @@
--- Apply after 20261017_secure_projects.sql. All changes are transactional.
+-- Apply after 20261025114545_secure_projects.sql. All changes are transactional.
 begin;
 create schema if not exists fb_private;
 revoke all on schema fb_private from public, anon, authenticated;
