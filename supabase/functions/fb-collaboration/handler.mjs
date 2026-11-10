@@ -1,8 +1,9 @@
 import core from './core.mjs';
+import {control,settings,enforceBlock,queueUpdates,blocked} from './launch-controls.mjs';
 const sha=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),x=>x.toString(16).padStart(2,'0')).join('');
 const secret=()=> 'fb_agent_'+btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');
-const readonly=new Set(['a2aGet','agentContext','list','readTask','matchTask','readContribution','activity','exportCredit','report','agentAudit']);
-export function createCloudHandler({load,commit,verifySession,reserveLogin,sendCode,origins,now=Date.now}){
+const readonly=new Set(['a2aGet','agentContext','list','readTask','matchTask','readContribution','activity','exportCredit','report','agentAudit','accountSettings']);
+export function createCloudHandler({load,commit,verifySession,reserveLogin,sendCode,origins,now=Date.now,notificationsAvailable=false}){
  if(!origins?.length)throw Error('Explicit browser origins required.');
  return async request=>{
   const origin=request.headers.get('Origin'),cors=origin&&origins.includes(origin)?{'Access-Control-Allow-Origin':origin,'Vary':'Origin'}:{};
@@ -29,18 +30,21 @@ export function createCloudHandler({load,commit,verifySession,reserveLogin,sendC
    const tokenHash=bearer.startsWith('fb_agent_')?await sha(bearer):null,digest=await sha(raw);
    for(let attempt=0;attempt<5;attempt++){
     const snapshot=await load(),state=snapshot.state;state.credentials??={};state.requests??={};state.securityEvents??=[];
-    const principal=tokenHash?state.credentials[tokenHash]:{userId:human.id};if(!principal)return reply({error:'unauthenticated'},401);
+    const principal=tokenHash?state.credentials[tokenHash]:{userId:human.id,email:human.email};if(!principal)return reply({error:'unauthenticated'},401);
     const scope=principal.userId+':'+(principal.grantId||'human'),cacheKey=await sha(scope+':'+key);
     let result,status=200,changed=false;
     try{
      if(principal.grantId){const grant=state.grants[principal.grantId];if(!grant||grant.ownerId!==principal.userId||grant.revokedAt!==null||grant.expiresAt<=now()){const e=Error('Agent permission is expired or revoked.');e.code='permission_denied';throw e;}}
      const saved=readonly.has(input.operation)?null:state.requests[cacheKey];
      if(saved){if(saved.digest!==digest){const e=Error('Request key was already used for different work.');e.code='conflict';throw e;}return reply(saved.result);}
-     if(!readonly.has(input.operation)&&!['revoke','revokePortfolio','close','withdrawOpportunity','withdrawCapability'].includes(input.operation)&&(Object.keys(state.tasks).length>=2000||Object.keys(state.contributions).length>=5000||JSON.stringify(state).length>2000000)){const e=Error('The controlled beta storage limit was reached. Existing permissions can still be revoked.');e.code='quota';throw e;}
-     const before=state.sequence;
-     let data;if(input.operation==='agentAudit'){if(principal.grantId){const e=Error('Only people can review this audit.');e.code='human_required';throw e;}data=state.securityEvents.filter(e=>e.ownerId===principal.userId).slice(-100).map(({ownerId,...rest})=>rest);}
-     else data=core.create({state,principal,now,id:()=>crypto.randomUUID()}).run(input.operation,input.params);
-     result={data};changed=state.sequence!==before;
+     if(!readonly.has(input.operation)&&!['revoke','revokePortfolio','close','withdrawOpportunity','withdrawCapability','setEmailUpdates','blockParticipant','reportConcern'].includes(input.operation)&&(Object.keys(state.tasks).length>=2000||Object.keys(state.contributions).length>=5000||JSON.stringify(state).length>2000000)){const e=Error('The controlled beta storage limit was reached. Existing permissions can still be revoked.');e.code='quota';throw e;}
+     const before=state.sequence;const eventStart=state.events.length;
+     let data;if(['accountSettings','setEmailUpdates','blockParticipant','reportConcern'].includes(input.operation)){data=control(state,principal,input.operation,input.params,now(),notificationsAvailable);changed=!readonly.has(input.operation);}
+     else if(input.operation==='agentAudit'){if(principal.grantId){const e=Error('Only people can review this audit.');e.code='human_required';throw e;}data=state.securityEvents.filter(e=>e.ownerId===principal.userId).slice(-100).map(({ownerId,...rest})=>rest);}
+     else {enforceBlock(state,principal.userId,input.operation,input.params);data=core.create({state,principal,now,id:()=>crypto.randomUUID()}).run(input.operation,input.params);}
+     if(input.operation==='list'){data.accountSettings=settings(state,principal.userId,notificationsAvailable);data.builderMatches=data.builderMatches.filter(m=>!blocked(state,principal.userId,m.builder.userId));data.matches=data.matches.filter(m=>!blocked(state,principal.userId,state.tasks[m.taskId]?.ownerId));}
+     if(state.events.length>eventStart)queueUpdates(state,state.events.slice(eventStart),principal.userId,now());
+     result={data};changed=changed||state.sequence!==before;
      if(input.operation==='grant'){const token=secret();state.credentials[await sha(token)]={userId:principal.userId,grantId:data.id};result.agentToken=token;changed=true;}
      if(!readonly.has(input.operation)){state.requests[cacheKey]={digest,result:{data}};changed=true;}
     }catch(error){status={unauthenticated:401,not_found:404,forbidden:403,permission_denied:403,human_required:403,conflict:409,invalid:400,invalid_stage:409,quota:429}[error.code]||503;

@@ -1,0 +1,21 @@
+/* Minimal account choices; never creates an email subscription on render. */
+(function(root){'use strict';
+ function create({document,user,execute,run,preview=false}){const host=document.getElementById('accountControls');let ticket=0;
+  if(!host)return {clear(){},render(){}};
+  const node=(tag,text)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;return e;};
+  function clear(){ticket++;host.replaceChildren();}
+  function render(records){clear();const owner=user();if(!owner)return;const current=ticket,prefs=records?.accountSettings||{enabled:false,version:0,available:false,blockedUsers:[]};const valid=()=>ticket===current&&user()?.id===owner.id;
+   const details=node('details'),summary=node('summary','Email & safety');details.append(summary);host.append(details);
+   details.append(node('h3','Collaboration emails'),node('p',preview?'This fictional preview sends no emails.':prefs.available?'Optional. At most one update per day, without private project details. Sign-in emails are separate.':'Optional updates are not connected yet. Sign-in emails still work.'));
+   const label=node('label'),check=node('input');check.type='checkbox';check.checked=prefs.enabled===true;check.disabled=preview||!prefs.available&&!prefs.enabled;label.append(check,node('span','Email me when a collaboration changes'));details.append(label);
+   const save=node('button','Save email preference');save.type='button';save.className='btn btn--secondary';save.disabled=preview;save.addEventListener('click',()=>{if(preview||!valid())return;return run(async()=>{if(!valid())return {viewOnly:true};await execute('setEmailUpdates',{enabled:check.checked===true,consent:check.checked===true,expectedVersion:prefs.version});});});details.append(save,node('p','You can unsubscribe in any update email. No marketing subscription is included.'));
+   const cs=(records.contributions||[]).filter(c=>[c.founderId,c.builderId].includes(owner.id));if(!cs.length){details.append(node('p','Need help? Contact support@getjidoka.com.'));return;}
+   details.append(node('h3','Report or stop new outreach'));const choose=node('select');choose.setAttribute('aria-label','Choose a collaboration');for(const c of cs){const option=node('option',(records.tasks||[]).find(t=>t.id===c.taskId)?.title||'Contribution');option.value=c.id;choose.append(option);}details.append(choose,node('p','Blocking stops new applications, invitations and messages between you. Existing delivery, feedback and closing actions remain available. It does not recall information already shared.'));
+   const button=(text,fn)=>{const b=node('button',text);b.type='button';b.className='btn btn--secondary';b.disabled=preview;b.addEventListener('click',()=>{if(!preview&&valid())return run(async()=>valid()?fn():{viewOnly:true});});return b;};
+   const selected=()=>cs.find(c=>c.id===choose.value)||cs[0];details.append(button('Block new outreach',()=>execute('blockParticipant',{contributionId:selected().id,blocked:true})),button('Allow outreach again',()=>execute('blockParticipant',{contributionId:selected().id,blocked:false})));
+   const reason=node('select');reason.setAttribute('aria-label','Report reason');for(const [value,text] of [['spam','Spam'],['harassment','Harassment'],['privacy','Privacy concern'],['misrepresentation','Misrepresentation'],['other','Other']]){const option=node('option',text);option.value=value;reason.append(option);}const note=node('textarea');note.maxLength=1500;note.setAttribute('aria-label','What should the operator review?');note.placeholder='What should the operator review? Do not include credentials.';details.append(reason,note,button('Send private report',async()=>{await execute('reportConcern',{contributionId:selected().id,reason:reason.value||'spam',details:note.value});note.value='';}));details.append(node('p','Crystal reviews reports. No automatic removal or payment recovery. For urgent concerns, email support@getjidoka.com.'));
+  }
+  return {clear,render};
+ }
+ const api={create};if(typeof module==='object'&&module.exports)module.exports=api;else root.FBAccountControls=api;
+})(typeof window==='undefined'?globalThis:window);

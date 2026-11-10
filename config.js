@@ -1,3 +1,4 @@
+// Legacy submissions remain unavailable until isolated Google verification and a reviewed deployment.
 /**
  * Founders & Builders — front-end config
  *
@@ -8,5 +9,6 @@
  * the create form runs in demo mode (nothing is saved to the sheet).
  */
 window.FB_CONFIG = {
-  PROFILES_API: "https://script.google.com/macros/s/AKfycbxkUEG4blNbl-wXjj7FG7HTECMRvJv8zuAMCnGKIS_RIxhh9fVtb-Azo103LteFX0xXOA/exec"
+  LEGACY_SUBMISSIONS_ENABLED: false,
+  PROFILES_API: ""
 };
