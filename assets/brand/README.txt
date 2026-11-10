@@ -1,14 +1,16 @@
-Founders & Builders — Connection in motion / v1
+Founders & Builders / Quiet ambition / v2
 
-Core line: Start with a contribution. Build a connection.
+Headline: Nothing great is ever built overnight. Or alone.
+Positioning: A founder has a product idea. Someone else has the skills to move it forward.
+Journey: One high-impact idea / Shared vision / Complementary strengths / Continuous growth and feedback.
 
-Palette: Paper #FFFAF1, Ink #142B41, Cobalt #234BE8, Signal #FF784F, Mist #E9EDFF.
-Headlines: Georgia. Body/UI: system sans-serif. No external fonts required.
-Primary: white on cobalt. Reading: ink on paper. Orange: decorative accent, not small text or white-text buttons.
-Keep one block of clear space around the mark; do not distort or add effects. Use the full name with the mark for new audiences. Use the white mark only on dark solid backgrounds.
+Palette: Alabaster #F5F2EB, Charcoal #242421, Bronze #85735E, Stone #D9D4C9, White #FFFFFF.
+Typography: Georgia headlines/wordmark; Arial/Helvetica UI/body; Courier New metadata sparingly. No external font requests.
+Charcoal on alabaster for reading; white on charcoal for primary actions. Bronze is a restrained accent. Keep semantic success/error labels and never rely on color alone.
+Neon cyan, violet, mint, rose and gold are reserved for illustrative skill signals in the immersive journey. They are not default UI colors.
 
-Voice: direct, human, specific. One clear action. Say what is waiting, who decides, and what was recorded. Never imply verified success or active agent work without evidence.
+Monogram: F & B. Clear space of one letter-stem width. Use full Founders & Builders wordmark for new audiences. No distortion, rotation or shadows. White variant only on a dark solid background.
 
-CSS: load founders-brand.css after existing styles and apply class founders-brand to the preview body. This is a scoped theme, not a replacement for product behavior.
+Voice: plain, specific and human. One clear next action. Never imply verified outcomes or active agents without recorded evidence. Public agent discovery and task-scoped actions exist; cross-owner agent networking remains in development.
 
-Current rollout: brand kit and quick tour only. Broader platform rollout pending visual review.
+Use platform-brand.css last across the platform; body class brand-cohesive scopes legacy component refinements. founders-brand.css contains standalone kit/example layouts. Preserve forms, IDs, hidden states and security behavior.

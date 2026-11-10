@@ -1,8 +1,4 @@
-/* The homepage is the source of truth: warm neutral surfaces, graphite, indigo, Plex. */
-@font-face{font-family:'IBM Plex Sans';font-style:normal;font-weight:400;font-display:swap;src:url('assets/fonts/ibm-plex-sans-400.ttf') format('truetype')}
-@font-face{font-family:'IBM Plex Sans';font-style:normal;font-weight:500;font-display:swap;src:url('assets/fonts/ibm-plex-sans-500.ttf') format('truetype')}
-@font-face{font-family:'IBM Plex Sans';font-style:normal;font-weight:600;font-display:swap;src:url('assets/fonts/ibm-plex-sans-600.ttf') format('truetype')}
-@font-face{font-family:'IBM Plex Sans';font-style:normal;font-weight:700;font-display:swap;src:url('assets/fonts/ibm-plex-sans-700.ttf') format('truetype')}
+/* Shared layout primitives. The quiet identity is applied last by platform-brand.css. */
 body{font-family:var(--font);color:var(--text)}
 .nav .brand__mark{width:24px;height:24px;color:var(--brand)}
 .nav__toggle:focus-visible{outline:2px solid var(--brand);outline-offset:3px}

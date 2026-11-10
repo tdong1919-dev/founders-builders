@@ -1,0 +1,13 @@
+# Quiet ambition · shared brand rollout
+
+All 58 root pages load platform-brand.css as their last stylesheet and use the same monogram favicon. Existing product pages also use brand-cohesive on body, scoping the legacy component refinements. The immersive journey, earlier quiet concept, beta entry and short tour keep their purposeful compositions; no workspace gains pinned storytelling or continuous motion.
+
+Identity: alabaster #F5F2EB, charcoal #242421, stone #D9D4C9, restrained bronze #85735E, white surfaces. Arial/Helvetica for readable UI; Georgia for wordmarks, page titles and editorial headings; Courier New for sparse metadata. No external fonts required. Form-control outlines use #928777 for sufficient boundary contrast. Primary buttons are white on charcoal; secondary buttons remain outlined. Status/error labels retain semantic meaning; neon accents are reserved for illustrative skill signals in the journey.
+
+Navigation uses a serif wordmark, with legacy rocket marks visually removed. Shared cards, fields, badges, focus states and selected controls use restrained corners and borders. Mobile navigation behavior and primary destinations are preserved. Homepage carries the approved headline, four-stage story, a journey link and accurate private-beta availability. The brand-kit page and ZIP now document the approved quiet identity and include the F&B monogram in color/ink/white plus current CSS. Previous generated image samples are not deployed site branding.
+
+Implementation: styles.css retains layouts with a system-font default; brand-system.css retains structural page helpers without unused font loading; platform-brand.css owns final tokens/component identity. Standalone kit/example stylesheet is updated to the same palette. Load order is intentional. Semantic state, [hidden], form constraints, scripts and content-security policies are preserved.
+
+Verification: 393 existing functional regressions and 58-page static checks pass. A before/after HTML audit verifies identical IDs, form/input/select/textarea/button attributes, script references and CSP across every page; theme is last everywhere. ZIP CSS matches source. Reading, muted copy and primary action pairs pass 4.5:1; input boundaries pass 3:1. Native browser inventory confirms browser use disabled in Work settings, so computed-style, desktop/mobile visual and real-account UX acceptance remain pending. No screenshots or measured rendering/performance results claimed.
+
+No auth/client/API/agent permission/database/Sheets/Resend changes. JIDOKA repository/database untouched. No paid services or new dependencies. Existing beta access and collaboration backend remain as deployed.
