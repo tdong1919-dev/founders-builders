@@ -271,3 +271,13 @@ Research informed choreography: Motion (motiondivision/motion), Lenis (darkroome
 380 tests and 57-page static checks pass, including four new deterministic-scene, pause/coalescing, reduced-motion and isolation tests. Browser/mobile visual and performance acceptance remain pending because browser access was last confirmed disabled. No backend, permissions, JIDOKA, Sheets, Resend or cost changes.
 
 Published journey concept as Sites version 39, saved version appgprj_6add5ba8a1688191b29dd954024ebb46~appgver_ced359b6668481919a78843c8e4062d9, hosting source afb8852a7f9bc2ed713dc08819b9ec146a2b2984. Deployment appgdep_6af270d97ff481919f1cdf4708ccfab5 succeeded with MCP retained. Live three-chapter page and pause control present; JS/CSS match tested source. Browser/mobile visual/performance acceptance still pending. PR #47 draft/unmerged, stacked on #46. No backend changes.
+
+### One point → pulsing web → begin (2026-11-09)
+
+Expanded the journey scene from a single visible seed into 24 surrounding nodes and 72 edges, including 48 node-to-node connections. Quiet, staggered signals leave each visible orb, travel along an actual graph edge and illuminate the receiver; no full-screen flashes. Native-scroll progress gradually brightens the charcoal scene to white. Reading colors change polarity to preserve contrast rather than interpolating through illegible grey. Verified text contrast >=4.5:1 at 101 sampled brightness points.
+
+The finale is white space with a black begin dot. Its real anchor leads to cloud-workspace.html, the existing private-beta sign-in entry; no public signup or auth-policy changes. Primary unmodified clicks expand a black circular overlay, then navigate once, with a timeout fallback. Cross-document view transitions fade into entry where supported. Reduced motion, paused motion, modifier clicks and no-JS retain normal link navigation. Back/forward-cache return clears the overlay. Added only a presentation stylesheet to the real workspace; session/auth logic unchanged.
+
+Pulse frames run only while visible and active, coalesce with scroll work, freeze on pause and stop in hidden tabs/offscreen. Reduced motion shows a static completed web with ordinary reading. Browser/mobile visual and performance acceptance remain pending; no captured screenshot claimed. No backend, real agent activity, JIDOKA, Sheets, Resend or cost changes.
+
+Final verification: 384 regression tests and 57-page static checks pass, including graph topology, pulse travel/arrival, pause/offscreen behavior, reduced motion, fixed-destination single navigation, timer fallback, modified links, bfcache recovery and continuous-transition text contrast.

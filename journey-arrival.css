@@ -1,0 +1,2 @@
+/* Cross-document fade from the concept; auth/session behavior is untouched. */
+@view-transition{navigation:auto}::view-transition-old(root){animation:arrival-out .25s ease both}::view-transition-new(root){animation:arrival-in .65s ease both}@keyframes arrival-out{to{opacity:0}}@keyframes arrival-in{from{opacity:0}to{opacity:1}}@media(prefers-reduced-motion:reduce){::view-transition-old(root),::view-transition-new(root){animation:none}}
