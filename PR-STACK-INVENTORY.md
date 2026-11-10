@@ -1,0 +1,55 @@
+# Superseded PR inventory
+
+All heads below were verified with `git merge-base --is-ancestor <sha> HEAD` before closing their PRs. They are preserved in release candidate #59; no branches were deleted. #45 remains separate and draft.
+
+| PR | Preserved head |
+| --- | --- |
+| #6 | `a263557061b4f36603f3282c8b72afd30e2a4f41` |
+| #7 | `694319a855292fc8ea4e80b802058cf9cfa8942c` |
+| #8 | `4ab519a52ebb39698227e087669bd26d67ddc163` |
+| #9 | `0a3fd6c874c3d3c7992764f8b369b769091a94f4` |
+| #11 | `349095524c588019e5c3cce2589d56fa9cc61211` |
+| #12 | `54ad1b312103ff86f619a0a5051fbfa5ca9c49b8` |
+| #13 | `b95f0a88fcea6bf15faef0299ba9304b7fccefb5` |
+| #14 | `8b9b0df244c0f2ebce9f6c2b999b84c3e884ef70` |
+| #15 | `bc7ca7ef5c3b196dc924ce3cce44c87537869802` |
+| #16 | `98012d4b530ca5f467d78b3af1ce348708b3a774` |
+| #17 | `3f22da03bfd0ac8974ca7c328532cee18503e9cb` |
+| #18 | `4a334ddcf1bb2eb740952aba6a4a845d2d4a2a39` |
+| #19 | `6d74e0723b33fb9339def281fde163eee6567bb0` |
+| #20 | `5c646997089f3fe8de69772eaaf8756b7778237b` |
+| #21 | `227a1f692f4b54340885fd3f29e22bdcff9af62b` |
+| #22 | `680d5c6beee46c248adb2b49232c677876522d2d` |
+| #23 | `9c001f0ff39836a5cfb039a17ce2a25b517670d6` |
+| #24 | `d866ec59ff02c724f9a88021998cc3c84d8a4170` |
+| #25 | `2c2709f7c845e352664649d5b540d50583682c3c` |
+| #26 | `d662a83a8b76dbee70e58db05f6711cb0554055b` |
+| #27 | `035f58b93192fdbd809a1ed9c90532da597de752` |
+| #28 | `52aa03898508f0d425c72018baa6030eab842da4` |
+| #29 | `0b0b49f33e1dd056d02ea3cfa795714899938915` |
+| #30 | `d2da61f43f366476d32551600c77ab54d1f726db` |
+| #31 | `d44ad25bcff4c614d85db3d2d9d85280edfee23d` |
+| #32 | `831598f81f9bb0b93c35bb2ef5f984a6f5901a81` |
+| #33 | `11f9de256b8587f48e8e6160a54d08d1f6c97d8c` |
+| #34 | `a95abc2f68d4004a718190b352cbbfd685d1a6ee` |
+| #35 | `32e941eefdb6f6ddce71de207acf90a6b47b78d0` |
+| #36 | `cfc89cead36941b65e407a0f746c140177ba31c7` |
+| #37 | `eb358690e619883d32e3c9097d49e2152b129c4f` |
+| #38 | `da073667b7af18504934f6848556ba9f93eabf92` |
+| #41 | `93d0022b40b585fe13a173e62ff3417e88c5c0d5` |
+| #43 | `fb511a7a3b62d69acfb92464d8f50c9aa88dc193` |
+| #44 | `ccd6e691e9f14ada644355546ecee577c9c8eaca` |
+| #46 | `6d272720dfe877b54ce1cccd49c9cba72578a772` |
+| #47 | `bd33a6601063d53abdf89d0de33a011d5054228e` |
+| #48 | `79dde79ee85cc9e385c819fe68cbbd8e6f6d7d6f` |
+| #49 | `898c90ab392f7259a098522ac98ac42bf18f3284` |
+| #50 | `30399d8b1a73db43b598ed3b8720901af9e7d2d1` |
+| #51 | `3145aa36e0974ee86a1741dba05248df72aa3ee8` |
+| #52 | `89708bc1e151957b829eed25f719c0feff828cda` |
+| #53 | `e95f0a6f14fc6faaa80fe1ae480fa92887d3115e` |
+| #54 | `4bc399436ceae7aebbd5d05d49bb27cb0d820c80` |
+| #55 | `97f8e9914a8d1542694b9a31febf29c61ed61036` |
+| #56 | `bc255a449091fcc26fa7f64e8c0c6d6a1788ad7e` |
+| #57 | `db18cdeebb7be5b9aa258c5a08cbb77a8bbcf117` |
+| #58 | `705ff29e8523ee516a494367bd4b305136fe039d` |
+
