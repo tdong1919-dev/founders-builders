@@ -148,7 +148,7 @@
   function renderInvitations(host){
    const founder=mode==='founder',user=client.user().id,invitations=(records.invitations||[]).filter(i=>founder?i.founderId===user&&(!projectId||records.tasks.some(t=>t.id===i.taskId&&t.projectId===projectId)):i.builderId===user&&['pending','withdrawn'].includes(i.status));if(!invitations.length)return;
    const section=node('section');section.append(node('h2',founder?'Your invitations':'Invitations to explore'),node('p',founder?'Withdraw a pending invitation if your plans change. Existing applications stay in your collaborations.':'A founder sees a possible fit. Review the scope before choosing to apply. This is not an agreement to work.'));
-   for(const invitation of invitations){const task=records.tasks.find(t=>t.id===invitation.taskId);if(!task)continue;const card=node('article');card.className='network-match';card.append(node('h3',task.title));
+   for(const invitation of invitations){const task=records.tasks.find(t=>t.id===invitation.taskId);if(!task)continue;const card=node('article');card.id='invitation-'+invitation.id;card.className='network-match';card.append(node('h3',task.title));
     if(invitation.status==='pending'){card.append(node('p',invitation.note));if(task.paused)card.append(node('p','This step is paused. New applications are on hold.'));if(founder)card.append(node('p','Waiting for a response.'),button('Withdraw invitation',()=>client.execute('withdrawInvitation',{invitationId:invitation.id,expectedVersion:invitation.version}),true));else{if(!task.paused)card.append(button('Review this invitation',async()=>{selectTask(task.id);return {viewOnly:true};}));card.append(button('Decline invitation',()=>client.execute('declineInvitation',{invitationId:invitation.id,expectedVersion:invitation.version}),true));}}
     else card.append(node('p',invitation.status==='withdrawn'?'Invitation withdrawn. No response is needed.':invitation.status==='declined'?'Invitation declined.':'Application received.'));section.append(card);
    }host.append(section);
@@ -178,7 +178,8 @@
   }
   function choose(path){rememberSetup();intent=path;mode=path==='both'?(records?.projects?.some(p=>p.ownerId===client.user().id)&&!records.profile?'builder':'founder'):path;healthFilter=null;if(records)render(records);}
   $('networkFounder').addEventListener('click',()=>choose('founder'));$('networkBuilder').addEventListener('click',()=>choose('builder'));$('networkBoth').addEventListener('click',()=>choose('both'));
-  return {render,clear};
+  function openInvitation(id){const invitation=(records?.invitations||[]).find(i=>i.id===id&&[i.founderId,i.builderId].includes(client.user()?.id));if(!invitation)return false;rememberSetup();mode=invitation.founderId===client.user().id?'founder':'builder';intent=mode;projectId=records.tasks.find(t=>t.id===invitation.taskId)?.projectId||projectId;render(records);show('invitation-'+invitation.id);return true;}
+  return {render,clear,openInvitation};
  }
  const api={create,inferredPath,firstExperience,startingStep,nextSteps,newMatches,progressSummary,conversationState,projectHealth,learningInsights};if(typeof module==='object'&&module.exports)module.exports=api;else root.FBProjectWorkspace=api;
 })(typeof window==='undefined'?{}:window);
