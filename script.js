@@ -128,28 +128,5 @@
     new MutationObserver(staggerNew).observe(profileGrid, { childList: true });
   }
 
-  // Waitlist form (front-end only for now — stores locally, no backend)
-  var form = document.getElementById("signupForm");
-  var msg = document.getElementById("signupMsg");
-  if (form && msg) {
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      var email = document.getElementById("email");
-      var value = (email && email.value || "").trim();
-      var valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-      if (!valid) {
-        msg.style.color = "#B0473F";
-        msg.textContent = "Please enter a valid email address.";
-        return;
-      }
-      try {
-        var list = JSON.parse(localStorage.getItem("fb_waitlist") || "[]");
-        if (list.indexOf(value) === -1) list.push(value);
-        localStorage.setItem("fb_waitlist", JSON.stringify(list));
-      } catch (err) { /* ignore storage errors */ }
-      msg.style.color = "";
-      msg.textContent = "Saved on this device only. Email updates are not connected yet.";
-      form.reset();
-    });
-  }
+
 })();
