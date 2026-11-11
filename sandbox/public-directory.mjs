@@ -24,7 +24,7 @@ export function createPublicDirectory({fetcher=fetch,origin='https://founders-bu
  async function load(kind,offset,deadline,f){
   if(Date.now()>=deadline)throw Error('timeout');
   const params={kind,limit:20,offset};if(f?.skills.length)params.skills=f.skills;if(f?.time!==null&&f?.time!==undefined)params[f.timeKey]=f.time;
-  const response=await fetcher('https://ijvokvffhcvakaultzfk.supabase.co/functions/v1/fb-collaboration',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({operation:'discoverPublic',params}),redirect:'error',signal:AbortSignal.timeout(Math.max(1,Math.min(3000,deadline-Date.now())))});
+  const response=await fetcher('https://ijvokvffhcvakaultzfk.supabase.co/functions/v1/fb-collaboration',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({operation:'discoverPublic',params}),redirect:'manual',signal:AbortSignal.timeout(Math.max(1,Math.min(3000,deadline-Date.now())))});
   if(!response.ok)throw Error('unavailable');const {data}=await response.json();
   if(!data||!Array.isArray(data.items)||data.items.length>20||data.nextOffset!==null&&(!Number.isInteger(data.nextOffset)||data.nextOffset<=offset||data.nextOffset>5000))throw Error('invalid');
   return {items:data.items.map(c=>clean(c,kind)),nextOffset:data.nextOffset};
