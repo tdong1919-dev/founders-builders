@@ -157,8 +157,8 @@
             ? "No one matching that search is raising right now."
             : "No investors match that search yet.";
           if (emptyCta) {
-            emptyCta.href = view === "raise" ? "add-raise.html" : "add-investor.html";
-            emptyCta.textContent = view === "raise" ? "Be the first — post your raise" : "Be the first — list as an investor";
+            emptyCta.href = "community.html";
+            emptyCta.textContent = "Explore the community";
           }
         }
         return;
