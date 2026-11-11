@@ -1,0 +1,7 @@
+/* Display agreed compensation without inferring or tracking payment. */
+(function(root){'use strict';
+ const currencies=['USD','EUR','GBP','CAD','AUD','NZD','JPY','CHF','SGD','HKD','INR','BRL','MXN','ZAR','AED'];
+ function summary(terms){const p=terms||{},kind=p.compensation;if(kind==='unpaid')return {kind,label:'Voluntary / unpaid',complete:true,detail:'No payment is promised by these terms.'};if(kind!=='paid')return {kind:'unknown',label:'Compensation not recorded',complete:false,detail:'Review compensation with the founder before agreeing.'};const complete=typeof p.paymentAmount==='string'&&/^(?:0|[1-9]\d{0,8})(?:\.\d{1,2})?$/.test(p.paymentAmount)&&Number(p.paymentAmount)>0&&currencies.includes(p.paymentCurrency)&&typeof p.paymentTiming==='string'&&Boolean(p.paymentTiming.trim())&&p.paymentTiming.length<=300;return {kind,label:complete?'Paid · '+p.paymentCurrency+' '+p.paymentAmount+' total':'Paid · details need confirmation',complete,detail:complete?'Payment timing: '+p.paymentTiming:'This older record has no complete structured payment terms. Do not infer an amount or payment status.'};}
+ const notice='Payment is agreed and arranged directly between participants. Founders & Builders does not process, hold, guarantee or verify payment and takes no transaction commission.';
+ const api={currencies,summary,notice};if(typeof module==='object'&&module.exports)module.exports=api;else root.FBCompensation=api;
+})(typeof window==='undefined'?{}:window);
