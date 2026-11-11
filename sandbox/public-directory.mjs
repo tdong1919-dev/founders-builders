@@ -24,7 +24,7 @@ export function createPublicDirectory({fetcher=fetch,origin='https://founders-bu
  async function load(kind,offset,deadline,f){
   if(Date.now()>=deadline)throw Error('timeout');
   const params={kind,limit:20,offset};if(f?.skills.length)params.skills=f.skills;if(f?.time!==null&&f?.time!==undefined)params[f.timeKey]=f.time;
-  const response=await fetcher('https://ijvokvffhcvakaultzfk.supabase.co/functions/v1/fb-collaboration',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({operation:'discoverPublic',params}),redirect:'error',signal:AbortSignal.timeout(Math.max(1,Math.min(3000,deadline-Date.now())))});
+  const response=await fetcher('https://ijvokvffhcvakaultzfk.supabase.co/functions/v1/fb-collaboration',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({operation:'discoverPublic',params}),redirect:'manual',signal:AbortSignal.timeout(Math.max(1,Math.min(8000,deadline-Date.now())))});
   if(!response.ok)throw Error('unavailable');const {data}=await response.json();
   if(!data||!Array.isArray(data.items)||data.items.length>20||data.nextOffset!==null&&(!Number.isInteger(data.nextOffset)||data.nextOffset<=offset||data.nextOffset>5000))throw Error('invalid');
   return {items:data.items.map(c=>clean(c,kind)),nextOffset:data.nextOffset};
@@ -48,7 +48,7 @@ export function createPublicDirectory({fetcher=fetch,origin='https://founders-bu
   const kind=match[1]==='opportunities'?'opportunities':'builders',id=match[2],base='/'+match[1]+'/';let f;
   try{f=filters(url.searchParams,kind);}catch{return new Response('Invalid filters. Use up to 12 skills and a 15–180 minute time preference.',{status:400,headers:{'Cache-Control':'no-store','X-Robots-Tag':'noindex'}});}
   try{
-   const deadline=Date.now()+8000;let page=await load(kind,id?0:f.offset,deadline,id?null:f);
+   const deadline=Date.now()+12000;let page=await load(kind,id?0:f.offset,deadline,id?null:f);
    if(id){let card=page.items.find(c=>c.id===id),pages=1;while(!card&&page.nextOffset!==null&&pages<maxPages){page=await load(kind,page.nextOffset,deadline);pages++;card=page.items.find(c=>c.id===id);}
     const back='<a href="'+base+esc(query(f))+'">← Back to your results</a>';
     if(!card){if(page.nextOffset!==null)throw Error('lookup_limit');return reply(request,{title:'This public card is unavailable.',description:'It may have been withdrawn, paused or changed by its owner.',body:back,status:404,canonical:url.pathname,noindex:true});}
