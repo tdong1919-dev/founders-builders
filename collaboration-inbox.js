@@ -4,7 +4,7 @@
  function inbox(records,userId,nextSteps,now=Date.now()){
   const tasks=new Map((records.tasks||[]).map(t=>[t.id,t])),contributions=new Map((records.contributions||[]).filter(c=>[c.founderId,c.builderId].includes(userId)).map(c=>[c.id,c]));
   const time=(...values)=>values.filter(n=>Number.isFinite(n)&&n>0&&n<=now).sort((a,b)=>b-a)[0]??null;
-  const items=[],seen=new Set();const add=item=>{if(!tasks.has(item.taskId)||seen.has(item.key))return;seen.add(item.key);items.push({...item,title:tasks.get(item.taskId).title||'Contribution'});};
+  const items=[],seen=new Set();const add=item=>{if(!tasks.has(item.taskId)||seen.has(item.key))return;seen.add(item.key);const task=tasks.get(item.taskId),c=contributions.get(item.contributionId),kind=c?.terms?.compensation||c?.offeredCompensation?.compensation||task.compensation||task.brief?.compensation;items.push({...item,title:task.title||'Contribution',compensation:kind==='paid'?'Paid · agreed directly':kind==='unpaid'?'Voluntary / unpaid':'Compensation not recorded'});};
   for(const mode of ['founder','builder'])for(const step of nextSteps(records,userId,mode)){
    const c=contributions.get(step.contributionId);if(!c||['cancelled'].includes(c.stage))continue;
    const at=time(c.lastActivityAt,...(c.messages||[]).filter(m=>[c.founderId,c.builderId].includes(m.actorId)).map(m=>m.at));
@@ -32,7 +32,7 @@
    for(const [key,label] of [['needs','Needs you'],['waiting','Waiting on others']]){const b=node('button',label+' · '+model[key].length);b.type='button';b.className='btn btn--secondary';b.setAttribute('aria-pressed',String(view===key));b.addEventListener('click',()=>{if(user()?.id!==who||ownerId!==who||ticket!==revision)return;view=key;render(records);});switches.append(b);}host.append(switches);
    const list=node('section');list.setAttribute('aria-label',view==='needs'?'Replies and decisions needed':'Waiting on others');
    if(!model[view].length)list.append(node('p',view==='needs'?'You’re up to date. Check Waiting on others for the next move.':'Nothing is waiting on someone else right now.'));
-   for(const item of model[view]){const row=node('article');row.className='inbox-item';row.append(node('h3',item.title),node('p',item.summary),node('p',item.who));if(item.at!==null){const date=new Date(item.at),stamp=node('time','Last recorded update · '+date.toLocaleString());stamp.dateTime=date.toISOString();row.append(stamp);}else row.append(node('p','Last update not recorded.'));
+   for(const item of model[view]){const row=node('article');row.className='inbox-item';row.append(node('p',item.compensation),node('h3',item.title),node('p',item.summary),node('p',item.who));if(item.at!==null){const date=new Date(item.at),stamp=node('time','Last recorded update · '+date.toLocaleString());stamp.dateTime=date.toISOString();row.append(stamp);}else row.append(node('p','Last update not recorded.'));
     const action=node('button',item.label);action.type='button';action.className='btn';action.addEventListener('click',()=>{if(user()?.id!==who||ownerId!==who||ticket!==revision||!records)return;if(item.kind==='agent')openAgent(item.taskId,item.requestId);else if(item.kind==='invitation'&&openInvitation)openInvitation(item.invitationId);else openContribution(item.taskId,item.contributionId);});row.append(action);list.append(row);
    }host.append(list);return true;
   }

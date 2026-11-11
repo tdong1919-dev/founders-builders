@@ -1,7 +1,7 @@
 /* Participant-only, read-only context. No requests, storage, embeds or approval actions. */
 (function(root){
  'use strict';
- const fields={deliverable:'Deliverable',acceptance:'What done means',outside:'Outside this task',minutes:'Time commitment',support:'Support',compensation:'Compensation',compensationDetails:'Compensation details',ownership:'Ownership',feedbackTiming:'Feedback timing',credit:'Credit and portfolio terms'};
+ const fields={deliverable:'Deliverable',acceptance:'What done means',outside:'Outside this task',minutes:'Time commitment',support:'Support',compensation:'Compensation',compensationDetails:'Compensation details',paymentAmount:'Total amount',paymentCurrency:'Currency',paymentTiming:'When payment is due',ownership:'Ownership',feedbackTiming:'Feedback timing',credit:'Credit and portfolio terms'};
  function evidenceLink(value){if(typeof value!=='string'||!value.trim()||value.length>800)return null;try{const u=new URL(value.trim());if(u.protocol!=='https:'||u.username||u.password)return null;return {href:u.href,host:u.host};}catch{return null;}}
  function model(contribution,userId){
   const c=contribution;if(!c||!userId||![c.founderId,c.builderId].includes(userId))return null;
