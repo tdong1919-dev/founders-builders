@@ -7,6 +7,9 @@
  function expandParents(el){for(let p=el?.parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS')p.open=true;}
  const api={routes,prompts,publicOutcome,expandParents};if(typeof module==='object'&&module.exports){module.exports=api;return;}root.FBSiteExperience=api;
  const d=root.document;if(!d)return;
+ // Separate decorative direction glyphs from link labels for a quieter mobile layout.
+ d.querySelectorAll('.experience-links a,.experience-card a,.entry-example').forEach(a=>{const last=a.lastChild;if(last&&last.nodeType===3&&/\s*→\s*$/.test(last.textContent)){last.textContent=last.textContent.replace(/\s*→\s*$/,'');const arrow=d.createElement('span');arrow.className='link-direction';arrow.setAttribute('aria-hidden','true');arrow.textContent=' →';a.append(arrow);}});
+
  d.addEventListener('invalid',e=>expandParents(e.target),true);
 
  const legacyPages=['create-profile.html','add-business.html','add-listing.html','add-job.html','become-mentor.html','add-help.html','add-raise.html','add-investor.html','add-event.html','add-event-source.html','add-collab.html','add-podcast.html','add-resource.html','report-listing.html','concierge.html'];
