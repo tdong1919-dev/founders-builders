@@ -8,7 +8,7 @@ Founders & Builders is a living network for people building projects, experience
 
 Our long-term direction is a human-controlled, agent-accessible collaboration platform for the emerging **A2A economy and Web3 ecosystem**. Today, it is an approval-based web application with private collaboration, opt-in public discovery, and bounded agent interfaces. Blockchain, tokens, wallets, on-chain reputation, and permissionless agent commerce are **not implemented**.
 
-[Explore the beta](https://founders-builders-ux-review.hello978822.chatgpt.site/) · [Roadmap](ROADMAP.md) · [Reviewer guide](docs/REVIEWER_GUIDE.md) · [Contributing](CONTRIBUTING.md)
+[Explore the beta](https://founders-builders-ux-review.hello978822.chatgpt.site/) · [Roadmap](ROADMAP.md) · [Public Project](https://github.com/users/tdong1919-dev/projects/4) · [Reviewer guide](docs/REVIEWER_GUIDE.md) · [Contributing](CONTRIBUTING.md)
 
 ## One journey, two perspectives
 
@@ -23,7 +23,7 @@ The main destinations are **Contributions, Builders, Community, and Workspace**.
 
 ## What is built
 
-Status reviewed **November 12, 2026**, against `main` at `ff27c96` and linked release records. These are implementation statements, not evidence of adoption, income, or unrestricted production readiness.
+Status reviewed **November 12, 2026**, against application baseline `ff27c96` and linked release records. Documentation PR [#69](https://github.com/tdong1919-dev/founders-builders/pull/69) is merged; this does not deploy a new application version. These are implementation statements, not evidence of adoption, income, or unrestricted production readiness.
 
 | Capability | Current boundary |
 | --- | --- |
@@ -78,7 +78,7 @@ cd founders-builders
 python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
-Open `http://127.0.0.1:8000/quick-tour.html` for a fictional walkthrough or `http://127.0.0.1:8000/shared-workspace.html` for the fictional collaboration UI. These do not establish real identity, cloud persistence, or production permissions. Repository access is required while it remains private.
+Open `http://127.0.0.1:8000/quick-tour.html` for a fictional walkthrough or `http://127.0.0.1:8000/shared-workspace.html` for the fictional collaboration UI. These do not establish real identity, cloud persistence, or production permissions. The repository and fictional tour were independently accessible without sign-in on November 12, 2026.
 
 For the loopback-only persistent fictional service, use a Node.js version supporting `node:sqlite`:
 
@@ -92,10 +92,12 @@ Open the printed URL. Never expose fictional sessions publicly or use real found
 
 - [Roadmap](ROADMAP.md): build history, future checkpoints, and exit criteria.
 - [Reviewer guide](docs/REVIEWER_GUIDE.md): product, engineering, and AI evaluation evidence for application reviewers and the public.
-- [Public repository readiness](docs/PUBLIC_REPOSITORY_READINESS.md): required exposure and licensing review before changing visibility.
+- [Public repository readiness](docs/PUBLIC_REPOSITORY_READINESS.md): current exposure findings, remaining privacy review, and licensing boundaries.
 - [Documentation index](docs/README.md): current guides versus historical records.
+- [Engineering guide](docs/ENGINEERING_GUIDE.md): repository map, trust boundaries, change review, and release evidence.
+- [November 12 exposure review](docs/PUBLIC_EXPOSURE_REVIEW_20261112.md): inspected scope, results, and unresolved limits.
 - [Collaboration architecture](docs/SHARED_COLLABORATION_BACKEND.md), [discovery and learning](DISCOVERY-AND-LEARNING.md), and [agent pilot](A2A-PILOT.md).
 
 Operated by **JIDOKA Group**, led by **Crystal**. Support/privacy: **support@getjidoka.com**. The product and its data are separate from other JIDOKA applications.
 
-Repository visibility remains private pending review. Public source availability would not itself grant an open-source license. No license grant is introduced by this documentation change.
+This repository is **public**. Public source availability does not itself grant an open-source license; no root source-license grant is introduced here. The bundled IBM Plex fonts retain their [SIL Open Font License](assets/fonts/OFL.txt). See the [exposure review](docs/PUBLIC_EXPOSURE_REVIEW_20261112.md) before reusing or publishing further material. Private collaboration records, production credentials, and backups do not belong in this repository or Project.

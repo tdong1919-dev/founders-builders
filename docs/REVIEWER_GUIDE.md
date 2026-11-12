@@ -8,6 +8,15 @@ Founders need direction and practical help; builders need accessible contributio
 
 Start with the [README](../README.md), [roadmap](../ROADMAP.md), and [fictional tour](https://founders-builders-ux-review.hello978822.chatgpt.site/quick-tour.html). Fictional examples are not testimonials or adoption evidence.
 
+## Review path
+
+1. Use the fictional tour for the user journey; it requires no production account.
+2. Read the [engineering guide](ENGINEERING_GUIDE.md) for the repository map and trust boundaries.
+3. Inspect the tests and implementation below, then compare dated release records.
+4. Review the [public Project](https://github.com/users/tdong1919-dev/projects/4) and [exposure findings](PUBLIC_EXPOSURE_REVIEW_20261112.md). Open acceptance criteria are not completed work.
+
+The repository and Project were independently accessible without sign-in on November 12, 2026. The existing folders are documented rather than moved, preserving deployed paths and unrelated work.
+
 ## Evidence to inspect
 
 | Area | Source/evidence | Evaluation question |
