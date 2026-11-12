@@ -6,7 +6,10 @@ Start with the [README](../README.md) and [roadmap](../ROADMAP.md). This reposit
 
 - [Reviewer guide](REVIEWER_GUIDE.md): product decisions, code/test evidence, AI-assisted development, and limits.
 - [Contributing](../CONTRIBUTING.md): local exploration, verification, and PR expectations.
-- [Public repository readiness](PUBLIC_REPOSITORY_READINESS.md): exposure/licensing review before public visibility.
+- [Public repository readiness](PUBLIC_REPOSITORY_READINESS.md): current public exposure checklist and unresolved privacy/licensing review.
+- [November 12 exposure review](PUBLIC_EXPOSURE_REVIEW_20261112.md): source/history scope, anonymous access, findings, and limits.
+- [Engineering guide](ENGINEERING_GUIDE.md): code map, trust boundaries, review expectations, and evidence vocabulary.
+- [Public GitHub Project](https://github.com/users/tdong1919-dev/projects/4): Delivered, Next, and Planned acceptance items.
 
 ## Product and agents
 

@@ -4,9 +4,9 @@
 
 Our mission is to turn ideas and skills into useful work, lasting relationships, and an honest contribution history. People can participate directly or bring an agent acting within explicit permissions.
 
-**Updated:** November 12, 2026. **Baseline:** `main` at `ff27c96`. This is a checkpoint-based roadmap, not a promise of delivery dates. “Built” means included in that baseline. Recorded verification is dated evidence, not a fresh production test today.
+**Updated:** November 12, 2026. **Application baseline:** `ff27c96`; documentation PR [#69](https://github.com/tdong1919-dev/founders-builders/pull/69) is merged. [Public Project](https://github.com/users/tdong1919-dev/projects/4). This is a checkpoint-based roadmap, not a promise of delivery dates. “Built” means included in that baseline. Recorded verification is dated evidence, not a fresh production test today.
 
-## How we reached this point
+## Delivered — how we reached this point
 
 | Period | Milestone | Evidence and qualification |
 | --- | --- | --- |
@@ -18,19 +18,20 @@ Our mission is to turn ideas and skills into useful work, lasting relationships,
 | November 10–11 | Approval-based launch controls, explicit paid terms, contribution records, agent readiness, founder guidance, and recovery tooling. | [PR #60](https://github.com/tdong1919-dev/founders-builders/pull/60), [#61](https://github.com/tdong1919-dev/founders-builders/pull/61), [#62](https://github.com/tdong1919-dev/founders-builders/pull/62). Later operational evidence in [#63](https://github.com/tdong1919-dev/founders-builders/pull/63) remains unmerged at this review. |
 | November 11 | Cleaner mobile navigation, consistent Contributions/Builders/Community/Workspace destinations, current guidance, private story drafts, and a hosted discovery fix. | [PR #64](https://github.com/tdong1919-dev/founders-builders/pull/64), [#65](https://github.com/tdong1919-dev/founders-builders/pull/65), [#66](https://github.com/tdong1919-dev/founders-builders/pull/66), [#67](https://github.com/tdong1919-dev/founders-builders/pull/67). Truthful empty discovery states are not evidence of a populated marketplace. |
 
-## Future checkpoints
+## Next — readiness and real participation
 
 ### 1. A clear, reviewable public project
 
 **Goal:** a visitor or application reviewer can understand the mission, try a safe example, and distinguish built work from aspirations.
 
-- [ ] Review and merge this documentation update.
+- [x] Documentation PR [#69](https://github.com/tdong1919-dev/founders-builders/pull/69) merged on November 12, 2026; claims and linked evidence reviewed. This is documentation acceptance, not a new production release.
 - [ ] Review operational evidence [#63](https://github.com/tdong1919-dev/founders-builders/pull/63) and mobile text fix [#68](https://github.com/tdong1919-dev/founders-builders/pull/68), reconciling source and deployed revisions.
 - [ ] Complete the [public exposure checklist](docs/PUBLIC_REPOSITORY_READINESS.md), including full history, metadata, fixtures, screenshots, and licensing.
 - [ ] Choose a source license or explicitly retain source-available/all-rights-reserved terms. Public visibility is distinct from open-source licensing.
-- [ ] Obtain final owner approval before changing visibility.
+- [x] Confirm existing repository and Project visibility: both are already public; anonymous read access verified November 12, 2026. No visibility or backend-access change was made.
+- [ ] Resolve the remaining historical personal-contact review and record the licensing decision in the [exposure review](docs/PUBLIC_EXPOSURE_REVIEW_20261112.md). History rewriting requires a separate owner-approved cleanup plan.
 
-**Exit evidence:** reviewed docs on main, a recorded exposure review, clear license position, and intentional visibility decision. A custom domain can follow with separate Auth/origin/SEO checks.
+**Exit evidence:** reviewed docs on main, a recorded exposure review, clear license position, and intentional exposure decision with unresolved findings visible. Existing public visibility is not a completed privacy sign-off. A custom domain can follow with separate Auth/origin/SEO checks.
 
 ### 2. A small community completing real work
 
@@ -56,6 +57,8 @@ Our mission is to turn ideas and skills into useful work, lasting relationships,
 - [ ] Review access approval, quotas, blocking, report handling, and operating capacity before unrestricted signup.
 
 **Exit evidence:** current checks and assigned responsibilities. No paid service is required by this checkpoint; upgrades need a separate decision.
+
+## Planned — bounded interoperability and ecosystem learning
 
 ### 4. Prove real external-agent interoperability
 

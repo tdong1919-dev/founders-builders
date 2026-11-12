@@ -1,12 +1,14 @@
 # Contributing
 
-We welcome concrete feedback on founder, builder, and owner-agent journeys. Repository access is private until exposure review. No open-source license is introduced here; code reuse and outside code contributions need a clear permission/license position first.
+We welcome concrete feedback on founder, builder, and owner-agent journeys. The repository is public; use only sanitized examples and read the [current exposure review](docs/PUBLIC_EXPOSURE_REVIEW_20261112.md). No open-source license is introduced here; code reuse and outside code contributions need a clear permission/license position first.
 
 ## Useful proposals
 
 Open an issue with the user problem, page/stage, expected behavior, and a small acceptance criterion. Use synthetic examples. Do not attach private ideas, messages, account identifiers, credentials, or production exports. Security concerns belong privately at **support@getjidoka.com**, with a minimal reproduction and no private data.
 
 Review [the roadmap](ROADMAP.md). For agent work, state who authorizes each action and what evidence closes the checkpoint.
+
+See the [engineering guide](docs/ENGINEERING_GUIDE.md) for folder responsibilities and trust boundaries. Do not move runtime files merely to tidy the presentation: flat page/module paths are used by the existing site and asset builder. A structural refactor needs its own scoped change and regression review.
 
 ## Local development
 
