@@ -1,204 +1,101 @@
-# 🚀 Founders & Builders
+# Founders & Builders
 
-The home base for builders and entrepreneurs — a practical, community-built ecosystem
-where founders, developers, designers, marketers, operators, investors, students, and
-creators find opportunities, connect with the right people, and help each other build
-successful companies.
+**Nothing great is ever built overnight. Or alone.**
 
-> We are not trying to build another social network. We're building a practical,
-> collaborative ecosystem that helps builders spend less time searching across fragmented
-> platforms and more time building meaningful relationships and successful companies.
+Turn your idea into progress. Turn your skills into opportunity. Find people to build with—and bring your agent.
 
-This repository currently holds the **marketing landing site** that presents the platform
-vision and gathers early community feedback.
+Founders & Builders is a living network for people building projects, experience, and relationships through real work. Founders get direction, support, and community. Builders put their skills to work on something meaningful and build an honest record of their contributions. A builder can be experienced, changing careers, learning a skill, or starting out.
 
-## The vision at a glance
+Our long-term direction is a human-controlled, agent-accessible collaboration platform for the emerging **A2A economy and Web3 ecosystem**. Today, it is an approval-based web application with private collaboration, opt-in public discovery, and bounded agent interfaces. Blockchain, tokens, wallets, on-chain reputation, and permissionless agent commerce are **not implemented**.
 
-- 👤 **Member Profiles** — what you're building, skills, stage, and what you're looking for
-- 🏢 **Business Directory** — searchable listings for startups, agencies, nonprofits & freelancers
-- 🛍️ **Products & Services Marketplace** — promote and support each other's work
-- 💼 **Jobs & Opportunities** — a community job board, incl. co-founder & advisory roles
-- 🤝 **Mentor Network** — request a mentor or become one
-- 🆘 **HAAALLLPPPPP!** — a help board for exactly what you need right now
-- 🎤 **Co-Host & Collaborate** — events, workshops, AMAs, cross-promotion
-- 🎙️ **Podcast Hub** — find guests, hosts, and local shows
-- 💰 **Funding Hub** — founder ↔ investor matching (AI-assisted)
-- 📅 **Community Calendar** — F&B posts plus reviewed external sources from organizer platforms
-- 💕 **Founder Diagnostic** — JIDOKA-powered bottleneck assessment for post-MVP founders
-- 📚 **Resource Library** — templates, playbooks, prompts, grant & accelerator databases
-- 📖 **Philosophical Topic Generator** — *"Do Not Open If You Want Peace"*
-- 🧭 **Member Dashboard + Universal Search** — persistent identity, saved items & cross-hub discovery
-- 🤖 **Matchmaker + Ask F&B** — rule-based recommendations and a concierge grounded in current records
-- 🛡️ **Trust & Moderation** — reporting, admin action notes, seed-content policy & funding disclaimers
-- 🗺️ **City Chapters + Network Intelligence** — DC, Atlanta, Boise, Madison, activity feed & graph layer
+[Explore the beta](https://founders-builders-ux-review.hello978822.chatgpt.site/) · [Roadmap](ROADMAP.md) · [Reviewer guide](docs/REVIEWER_GUIDE.md) · [Contributing](CONTRIBUTING.md)
 
-## Tech
+## One journey, two perspectives
 
-Plain, dependency-free **HTML / CSS / JavaScript** — no build step, no framework.
+| Founder | Builder |
+| --- | --- |
+| Describe a project and the outcome you want. | Describe your skills, goals, and contribution capacity. |
+| Define a clear contribution with support and feedback. | Discover an opportunity and explain how you can help. |
+| Review interest and propose scope and terms. | Review and confirm the proposed agreement. |
+| Review delivered work, give feedback, and agree on credit. | Deliver work, exchange feedback, and request portfolio credit. |
 
-```
-index.html            # landing page
-styles.css            # design system & landing layout
-script.js             # nav, scroll reveals, topic generator, waitlist form
+The main destinations are **Contributions, Builders, Community, and Workspace**. Older directories and browser-local tools remain available through the site's archive; they are not equivalent to authenticated cloud collaboration.
 
-profiles.html         # 👤 Member Directory (hub #1)
-create-profile.html   # profile creation form
-profiles.js           # directory + form logic (reads/writes the sheet)
+## What is built
 
-business.html         # 🏢 Business Directory (hub #2)
-add-business.html     # business listing form
-business.js           # directory + form logic (reads/writes the sheet)
+Status reviewed **November 12, 2026**, against `main` at `ff27c96` and linked release records. These are implementation statements, not evidence of adoption, income, or unrestricted production readiness.
 
-marketplace.html      # 🛍️ Marketplace (hub #3)
-add-listing.html      # product/service listing form
-marketplace.js        # directory + form logic (reads/writes the sheet)
+| Capability | Current boundary |
+| --- | --- |
+| Private cloud collaboration | Verified email sign-in, approved beta access, persistent project/profile and contribution records, and participant authorization. |
+| Complete contribution journey | Interest → versioned agreement → delivery → feedback → separately approved portfolio credit, with mutual reviews and clear next/waiting states. |
+| Paid and voluntary opportunities | Explicit labels; paid agreements require amount, currency, and payment timing. Completion does not verify payment. |
+| Opt-in public discovery | Owners approve limited public cards. Private ideas, full briefs, conversations, and reviews are excluded from that projection. |
+| Explainable matching | Structured skills, contribution time, preferences, and practice goals inform explanations. Matching is not proof of competence or availability. |
+| Agent controls | Task-scoped grants, action/request/time/expiry limits, revocation, activity records, and an owner control center. |
+| Agent interfaces | Scoped MCP adapter and a limited A2A owner-question pilot. Real external-host acceptance remains a separate checkpoint. |
+| Evidence-based guidance | Private suggestions from recorded handoffs/reviews; a separate fictional orchestrator sandbox explores broader feedback loops. |
 
-jobs.html              # 💼 Jobs & Opportunities (hub #4)
-add-job.html           # job/opportunity posting form
-jobs.js                # directory + form logic (reads/writes the sheet)
+The beta has recorded automated security/regression checks and a synthetic journey using two real accounts. These do not establish security certification, universal device compatibility, market traction, or successful third-party agent interoperability. [Evidence and limits](docs/REVIEWER_GUIDE.md).
 
-mentors.html           # 🤝 Mentor Network (hub #5)
-become-mentor.html     # mentor signup form
-mentors.js             # directory + form logic (reads/writes the sheet)
+## Human control comes first
 
-help.html              # 🆘 Help Board (hub #6)
-add-help.html          # post-a-need form
-help.js                # directory + form logic (reads/writes the sheet)
+Owners decide what becomes discoverable and what agents may do. Connecting an agent does not create a background worker. Human confirmation remains required for agreements, agent permissions, reviews, and portfolio approval in the current implementation.
 
-funding.html           # 💰 Funding Hub — raising + investing boards (hub #7)
-add-raise.html         # founder raise intake form
-add-investor.html      # investor intake form
-funding.js             # both directories + both forms (reads/writes the sheet)
+The platform **does not process payments, take a transaction cut, guarantee compensation, or resolve payment disputes**. Compensation is arranged directly by participants. A contribution record is not a payment receipt or independently verified credential.
 
-calendar.html          # 📅 Community Calendar (hub #8)
-add-event.html         # event posting form
-add-event-source.html  # organizer calendar/source authorization request form
-calendar.js            # directory + form logic (reads/writes the sheet)
-event-sources.js       # event-source intake flow (private admin review queue)
+Launch remains approval-based. Collaboration notification emails and legacy Sheets submissions stay off pending separate activation checks. Sign-in email is distinct. Public contribution stories require separate participant permission; this roadmap authorizes none.
 
-collaborate.html       # 🎤 Co-Host & Collaborate (hub #9)
-add-collab.html        # collab posting form
-collaborate.js         # directory + form logic (reads/writes the sheet)
+## Architecture
 
-podcasts.html          # 🎙️ Podcast Hub (hub #10)
-add-podcast.html       # podcast listing form
-podcasts.js            # directory + form logic (reads/writes the sheet)
-
-resources.html         # 📚 Resource Library (hub #11)
-add-resource.html      # resource submission form
-resources.js           # directory + form logic (reads/writes the sheet)
-
-dashboard.html         # unified member dashboard + persistent local identity
-search.html            # universal search across all 11 hubs
-concierge.html         # Ask F&B community concierge
-chapters.html          # DC / Atlanta / Boise / Madison chapter dashboards
-activity.html          # action-oriented opportunities feed
-network.html           # explainable network intelligence graph
-admin.html             # trust, report queue, admin action notes
-report-listing.html    # listing report intake
-platform.js            # shared data, identity, search, matchmaking, graph logic
-platform.css           # shared styles for connected platform pages
-seed-content/          # seed/import policy and intake templates
-
-profiles.css          # shared hub styling (cards, modal, forms, toolbar)
-config.js             # paste your Apps Script Web App URL here (shared by all hubs)
-apps-script/Code.gs   # Google Sheets backend — one Web App serves every hub
-apps-script/SCHEMA.md # Full schema reference: every entity's columns, types, enums
+```mermaid
+flowchart LR
+  H[Founder or builder] --> UI[Web workspace]
+  UI --> AUTH[Supabase Auth]
+  UI --> API[Collaboration Edge Function]
+  AUTH --> API
+  A[Owner-authorized agent] --> G[Scoped MCP / limited A2A gateway]
+  G --> API
+  API --> P[Authorization and permission checks]
+  P --> DB[(Private state and activity)]
+  API --> PUB[Owner-approved public cards]
+  PUB --> D[Human and agent discovery]
 ```
 
-## Google Sheets backend
+- **Frontend:** plain HTML, CSS, and JavaScript; immersive living-network homepage and practical workspace.
+- **Cloud:** Supabase Auth, PostgreSQL/RLS, and Edge Functions. Server credentials never belong in frontend code.
+- **Hosting:** reviewed Worker-based Sites deployment. GitHub source, deployed assets, and backend releases have separate lifecycles.
+- **Agent access:** public discovery is separate from private owner-issued access. MCP tool access and A2A coordination have different roles and limited coverage.
+- **Legacy:** Sheets / Apps Script code and isolated verification harness retained; submissions remain disabled.
 
-Every hub uses the **same Google Sheet** as its datastore via **one Google Apps Script
-Web App** — no server or paid database required, and it works from GitHub Pages. Each hub
-gets its own tab (`Profiles`, `Businesses`, …), routed by a `type` param, so you only
-deploy once no matter how many hubs get added.
+## Explore locally
 
-**One-time setup:**
-
-1. Open your Google Sheet → **Extensions → Apps Script**.
-2. Delete any code, paste all of [`apps-script/Code.gs`](apps-script/Code.gs), and Save.
-3. **Deploy → New deployment → Web app**
-   - *Execute as:* **Me**
-   - *Who has access:* **Anyone**
-4. Copy the **Web app URL** (ends in `/exec`).
-5. Paste it into [`config.js`](config.js) as `PROFILES_API`, commit, and push.
-
-**Public/private boundary:** this endpoint serves allowlisted public directories and one-way intake for reports, event-source requests and concierge questions. Private reads and anonymous account/admin writes are denied. Owner keys and account emails are not authentication. Review [the boundary and deployment checks](docs/APPS_SCRIPT_PUBLIC_BOUNDARY.md) before updating a deployment; the local tests do not establish live security. Supabase/private shared accounts remain deferred.
-
-**When `apps-script/Code.gs` changes** (e.g. a new hub is added), update the existing
-deployment rather than creating a new one — the URL in `config.js` stays valid:
-**Deploy → Manage deployments → Edit (pencil) → Version: New → Deploy**.
-
-Each sheet tab and its headers are created automatically on first use. Existing tabs are
-migrated safely: when new columns are added to `Code.gs`, the script appends missing
-headers instead of replacing old data. Until
-`config.js` is set, every hub shows sample data and forms run in demo mode (nothing is
-saved).
-
-**Event aggregation:** organizers can submit external event sources through
-[`add-event-source.html`](add-event-source.html). The request goes to a private
-`Event Sources` tab for review; approved external events appear in the public `Events`
-tab with source attribution and RSVP links back to the original platform. Admins can
-review selected source requests in [`admin.html`](admin.html), which records append-only
-review actions and recommended status changes. Approved sources can then be used in the
-manual import queue to paste iCal/JSON/CSV/text events, preview/edit them, and publish
-selected rows to the public calendar. The operating guide is in
-[`docs/EVENT_SOURCE_AGGREGATION.md`](docs/EVENT_SOURCE_AGGREGATION.md).
-
-**Schema:** every entity's exact columns, types, required fields, and allowed values
-(enums) are documented in [`apps-script/SCHEMA.md`](apps-script/SCHEMA.md) — that's the
-place to look before adding a field or a new hub. The backend validates required fields
-and enum values server-side, so a submission with a bad category/stage/type value is
-rejected rather than silently written.
-
-**How it works:** each directory **reads** via JSONP (bypasses CORS, `?type=<hub>`), and
-each form **writes** by POSTing `{ type: "<hub>", ... }` to the same endpoint. A hidden
-honeypot field on every form filters basic spam bots.
-
-## Run locally
-
-Just open `index.html` in a browser, or serve the folder:
+Use Python 3 and a modern browser:
 
 ```bash
-python3 -m http.server 8000
-# then visit http://localhost:8000
+git clone https://github.com/tdong1919-dev/founders-builders.git
+cd founders-builders
+python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
-## Deploy (GitHub Pages)
+Open `http://127.0.0.1:8000/quick-tour.html` for a fictional walkthrough or `http://127.0.0.1:8000/shared-workspace.html` for the fictional collaboration UI. These do not establish real identity, cloud persistence, or production permissions. Repository access is required while it remains private.
 
-1. Push to `main`.
-2. In the repo: **Settings → Pages → Build from a branch → `main` / `root`**.
-3. Your site goes live at `https://<user>.github.io/buildersandentrepreneurs/`.
+For the loopback-only persistent fictional service, use a Node.js version supporting `node:sqlite`:
 
-## Roadmap
+```bash
+node server/run-local.mjs
+```
 
-- [x] Landing site presenting the vision
-- [x] **👤 Member Profiles** — directory + create form, Google Sheets backend
-- [x] **🏢 Business Directory** — directory + listing form, Google Sheets backend
-- [x] **🛍️ Products & Services Marketplace** — listings + "book a consultation", Google Sheets backend
-- [x] **💼 Jobs & Opportunities** — job board with apply/contact CTAs, Google Sheets backend
-- [x] **🤝 Mentor Network** — mentor directory + signup form, Google Sheets backend
-- [x] **🆘 Help Board** — post-a-need board with category/urgency filters, Google Sheets backend
-- [x] **💰 Funding Hub** — raising + investing boards, Google Sheets backend (AI-assisted matching is a future upgrade)
-- [x] **📅 Community Calendar** — event listings plus reviewed external source intake, Google Sheets backend
-- [x] **🎤 Co-Host & Collaborate** — collab board for events, workshops, AMAs & cross-promotion, Google Sheets backend
-- [x] **🎙️ Podcast Hub** — show directory, find guests/co-hosts/sponsors, Google Sheets backend
-- [x] **📚 Resource Library** — templates, playbooks, prompts & tools, Google Sheets backend
-- [x] **Member dashboard** — device-level persistent identity, saved items, my records
-- [x] **Universal search** — one search surface across all 11 hubs
-- [x] **Needs/offers profile mechanic** — structured `needs` and `offers` signals
-- [x] **Matchmaking engine** — rule-based recommendations grounded in current records
-- [x] **Ask F&B** — concierge-style search assistant without fabricated matches
-- [x] **Trust/moderation infrastructure** — reports, admin action log, status fields
-- [x] **Seed-content infrastructure** — import policy and review template, no fabricated people
-- [x] **City chapters** — DC, Atlanta, Boise, Madison, plus virtual/remote support
-- [x] **Action-oriented activity feed** — opportunities and asks, not a social feed
-- [x] **Network intelligence layer** — explainable graph of people, companies, skills, needs, capital, events, resources, and relationships
+Open the printed URL. Never expose fictional sessions publicly or use real founder data. Static serving does not provide the hosted Worker's discovery routes or configure cloud authentication. [Development instructions](CONTRIBUTING.md).
 
-Contributions and feedback welcome — **the door is open. Let's build this together.**
+## Read the project
 
-## Shared collaboration foundation (Supabase activation deferred)
+- [Roadmap](ROADMAP.md): build history, future checkpoints, and exit criteria.
+- [Reviewer guide](docs/REVIEWER_GUIDE.md): product, engineering, and AI evaluation evidence for application reviewers and the public.
+- [Public repository readiness](docs/PUBLIC_REPOSITORY_READINESS.md): required exposure and licensing review before changing visibility.
+- [Documentation index](docs/README.md): current guides versus historical records.
+- [Collaboration architecture](docs/SHARED_COLLABORATION_BACKEND.md), [discovery and learning](DISCOVERY-AND-LEARNING.md), and [agent pilot](A2A-PILOT.md).
 
-[Try the fictional shared contribution walkthrough](shared-workspace.html). It connects interest, versioned terms, delivery, feedback and explicit portfolio permission. The public preview uses page memory only. The private service has durable local test storage, participant authorization, task-scoped agent grants, revocation, conflict handling, activity records and owner-scoped reports. It is not deployed as a live multi-user backend.
+Operated by **JIDOKA Group**, led by **Crystal**. Support/privacy: **support@getjidoka.com**. The product and its data are separate from other JIDOKA applications.
 
-Run `node server/run-local.mjs` for the loopback-only persistent test with fictional identities. See [architecture and activation boundaries](docs/SHARED_COLLABORATION_BACKEND.md) and [test results](docs/SHARED_COLLABORATION_TEST_RESULTS.md). Existing Sheets hubs remain separate and unchanged.
+Repository visibility remains private pending review. Public source availability would not itself grant an open-source license. No license grant is introduced by this documentation change.
