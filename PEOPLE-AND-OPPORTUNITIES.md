@@ -35,3 +35,11 @@ Fresh rendered desktop/mobile and hosted two-real-account acceptance remain pend
 4. Apply from the second account, change terms, confirm again, deliver, give feedback, record approved credit, review mutually, and publish exact credit separately.
 5. Revoke credit/profile publication and confirm anonymous new reads omit them. A different account's private ideas/reviews must never appear.
 6. Verify an existing scoped agent still reads only permitted work, cannot publish, and fails after revocation. Never paste a credential into chat or source.
+
+## Approved deployment — November 13, 2026
+
+After explicit owner approval, `fb-collaboration` version 13 was deployed only to `ijvokvffhcvakaultzfk`. Readback of all seven deployed files matches the tested source. Existing internal authentication and `verify_jwt=false` gateway configuration were retained; the function verifies private access itself. No migration or participant-data publication was performed.
+
+The matching frontend is Sites version 67, source `5dc5fbd120e5115f40d41ab2fe2e92c72704b759`, saved version `appgprj_6add5ba8a1688191b29dd954024ebb46~appgver_ba4dfdf2947481918f50302ca4947bbc`. Deployment `appgdep_6af70f6f5f388191874ad594d02e71cc` succeeded at https://founders-builders-ux-review.hello978822.chatgpt.site with MCP retained and the same public audience.
+
+Ten real anonymous/forged-token boundary requests passed. Four public projection kinds responded without account IDs, and unauthenticated profile publication returned 401 without a write. Scheduled collaboration-email dispatch remains inactive; daily retention remains active. Sign-in SMTP is unchanged. Fresh hosted human-account/browser acceptance remains pending, as distinguished above.
