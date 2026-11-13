@@ -70,7 +70,7 @@
    return {kind:'preferences',title:'No new matches yet. Your profile is ready.',detail:'Matching uses shared skills, time and compensation preferences. Review those details when useful; keep limits that matter to you. No application is sent automatically.',label:'Review my skills and preferences'};
   }
   const project=(records.projects||[]).find(p=>p.ownerId===userId&&p.id===projectId)||(records.projects||[]).find(p=>p.ownerId===userId);
-  if(!project)return {kind:'project',title:'Direction for your next project step.',detail:'Describe the idea, who it helps and the next milestone. Choose whether the overview stays private.'};
+  if(!project)return {kind:'publish',title:'Start with one useful opportunity.',detail:'Describe one outcome, the support you can offer and a clear proposed exchange. A larger project overview is optional.',label:'Share an opportunity'};
   const tasks=(records.tasks||[]).filter(t=>t.ownerId===userId&&t.projectId===project.id);
   if(!tasks.length)return {kind:'step',title:'Your project is ready for a first contribution.',detail:'Choose one deliverable. Define its time, support and terms before sharing.',label:'Define the first contribution',projectId:project.id};
   const task=tasks.find(t=>!t.paused&&t.visibility==='public')||tasks[0];
@@ -177,7 +177,7 @@
   function renderGuide(){const host=$('firstExperience');host.replaceChildren();const model=firstExperience(records,client.user().id,mode,projectId);host.append(node('p',intent==='both'?'Your starting point · both paths':'Your starting point'),node('h2',model.title),node('p',model.detail));
    if(intent==='both'&&mode==='builder'&&!records.profile)host.append(node('p','Your project is saved. Add your builder profile next; your privacy choices stay separate.'));
    if(model.kind==='example'){const example=node('a',model.label);example.href='quick-tour.html';example.className='btn';host.append(example);return;}
-   if(model.label)host.append(button(model.label,async()=>{rememberSetup();if(model.kind==='agent')openAgent?.(model.taskId,model.requestId);else if(model.kind==='contribution')selectTask(model.taskId,model.contributionId);else if(model.kind==='step')defineStep();else if(model.kind==='skills'){show('step-discovery-'+model.taskId);}else if(model.kind==='preferences')show('builderProfile');else show('networkMatches');return {viewOnly:true};}));
+   if(model.label)host.append(button(model.label,async()=>{rememberSetup();if(model.kind==='agent')openAgent?.(model.taskId,model.requestId);else if(model.kind==='contribution')selectTask(model.taskId,model.contributionId);else if(model.kind==='publish'){show('shareOpportunity');}else if(model.kind==='step')defineStep();else if(model.kind==='skills'){show('step-discovery-'+model.taskId);}else if(model.kind==='preferences')show('builderProfile');else show('networkMatches');return {viewOnly:true};}));
   }
   function choose(path){rememberSetup();intent=path;mode=path==='both'?(records?.projects?.some(p=>p.ownerId===client.user().id)&&!records.profile?'builder':'founder'):path;healthFilter=null;if(records)render(records);}
   $('networkFounder').addEventListener('click',()=>choose('founder'));$('networkBuilder').addEventListener('click',()=>choose('builder'));$('networkBoth').addEventListener('click',()=>choose('both'));

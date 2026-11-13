@@ -2,13 +2,13 @@
 
 The journey's begin dot opens beta-access.html, with invited sign-in and a real request form (email, role, explicit consent). Submission stores a pending request only. It does not create an auth account, approve access, send email, subscribe anyone to marketing, or expose project data. The visible confirmation accurately says no confirmation email is sent. Duplicate requests return the same response and do not overwrite the first recorded role or imply membership.
 
-Backend: separate fb-beta-access Edge Function in Founders & Builders project ijvokvffhcvakaultzfk. Existing fb-collaboration version 8 and authentication settings are unchanged. Requests/limits tables have RLS, no anon/authenticated table grants or policies, and a service-only SECURITY INVOKER RPC. The public function validates origin/payload/consent and size, emits generic failures, never logs body/provider errors, and exposes no read/list/approval operations. Runtime secrets stay server-side.
+Backend: separate fb-beta-access Edge Function in Founders & Builders project ijvokvffhcvakaultzfk. At the original access-request release, fb-collaboration was version 8. The November 13 operations review verified version 13; this frontend/admin-planner update does not replace that function or change authentication settings. Requests/limits tables have RLS, no anon/authenticated table grants or policies, and a service-only SECURITY INVOKER RPC. The public function validates origin/payload/consent and size, emits generic failures, never logs body/provider errors, and exposes no read/list/approval operations. Runtime secrets stay server-side.
 
 Abuse controls: transactional serialized 10 requests/network/hour and 100 globally/hour; hard inbox cap 1000. Network identifiers are HMAC-hashed with a server secret and removed after seven days when subsequent requests are processed. Header-based network grouping is best-effort; the global cap is independent of that header. No CAPTCHA or automatic approval. Requests are unverified expressions of interest, not proof of email ownership.
 
 ## Owner review
 
-Use Supabase dashboard SQL/Table Editor for this exact project, with owner/admin access. There is deliberately no client-side admin shortcut. Inspect pending requests with:
+Follow [BETA-OPERATOR-QUICKSTART.md](BETA-OPERATOR-QUICKSTART.md) for guarded approval, report review, suspension and deletion inventory. Use Supabase dashboard SQL/Table Editor for this exact project, with owner/admin access. There is deliberately no client-side admin shortcut. Inspect pending requests with:
 
 ```sql
 select email, role, created_at, status
@@ -23,7 +23,7 @@ Verify the request and address through the normal manual invitation process befo
 
 SQL tests within a rolled-back transaction prove persistence, deduplication, preserved consent/role, rate limiting, RLS and denied table/RPC privileges. Live HTTPS fixture request stored builder/pending/beta-access-v1 and was removed; no email sent. Public-key direct REST reads and RPC execution denied. Invalid/foreign-origin requests denied. Existing ten live collaboration privacy checks pass. Unit tests exercise false-success prevention, duplicate-submit suppression, backend errors, explicit consent and minimal fields.
 
-Security advisor: new tables' RLS-without-policies INFO is intentional deny-by-default. Existing legacy project SECURITY DEFINER RPC warnings and disabled leaked-password-protection warning remain; no new privileged public SQL RPC was added. Review these before broader public release. References:
+Security advisor: new tables' RLS-without-policies INFO is intentional deny-by-default. The November 13 review returned eight intentional RLS-without-policies INFO entries and one disabled leaked-password-protection warning (a Pro-only feature); no paid upgrade was enabled. The historical legacy RPC warnings are not a current finding. No new privileged public SQL RPC was added. Review these before broader public release. References:
 - https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable
 - https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable
 - https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection

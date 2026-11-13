@@ -54,3 +54,5 @@ test('production entry points share the same header structure and menu semantics
  }
  assert.ok(pages.length>=65);
 });
+
+test('copying a public card never includes workspace tokens, filters or an external destination',async()=>{const fs=require('node:fs'),vm=require('node:vm');const callbacks=[],copied=[],status={textContent:''};const make=path=>({getAttribute:()=>path,nextElementSibling:status,addEventListener:(k,fn)=>callbacks.push(fn)});const buttons=[make('/people/public-person'),make('https://evil.example/private'),make('/cloud-workspace.html#access_token=private')];const document={getElementById:()=>null,querySelectorAll:()=>buttons};vm.runInNewContext(fs.readFileSync(require.resolve('../navigation.js'),'utf8'),{document,window:{location:{origin:'https://site.test',hash:''},addEventListener(){},navigator:{clipboard:{writeText:async v=>copied.push(v)}}}});for(const fn of callbacks)await fn();assert.deepEqual(copied,['https://site.test/people/public-person']);assert.match(status.textContent,/Link copied/);});

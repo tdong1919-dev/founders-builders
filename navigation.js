@@ -14,6 +14,7 @@
     if (target.scrollIntoView) target.scrollIntoView({block: 'start'});
   }
   revealStep(); window.addEventListener('hashchange', revealStep);
+  if(document.querySelectorAll)document.querySelectorAll('[data-copy-public-link]').forEach(function(button){button.addEventListener('click',async function(){var path=button.getAttribute('data-copy-public-link'),status=button.nextElementSibling;if(!/^\/(?:opportunities|builders|people|project)\/[A-Za-z0-9_-]{1,120}$/.test(path||''))return;var url=window.location.origin+path;try{await window.navigator.clipboard.writeText(url);if(status)status.textContent='Link copied. Only the published card is shared.';}catch(error){if(status)status.textContent='Copy this public link: '+url;}});});
   if (!nav || !links || !toggle) return;
   function close() { links.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); }
   function scroll() { nav.classList.toggle('scrolled', window.scrollY > 8); }

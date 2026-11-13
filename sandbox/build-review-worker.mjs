@@ -28,6 +28,7 @@ let cachedSecret,cachedSandbox;
 const discoveryMcp=createDiscoveryMcp({connection:JSON.parse(reviewAssets['/agent-connection.json'].body),card:JSON.parse(reviewAssets['/a2a-agent-card.json'].body)});
 export default {async fetch(request,env){
  const url=new URL(request.url);
+ const aliases={'/about':'/about.html','/contact':'/questions.html','/team':'/about.html','/favicon.ico':'/assets/brand/fb-connection-mark.svg'};if(aliases[url.pathname])return Response.redirect(new URL(aliases[url.pathname],request.url).href,302);
  if(url.pathname.startsWith('/people/')||url.pathname.startsWith('/project/'))return createPeopleDirectory()(request);
  if(url.pathname.startsWith('/opportunities/')||url.pathname.startsWith('/builders/'))return createPublicDirectory()(request);
  if(url.pathname==='/journey-concept.html')return Response.redirect(new URL('/'+url.search,request.url).href+url.hash,301);
