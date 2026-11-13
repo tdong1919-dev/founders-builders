@@ -22,12 +22,13 @@ if(Object.values(assets).some(a=>a.body?.includes('script.google.com/macros/s/')
 if(!assets['/secure-config.js']?.body.includes('enabled: false'))throw Error('Keep Supabase disabled in review.');
 const handler=fs.readFileSync(path.join(root,'sandbox/a2a-handler.mjs'),'utf8').replace('export function createSandbox','function createSandbox');
 const discovery=fs.readFileSync(path.join(root,'sandbox/discovery-mcp.mjs'),'utf8').replace('export function createDiscoveryMcp','function createDiscoveryMcp');
-const directory=fs.readFileSync(path.join(root,'sandbox/public-directory.mjs'),'utf8').replace('export function createPublicDirectory','function createPublicDirectory');
+const directory=fs.readFileSync(path.join(root,'sandbox/public-directory.mjs'),'utf8').replace('export function createPublicDirectory','function createPublicDirectory').replace('export function createPeopleDirectory','function createPeopleDirectory');
 const source=directory+'\n'+handler+'\n'+discovery+'\nconst reviewAssets='+JSON.stringify(assets)+';\n'+`
 let cachedSecret,cachedSandbox;
 const discoveryMcp=createDiscoveryMcp({connection:JSON.parse(reviewAssets['/agent-connection.json'].body),card:JSON.parse(reviewAssets['/a2a-agent-card.json'].body)});
 export default {async fetch(request,env){
  const url=new URL(request.url);
+ if(url.pathname.startsWith('/people/')||url.pathname.startsWith('/project/'))return createPeopleDirectory()(request);
  if(url.pathname.startsWith('/opportunities/')||url.pathname.startsWith('/builders/'))return createPublicDirectory()(request);
  if(url.pathname==='/journey-concept.html')return Response.redirect(new URL('/'+url.search,request.url).href+url.hash,301);
  if(url.pathname==='/mcp')return discoveryMcp(request);
