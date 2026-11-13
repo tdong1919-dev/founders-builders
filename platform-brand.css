@@ -91,3 +91,27 @@ body.brand-cohesive .hub-head>.experience-links{max-width:var(--maxw);margin:22p
 .opportunity-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px;margin:20px 0}.opportunity-facts div{min-width:0}.opportunity-facts dt{font:12px/1.5 Arial,sans-serif;color:#6c685f;margin-bottom:5px}.opportunity-facts dd{margin:0;font-size:15px;line-height:1.6;overflow-wrap:anywhere}.opportunity-facts>div:first-child,.opportunity-facts>div:last-child{grid-column:1/-1}
 .public-directory>header nav{display:flex;flex-wrap:wrap;gap:8px 20px}.public-directory>header nav a{min-height:44px;display:inline-flex;align-items:center}.agent-developer{margin-top:32px}.agent-developer h2{font-size:24px}.experience-banner>a{display:inline-flex;min-height:44px;align-items:center;margin-right:20px}.experience-details>summary{min-height:48px;cursor:pointer}
 @media(max-width:650px){.journey-footer{padding:28px 0}.journey-footer nav{gap:2px 20px}.journey-footer nav a{font-size:14px}.public-directory>header{align-items:flex-start;gap:12px}.public-directory>header nav{width:100%;gap:4px 16px;justify-content:space-between}.public-directory>header nav a{font-size:13px}.opportunity-facts{gap:14px}.opportunity-facts dd{font-size:14px}.agent-developer{margin-top:24px}.learning-guide .community-intro .lead{font-size:18px;line-height:1.6}}
+
+/* One shared site header across static and server-rendered destinations. */
+body.brand-cohesive header.nav{height:auto;padding:0;display:block;gap:0;position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--border)}
+body.brand-cohesive header.nav>.nav__inner{width:100%;max-width:var(--maxw,1280px);margin-inline:auto;display:flex;justify-content:flex-start;align-items:center;gap:20px;padding:16px 24px;min-height:80px}
+body.brand-cohesive header.nav .brand{white-space:nowrap;text-decoration:none;color:var(--text)}
+body.brand-cohesive header.nav .nav__links{margin-left:auto}
+body.brand-cohesive header.nav .nav__links a{color:var(--text-secondary);text-decoration:none}
+body.brand-cohesive header.nav .nav__toggle{padding:12px;min-width:48px;min-height:48px;justify-content:center}
+body.brand-cohesive .site-skip{position:absolute;left:24px;top:-100px;z-index:100;background:var(--text);color:white;padding:12px 18px}
+body.brand-cohesive .site-skip:focus{top:8px}
+body.brand-cohesive.discovery-page .public-directory{width:min(100%,1120px);max-width:1120px;padding:48px 24px 64px}
+body.brand-cohesive.discovery-page .public-directory>h1{font:400 clamp(38px,5vw,64px)/1.08 var(--font-display);letter-spacing:-.045em;max-width:20ch;margin:22px 0}
+body.brand-cohesive.discovery-page .public-directory>p:not(.kicker){font-size:17px;line-height:1.7;color:var(--text-secondary);max-width:60ch;margin:0 0 28px}
+body.brand-cohesive.discovery-page .discovery-filters{background:#fff;border:0;border-radius:16px;padding:24px;margin:28px 0 32px;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+body.brand-cohesive.discovery-page .discovery-filters input,body.brand-cohesive.discovery-page .discovery-filters select{border:1px solid var(--border);border-radius:10px;min-height:48px}
+body.brand-cohesive.discovery-page .discovery-filters .btn{margin-top:0;align-self:end;border-radius:10px;min-height:48px}
+body.brand-cohesive.discovery-page .discovery-filters>a{font-size:14px;text-decoration:none;justify-content:center}
+body.brand-cohesive.discovery-page .experience-card{background:#fff;border:0;border-radius:16px;padding:24px;margin:20px 0}
+body.brand-cohesive.discovery-page .experience-card>a{font-weight:500;color:var(--text)}
+@media(max-width:960px){body.brand-cohesive header.nav .nav__toggle{display:flex;margin-left:auto}body.brand-cohesive header.nav .nav__links,body.brand-cohesive header.nav>.nav__inner>.btn--sm{display:none}body.brand-cohesive header.nav .nav__links.open{position:absolute;top:100%;left:0;right:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:12px 20px 20px;gap:6px;background:var(--bg);border:0;box-shadow:0 12px 18px -18px #24242155}body.brand-cohesive header.nav .nav__links a{display:flex;align-items:center;min-height:48px;padding:12px 14px;border-radius:9px;font-size:15px}body.brand-cohesive header.nav .nav__links a::after{display:none}body.brand-cohesive header.nav .nav__links a[aria-current=page]{background:var(--bg-2);font-weight:600;text-decoration:none}}
+@media(max-width:650px){body.brand-cohesive header.nav>.nav__inner{min-height:72px;padding:12px 24px;gap:8px}body.brand-cohesive header.nav :is(.brand,.brand__name){font-size:21px}body.brand-cohesive.discovery-page .public-directory{padding-top:36px}body.brand-cohesive.discovery-page .public-directory>p:not(.kicker){font-size:16px}body.brand-cohesive.discovery-page .discovery-filters{grid-template-columns:minmax(0,1fr);padding:20px;gap:18px}body.brand-cohesive.discovery-page .experience-card{padding:20px}}
+
+/* Preserve the expressive homepage typography while sharing the navigation. */
+body.journey-page .entry h1{font-family:Arial,Helvetica,sans-serif}
