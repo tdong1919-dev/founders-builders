@@ -3,7 +3,7 @@ export function createPublicDirectory({fetcher=fetch,origin='https://founders-bu
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function clean(c,kind){
   const opportunities=kind==='opportunities',minutes=opportunities?c?.minutes:c?.maxMinutes;
-  if(!c||typeof c.id!=='string'||! /^[A-Za-z0-9_-]{1,120}$/.test(c.id)||!Number.isInteger(minutes)||minutes<15||minutes>180||!Array.isArray(c.skills)||c.skills.length>12||c.skills.some(s=>typeof s!=='string'||!s.trim()||s.length>40))throw Error('invalid');
+  if(!c||typeof c.id!=='string'||! /^[A-Za-z0-9_-]{1,120}$/.test(c.id)||!Number.isInteger(minutes)||minutes<15||minutes>14400||!Array.isArray(c.skills)||c.skills.length>12||c.skills.some(s=>typeof s!=='string'||!s.trim()||s.length>40))throw Error('invalid');
   const title=opportunities?c.title:c.name,summary=opportunities?c.summary:c.goal;
   if(typeof title!=='string'||!title.trim()||title.length>120||typeof summary!=='string'||summary.length>(c.personProfile?800:400))throw Error('invalid');
   if(opportunities&&(!['paid','unpaid','nonmonetary','both'].includes(c.compensation)||typeof c.taskId!=='string'||! /^[A-Za-z0-9_-]{1,120}$/.test(c.taskId)))throw Error('invalid');
@@ -16,7 +16,7 @@ export function createPublicDirectory({fetcher=fetch,origin='https://founders-bu
   const skills=[...new Set(raw.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean))];
   if(skills.length>12||skills.some(s=>s.length>40||/[\u0000-\u001f\u007f]/.test(s)))throw Error('invalid');
   const offset=Number(search.get('offset')||0),time=search.get(timeKey)?Number(search.get(timeKey)):null;
-  if(!Number.isInteger(offset)||offset<0||offset>5000||time!==null&&(!Number.isInteger(time)||time<15||time>180))throw Error('invalid');
+  if(!Number.isInteger(offset)||offset<0||offset>5000||time!==null&&(!Number.isInteger(time)||time<15||time>14400))throw Error('invalid');
   const compensation=search.get('compensation')||'';if(!['','paid','unpaid','nonmonetary','both'].includes(compensation))throw Error('invalid');
   const extra={};for(const key of ['q','sort','experience','workMode','location','currency','minAmount','maxAmount'])if(search.has(key)&&search.get(key)!==''){const value=search.get(key);if(value.length>160)throw Error('invalid');extra[key]=['minAmount','maxAmount'].includes(key)?Number(value):key==='currency'?value.toUpperCase():value;}if(extra.sort&&!['newest','oldest','updated'].includes(extra.sort))throw Error('invalid');return {skills,offset,time,timeKey,compensation,...extra};
  }
@@ -46,7 +46,7 @@ export function createPublicDirectory({fetcher=fetch,origin='https://founders-bu
   if(!match)return new Response('Not found',{status:404});
   if(!['GET','HEAD'].includes(request.method))return new Response('Method not allowed',{status:405,headers:{Allow:'GET, HEAD'}});
   const kind=match[1]==='opportunities'?'opportunities':'builders',id=match[2],base='/'+match[1]+'/';let f;
-  try{f=filters(url.searchParams,kind);}catch{return new Response('Invalid filters. Use up to 12 skills and a 15–180 minute time preference.',{status:400,headers:{'Cache-Control':'no-store','X-Robots-Tag':'noindex'}});}
+  try{f=filters(url.searchParams,kind);}catch{return new Response('Invalid filters. Use up to 12 skills and a 15-minute to 30-working-day effort preference.',{status:400,headers:{'Cache-Control':'no-store','X-Robots-Tag':'noindex'}});}
   try{
    const deadline=Date.now()+12000;let page=await load(kind,id?0:f.offset,deadline,id?null:f);
    if(id){let card=page.items.find(c=>c.id===id),pages=1;while(!card&&page.nextOffset!==null&&pages<maxPages){page=await load(kind,page.nextOffset,deadline);pages++;card=page.items.find(c=>c.id===id);}
