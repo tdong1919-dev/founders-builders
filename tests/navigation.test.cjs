@@ -20,7 +20,7 @@ test('navigation closes after following a link or clicking outside',()=>{
 test('every full-navigation branded page keeps the same four primary destinations',()=>{
  const root=path.resolve(__dirname,'..');let count=0;
  for(const name of fs.readdirSync(root).filter(n=>n.endsWith('.html'))){
-  const html=fs.readFileSync(path.join(root,name),'utf8');if(!html.includes('brand-system.css'))continue;if(name==='quick-tour.html'){assert.match(html,/<a href="index.html">Back to home<\/a>/);assert.match(html,/id="tourFounder"/);continue;}count++;
+  const html=fs.readFileSync(path.join(root,name),'utf8');if(!html.includes('brand-system.css'))continue;if(name==='quick-tour.html'){assert.match(html,/id="navToggle"/);assert.match(html,/id="tourFounder"/);continue;}count++;
   const nav=html.match(/<nav class="nav__links"[^>]*>([\s\S]*?)<\/nav>/);assert.ok(nav, name);
   assert.deepEqual([...nav[1].matchAll(/href="([^"]+)"/g)].map(m=>m[1]),['/opportunities/','/builders/','community.html','cloud-workspace.html'],name);
   assert.ok(html.includes('navigation.js'),name);assert.ok(html.includes('aria-controls="primaryLinks"'),name);
@@ -41,3 +41,18 @@ test('direct links reveal collapsed journey steps on initial load and hash chang
 });
 
 test('Workspace navigation opens the real cloud entry point',()=>{assert.equal(setup().destination(),'cloud-workspace.html');});
+
+test('production entry points share the same header structure and menu semantics',()=>{
+ const root=path.resolve(__dirname,'..');
+ const pages=fs.readdirSync(root).filter(n=>n.endsWith('.html')&&!['atelier-concept.html','brand-kit.html'].includes(n));
+ for(const name of pages){
+  const html=fs.readFileSync(path.join(root,name),'utf8');
+  assert.match(html,/<header class="nav scrolled" id="nav">/,name);
+  assert.match(html,/<span class="brand__name">Founders <span class="amp">&amp;<\/span> Builders<\/span>/,name);
+  assert.match(html,/id="navToggle"[^>]*aria-controls="primaryLinks"[^>]*aria-expanded="false"/,name);
+  assert.ok(html.includes('navigation.js'),name);
+ }
+ assert.ok(pages.length>=65);
+});
+
+test('copying a public card never includes workspace tokens, filters or an external destination',async()=>{const fs=require('node:fs'),vm=require('node:vm');const callbacks=[],copied=[],status={textContent:''};const make=path=>({getAttribute:()=>path,nextElementSibling:status,addEventListener:(k,fn)=>callbacks.push(fn)});const buttons=[make('/people/public-person'),make('https://evil.example/private'),make('/cloud-workspace.html#access_token=private')];const document={getElementById:()=>null,querySelectorAll:()=>buttons};vm.runInNewContext(fs.readFileSync(require.resolve('../navigation.js'),'utf8'),{document,window:{location:{origin:'https://site.test',hash:''},addEventListener(){},navigator:{clipboard:{writeText:async v=>copied.push(v)}}}});for(const fn of callbacks)await fn();assert.deepEqual(copied,['https://site.test/people/public-person']);assert.match(status.textContent,/Link copied/);});
