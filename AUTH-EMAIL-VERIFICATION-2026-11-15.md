@@ -22,3 +22,9 @@ A real password must be created and submitted by the owner, then tested by the o
 ## Validation
 
 37 focused controller/navigation/guided-form/fictional-preview tests pass. All 67 HTML pages pass asset/link/anchor/ID checks. The mobile CSS change is presentation-only and does not alter permissions or stored records. Deployment results and subsequent browser checks are recorded in the pull request.
+
+## Published correction and browser results
+
+Sites version 74 succeeded, source `dd644e1a01bd53335fb3381aca7619e55530823f`, deployment `appgdep_6af9b2d1b87881918294dffb9de4481a`. The first low-specificity override did not beat `#peopleWorkspace button`; the final ID-scoped rule was verified in the browser. At 390px the publishing navigation shrank from approximately 319px to 142px high, with individual tabs between 65px and 146px wide. Document width remained 375px in the 390px viewport. A 1440px layout check measured document width 1425px. Temporary viewport overrides were cleared.
+
+The email/password handoff remains open; no real sign-in code or password was read or entered by the agent. Resend's Google chooser offered multiple accounts. Automatic approval review rejected selecting the unconfirmed account because the correct Resend workspace owner was unknown. The operator was asked to identify the account; no alternative account or indirect login was attempted. Reply-To remains unverified. No claim of email receipt or successful password creation follows from a request-received message.
