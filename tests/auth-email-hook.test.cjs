@@ -61,9 +61,9 @@ test('unsigned, stale, tampered, browser-origin, unknown-action and oversized re
  assert.equal(await status(s,signed(event(),{raw:'x'.repeat(131073)})),413);
  assert.equal(s.sent.length,0);
 });
-test('foreign redirects, header-injection recipients and malformed code/hash fail before provider delivery',async()=>{
+test('header-injection recipients and malformed code/hash fail before provider delivery',async()=>{
  const s=await setup();
- for(const alter of [e=>e.email_data.redirect_to='https://attacker.invalid/capture',e=>e.email_data.site_url='https://another-site.invalid',e=>e.user.email='a@example.invalid\r\nBcc:other@example.invalid',e=>e.email_data.token='<script>',e=>e.email_data.token_hash='../../not-a-token']) {const e=event();alter(e);assert.equal(await status(s,signed(e)),400);}
+ for(const alter of [e=>e.user.email='a@example.invalid\r\nBcc:other@example.invalid',e=>e.email_data.token='<script>',e=>e.email_data.token_hash='../../not-a-token']) {const e=event();alter(e);assert.equal(await status(s,signed(e)),400);}
  assert.equal(s.sent.length,0);
 });
 test('missing secrets/wrong project fail closed; provider errors are sanitized; retries reuse a key',async()=>{
@@ -73,3 +73,5 @@ test('missing secrets/wrong project fail closed; provider errors are sanitized; 
  const s=await setup();await s.handler(signed());await s.handler(signed());assert.equal(s.sent[0].options.headers['Idempotency-Key'],s.sent[1].options.headers['Idempotency-Key']);
  assert.equal(await status(s,new Request(target)),405);
 });
+
+test('incoming site and redirect settings never control the generated sign-in destination',async()=>{const s=await setup();const e=event();e.email_data.site_url='http://localhost:3000';e.email_data.redirect_to='https://attacker.invalid/capture?x=1';assert.equal(await status(s,signed(e)),200);const body=JSON.stringify(s.sent[0]);assert.doesNotMatch(body,/attacker.invalid|localhost/);assert.match(body,/cloud-workspace/);});
