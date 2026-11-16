@@ -2,7 +2,11 @@
 
 Server-side Send Email hook for Founders & Builders project `ijvokvffhcvakaultzfk` only. All messages use `Founders & Builders <founders@jidokagroup.com>` and explicit `reply_to: ["support@getjidoka.com"]`. Approved branded templates are bundled locally. No application records or service-role key are used.
 
-## Activation (pending)
+## Current status
+
+Live hook version 9 is enabled. The owner confirmed that the test authentication email and Reply-To support@getjidoka.com work. Eight automated tests pass. Earlier dated notes below preserve the troubleshooting history; their pending/disabled states are superseded by this confirmation.
+
+## Activation procedure
 
 1. Keep the existing SMTP configuration intact for rollback.
 2. In Supabase Authentication → Hooks, prepare a Send Email HTTP hook targeting `https://ijvokvffhcvakaultzfk.supabase.co/functions/v1/fb-auth-email`. Generate a signing secret.
