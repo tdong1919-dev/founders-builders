@@ -1,0 +1,4 @@
+import {Webhook} from 'npm:standardwebhooks@1.0.0';
+import {createAuthEmail} from './handler.mjs';
+console.info('fb-auth-config', JSON.stringify({projectMatches:Deno.env.get('SUPABASE_URL')==='https://ijvokvffhcvakaultzfk.supabase.co',verifierReady:(()=>{try{new Webhook((Deno.env.get('FB_AUTH_HOOK_SECRET')||'').replace(/^v1,/,''));return true;}catch{return false;}})(),signingPresent:!!Deno.env.get('FB_AUTH_HOOK_SECRET'),signingFormat:/^(?:v1,)?whsec_[A-Za-z0-9+/=]+$/.test(Deno.env.get('FB_AUTH_HOOK_SECRET')||''),resendPresent:!!(Deno.env.get('Founders & Builders Auth Hook')||Deno.env.get('FB_AUTH_RESEND_API_KEY')),resendFormat:/^re_[A-Za-z0-9_-]+$/.test(Deno.env.get('Founders & Builders Auth Hook')||Deno.env.get('FB_AUTH_RESEND_API_KEY')||'')}));
+Deno.serve(createAuthEmail({Webhook,secret:Deno.env.get('FB_AUTH_HOOK_SECRET'),apiKey:Deno.env.get('Founders & Builders Auth Hook')||Deno.env.get('FB_AUTH_RESEND_API_KEY'),projectUrl:Deno.env.get('SUPABASE_URL')}));
